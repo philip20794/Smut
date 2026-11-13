@@ -134,39 +134,90 @@ function setPageTestFixture(enabled: boolean): void {
  */
 let lastCanvasTouch: { x: number; y: number; time: number } | null = null;
 let isNativeSelectionDrag = false;
-container?.addEventListener("touchstart", event => {
+let selectionDragPoint: { x: number; y: number } | null = null;
+let selectionScrollFrame = 0;
+
+/**
+ * A Canvas Editor page is a separate canvas. During an Android selection drag,
+ * the finger can cross page gaps or the visible edge of the WebView; route each
+ * move to the closest visible page, clamped to that page's actual drawing area.
+ * This path is never used for ordinary swipes or multi-touch gestures.
+ */
+function forwardNativeSelectionDrag(x: number, y: number): void {
+  if (!container || !isNativeSelectionDrag) return;
+  let target: HTMLCanvasElement | null = null;
+  let distance = Number.POSITIVE_INFINITY;
+  for (const canvas of container.querySelectorAll<HTMLCanvasElement>(".ce-page-container canvas")) {
+    const r = canvas.getBoundingClientRect();
+    if (!r.width || !r.height || r.bottom < 0 || r.top > window.innerHeight) continue;
+    const dx = Math.max(r.left - x, 0, x - r.right);
+    const dy = Math.max(r.top - y, 0, y - r.bottom);
+    const candidateDistance = Math.hypot(dx, dy);
+    if (candidateDistance < distance) {
+      target = canvas;
+      distance = candidateDistance;
+    }
+  }
+  // Avoid accidentally selecting pages while dragging over the app toolbar.
+  if (!target || distance > 96) return;
+  const r = target.getBoundingClientRect();
+  target.dispatchEvent(new MouseEvent("mousemove", {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    clientX: Math.max(r.left + 1, Math.min(r.right - 1, x)),
+    clientY: Math.max(r.top + 1, Math.min(r.bottom - 1, y)),
+    buttons: 1,
+  }));
+}
+
+function stopNativeSelectionDrag(): void {
+  lastCanvasTouch = null;
   isNativeSelectionDrag = false;
+  selectionDragPoint = null;
+  if (selectionScrollFrame) cancelAnimationFrame(selectionScrollFrame);
+  selectionScrollFrame = 0;
+}
+
+/** Keep extending the range when the finger reaches the WebView's vertical edge. */
+function autoScrollSelection(): void {
+  selectionScrollFrame = 0;
+  if (!isNativeSelectionDrag || !selectionDragPoint) return;
+  const edge = Math.min(72, window.innerHeight * 0.14);
+  const { x, y } = selectionDragPoint;
+  let delta = 0;
+  if (y < edge) delta = -Math.max(2, (edge - y) * 0.16);
+  if (y > window.innerHeight - edge) {
+    delta = Math.max(2, (y - (window.innerHeight - edge)) * 0.16);
+  }
+  if (delta) {
+    const before = window.scrollY;
+    window.scrollBy(0, delta);
+    if (window.scrollY !== before) forwardNativeSelectionDrag(x, y);
+  }
+  selectionScrollFrame = requestAnimationFrame(autoScrollSelection);
+}
+
+container?.addEventListener("touchstart", event => {
+  stopNativeSelectionDrag();
   const target = event.target;
   const touch = event.touches.item(0);
   if (event.touches.length !== 1 || !touch || !(target instanceof HTMLCanvasElement)
-      || !target.closest(".ce-page-container")) {
-    lastCanvasTouch = null;
-    return;
-  }
+      || !target.closest(".ce-page-container")) return;
   lastCanvasTouch = { x: touch.clientX, y: touch.clientY, time: Date.now() };
 }, { passive: true });
 container?.addEventListener("touchmove", event => {
   const touch = event.touches.item(0);
   if (event.touches.length !== 1 || !touch) {
-    lastCanvasTouch = null;
-    isNativeSelectionDrag = false;
+    stopNativeSelectionDrag();
     return;
   }
   if (isNativeSelectionDrag) {
-    // Only a confirmed long-press selects text. Normal swipe scrolling is
-    // untouched; prevent native pan only while extending that selection.
+    // Only confirmed long-press selection prevents the browser's normal swipe.
     event.preventDefault();
-    const hit = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (hit instanceof HTMLCanvasElement && hit.closest(".ce-page-container")) {
-      hit.dispatchEvent(new MouseEvent("mousemove", {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        buttons: 1,
-      }));
-    }
+    selectionDragPoint = { x: touch.clientX, y: touch.clientY };
+    forwardNativeSelectionDrag(touch.clientX, touch.clientY);
+    if (!selectionScrollFrame) selectionScrollFrame = requestAnimationFrame(autoScrollSelection);
     return;
   }
   if (lastCanvasTouch &&
@@ -174,14 +225,8 @@ container?.addEventListener("touchmove", event => {
     lastCanvasTouch = null;
   }
 }, { passive: false });
-container?.addEventListener("touchend", () => {
-  lastCanvasTouch = null;
-  isNativeSelectionDrag = false;
-});
-container?.addEventListener("touchcancel", () => {
-  lastCanvasTouch = null;
-  isNativeSelectionDrag = false;
-});
+container?.addEventListener("touchend", stopNativeSelectionDrag);
+container?.addEventListener("touchcancel", stopNativeSelectionDrag);
 container?.addEventListener("contextmenu", event => {
   if (!editor || !window.SmutAndroid || !lastCanvasTouch) return;
   if (Date.now() - lastCanvasTouch.time > 3500) return;
