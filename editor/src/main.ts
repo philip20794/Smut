@@ -1,4 +1,5 @@
 import { DEFAULT_ZOOM, MIN_ZOOM, MAX_ZOOM, nextZoom, formatZoom } from "./zoom.js";
+import { caretScrollDelta } from "./caret-visibility.js";
 import { createReadyMessage, parseReadyAck } from "./bridge.js";
 import {
   INITIAL_DOCUMENT, createDocumentRequest, isPrototypeData, parseDocumentResponse,
@@ -60,6 +61,49 @@ let isSaving = false;
 let currentZoom = DEFAULT_ZOOM;
 let testDocumentBackup: PrototypeData | null = null;
 let suppressTestAutoSave = false;
+let caretVisibilityFrame = 0;
+
+/**
+ * Canvas Editor 1.1.0 positions its real caret in .ce-cursor. The proxy
+ * textarea is NOT a suitable scroll target because its position can lag.
+ * Keep the caret above the Android IME whenever the viewport shrinks,
+ * an input is committed, or Canvas Editor updates its caret position.
+ */
+function keepCaretVisible(): void {
+  if (!container || !editor || isNativeSelectionDrag) return;
+  const input = container.querySelector<HTMLTextAreaElement>(".ce-inputarea");
+  const caret = container.querySelector<HTMLElement>(".ce-cursor");
+  if (!input || document.activeElement !== input || !caret
+      || getComputedStyle(caret).display === "none") return;
+  const caretRect = caret.getBoundingClientRect();
+  if (caretRect.width === 0 && caretRect.height === 0) return;
+  const visual = window.visualViewport;
+  const viewportTop = Math.max(0, visual?.offsetTop ?? 0);
+  const viewportBottom = Math.min(window.innerHeight,
+    (visual?.offsetTop ?? 0) + (visual?.height ?? window.innerHeight));
+  const delta = caretScrollDelta(caretRect.top, caretRect.bottom,
+    viewportTop, viewportBottom, 28);
+  if (delta) window.scrollBy(0, delta);
+}
+
+function scheduleCaretVisibility(): void {
+  if (caretVisibilityFrame) cancelAnimationFrame(caretVisibilityFrame);
+  caretVisibilityFrame = requestAnimationFrame(() => {
+    // Canvas Editor updates its canvas/caret after its own IME event handler.
+    caretVisibilityFrame = requestAnimationFrame(() => {
+      caretVisibilityFrame = 0;
+      keepCaretVisible();
+    });
+  });
+}
+
+container?.addEventListener("input", scheduleCaretVisibility, true);
+container?.addEventListener("compositionend", scheduleCaretVisibility, true);
+container?.addEventListener("keyup", scheduleCaretVisibility, true);
+window.addEventListener("resize", scheduleCaretVisibility);
+window.visualViewport?.addEventListener("resize", scheduleCaretVisibility);
+window.visualViewport?.addEventListener("scroll", scheduleCaretVisibility);
+
 
 function updateZoomControls(): void {
   if (zoomValue) zoomValue.textContent = formatZoom(currentZoom);
@@ -73,6 +117,7 @@ function adjustZoom(direction: -1 | 1): void {
   editor.command.executePageScale(zoom);
   currentZoom = zoom;
   updateZoomControls();
+  scheduleCaretVisibility();
 }
 
 
@@ -278,7 +323,18 @@ async function initializeEditor(document: PrototypeData): Promise<void> {
       defaultSize: 15,
       pageMode: "paging",
     });
-    editor.listener.contentChange = scheduleSave;
+    editor.listener.contentChange = () => {
+      scheduleSave();
+      scheduleCaretVisibility();
+    };
+    // The editor repositions .ce-cursor after key presses and page reflow.
+    // Observe only this one node to avoid re-render loops on the canvas.
+    const caret = container.querySelector(".ce-cursor");
+    if (caret) {
+      new MutationObserver(scheduleCaretVisibility).observe(caret, {
+        attributes: true, attributeFilter: ["style"],
+      });
+    }
     updateZoomControls();
     report("A5-Buchseite · Tippen direkt im Text");
   } catch (error) {
