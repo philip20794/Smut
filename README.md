@@ -59,7 +59,7 @@ Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffä
 
 ## Implementierung und Projektstand
 
-**Der Implementierungsplan ist angelegt; der App-Code ist noch nicht vorhanden.** Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
+**F-01 (Projektbaseline) ist dokumentiert; Android-App-Code und automatische Builds folgen ab F-02.** Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
 
 ## Dokumentation
 
@@ -72,5 +72,6 @@ Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffä
 - [Fortschrittstracker und Übergabe](docs/PROGRESS.md)
 - [Entwicklungs- und Wiederaufnahmeprotokoll](docs/DEVELOPMENT_WORKFLOW.md)
 - [Technische Entscheidungen](docs/DECISIONS.md)
+- [Projektstruktur, Toolchains und Buildkonventionen](docs/BUILD.md)
 
-Der Implementierungsplan ist vorhanden. Unbestätigte technische Annahmen bleiben bis zum P1-Machbarkeitsnachweis als Prüfaufgaben gekennzeichnet. Die Umsetzung und die automatische APK-Erstellung stehen noch aus.
+Der Implementierungsplan ist vorhanden. Unbestätigte technische Annahmen bleiben bis zum P1-Machbarkeitsnachweis als Prüfaufgaben gekennzeichnet. Die erste Projektbaseline ist eingecheckt; Android-App, Wrapper, Tests, GitHub-Actions-Workflows und automatische APK-Erstellung stehen noch aus.
