@@ -1,0 +1,49 @@
+# Gradle/Android build outputs and machine-specific settings
+.gradle/
+**/build/
+local.properties
+.cxx/
+.externalNativeBuild/
+captures/
+.idea/
+*.iml
+*.hprof
+*.log
+
+# JavaScript/TypeScript - generated files only; commit lockfiles
+node_modules/
+**/node_modules/
+editor/dist/
+editor/.vite/
+coverage/
+**/coverage/
+*.tsbuildinfo
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Generated Android packages and signing material
+*.apk
+*.aab
+*.apks
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.asc
+*.gpg
+
+# Local credentials (never commit)
+.env
+.env.*
+!.env.example
+secrets.properties
+**/secrets.properties
+service-account*.json
+
+# Keep Gradle wrapper scripts and JAR tracked when generated in F-02
+# Keep package-lock.json (or the chosen alternative) tracked in F-03
