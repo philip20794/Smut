@@ -162,6 +162,27 @@ class OfflineEditorSmokeTest {
         awaitJavaScriptValue("window.smutPrototype?.getText()", "Zweiter Absat")
     }
 
+    @Test
+    fun zoomControlsChangeTheCanvasViewWithoutMutatingBookText() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        awaitJavaScriptValue("window.smutPrototype?.getZoom()", "0.6", exact = true)
+        awaitJavaScriptValue(
+            "window.smutPrototype?.getPageCount() >= 1",
+            "true",
+            exact = true
+        )
+
+        val originalText = evaluate("window.smutPrototype?.getText()")
+        tapHtmlButton("zoom-in")
+        awaitJavaScriptValue("window.smutPrototype?.getZoom()", "0.7", exact = true)
+        awaitJavaScriptValue("document.getElementById('zoom-value')?.textContent", "70 %")
+
+        tapHtmlButton("zoom-out")
+        awaitJavaScriptValue("window.smutPrototype?.getZoom()", "0.6", exact = true)
+        assertEquals("Zoom darf Manuskripttext nicht ändern", originalText,
+            evaluate("window.smutPrototype?.getText()"))
+    }
+
     /**
      * Emulator setup and the Google keyboard may briefly steal window focus.
      * Reorder the ActivityScenario-owned task to the front instead of
