@@ -229,6 +229,53 @@ class OfflineEditorSmokeTest {
      * If the candidate editor has no mobile selection gesture, keep this gate
      * red and evaluate an accessible alternative before claiming support.
      */
+    /**
+     * E-03 engine probe: after a genuine native touch focuses the editor,
+     * select all across several A5 pages through the documented Canvas
+     * command and replace through Android IME. The programmatic range is
+     * deliberately NOT a substitute for testing cross-page selection handles.
+     */
+    @Test
+    fun aMultiPageRangeCanBeReplacedViaAndroidImeAndRestoredWithoutDataLoss() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        val savedManuscript = evaluate("window.smutPrototype?.getText()")
+        try {
+            evaluate("window.smutPrototype?.setPageTestFixture(true)")
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getPageCount() >= 2",
+                "true", exact = true
+            )
+            selectWordByNativeLongPress()
+            assertEquals(
+                "Select-all probe only permitted while isolated page fixture is active",
+                "true", evaluate("window.smutPrototype?.selectAllTestFixture()")
+            )
+            val selectedLength = evaluate(
+                "window.smutPrototype?.getSelection()?.endIndex - window.smutPrototype?.getSelection()?.startIndex"
+            ).toInt()
+            assertTrue("Range must span several thousand text characters", selectedLength > 1000)
+            sendImeText("Ein neuer Absatz auf einer A5-Seite")
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getText()?.includes('Ein neuer Absatz auf einer A5-Seite')",
+                "true", exact = true
+            )
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getText()?.includes('Absatz 75')",
+                "false", exact = true
+            )
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getPageCount() === 1",
+                "true", exact = true
+            )
+        } finally {
+            evaluate("window.smutPrototype?.setPageTestFixture(false)")
+        }
+        assertEquals(
+            "Whole-document range probe must restore the real saved book",
+            savedManuscript, evaluate("window.smutPrototype?.getText()")
+        )
+    }
+
     private fun selectWordByNativeLongPress() {
         awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
         ensureEditorWindowFocused()
