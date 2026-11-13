@@ -9,7 +9,7 @@ interface AndroidBridge {
   postMessage(payload: string): void;
 }
 interface CanvasEditor {
-  command: { getValue(): { data: PrototypeData }; executePageScale(scale: number): void };
+  command: { getValue(): { data: PrototypeData }; executePageScale(scale: number): void; executeSetValue(data: Partial<PrototypeData>): void };
   listener: { contentChange?: () => void };
 }
 interface CanvasEditorModule {
@@ -28,6 +28,7 @@ declare global {
       isLoaded(): boolean;
       getZoom(): number;
       getPageCount(): number;
+      setPageTestFixture(enabled: boolean): void;
     };
   }
 }
@@ -48,6 +49,8 @@ let editor: CanvasEditor | null = null;
 let isLoading = false;
 let isSaving = false;
 let currentZoom = DEFAULT_ZOOM;
+let testDocumentBackup: PrototypeData | null = null;
+let suppressTestAutoSave = false;
 
 function updateZoomControls(): void {
   if (zoomValue) zoomValue.textContent = formatZoom(currentZoom);
@@ -73,7 +76,7 @@ function postRequest(payload: string): void {
 }
 
 function scheduleSave(): void {
-  if (!editor || isLoading) return;
+  if (!editor || isLoading || suppressTestAutoSave) return;
   pendingSave = true;
   if (!isSaving) void saveCurrentDocument();
 }
@@ -93,6 +96,27 @@ async function saveCurrentDocument(): Promise<void> {
     report(`Speichern nicht möglich: ${String(error)}`);
   }
 }
+/**
+ * The page-flow fixture is isolated from native persistence and restores the
+ * exact original editor document. It is only used by the emulator test.
+ */
+function setPageTestFixture(enabled: boolean): void {
+  if (!editor) return;
+  if (enabled) {
+    if (testDocumentBackup) return;
+    testDocumentBackup = editor.command.getValue().data;
+    suppressTestAutoSave = true;
+    const prose = Array.from({ length: 75 }, (_, i) =>
+      `Absatz ${i + 1}: Ein leiser Wind strich über die dunkle Straße. Äpfel, Öl und Grüße standen in einem Brief, während die Nacht langsam verging. `
+    ).join("");
+    editor.command.executeSetValue({ main: [{ value: prose }] });
+  } else if (testDocumentBackup) {
+    editor.command.executeSetValue(testDocumentBackup);
+    testDocumentBackup = null;
+    suppressTestAutoSave = false;
+  }
+}
+
 function requestHandshake(requestId: string): void {
   pendingRequestId = requestId;
   if (status) status.textContent = "Android-Verbindung wird geprüft …";
@@ -167,6 +191,7 @@ window.smutPrototype = {
   isLoaded: () => editor !== null,
   getZoom: () => currentZoom,
   getPageCount: () => container?.querySelectorAll(".ce-page-container canvas").length ?? 0,
+  setPageTestFixture,
 };
 updateZoomControls();
 requestHandshake("startup");
