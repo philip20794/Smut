@@ -7,8 +7,8 @@
 - **Stand:** 2026-11-13
 - **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 abgeschlossen, F-02 (startbare Android-App) als Nächstes. Noch keine App, CI oder APK.
 - **Meilenstein:** `P0 – Projektgerüst und Cloud-Build`
-- **Aktive Aufgabe:** keine; F-01 abgeschlossen
-- **Nächste ausführbare Aufgabe:** `F-02` – minimale startbare Android-App einschließlich Gradle Wrapper
+- **Aktive Aufgabe:** `F-02` – Android-Grundprojekt und Cloud-Buildnachweis
+- **Nächste ausführbare Aufgabe:** `F-02` abschließen: Android-App kompilieren, Smoke-Test und APK verifizieren
 - **Abgeschlossene Aufgaben:** **1 / 35 (2,9 %)**; ausschließlich Aufgaben mit `DONE` zählen.
 - **Letzter verifizierter grüner CI-Lauf:** keiner; noch keine GitHub Actions Workflows.
 - **Letzte geprüfte APK:** keine.
@@ -39,7 +39,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | Phase | Task-ID | Status | Prüfbeleg / Blocker |
 | --- | --- | --- | --- |
 | P0 | F-01 | DONE | [Baseline-Commit](https://github.com/philip20794/Smut/commit/5801f814e619999645b658fdd9930b02c5fb00c1), [Build-Doku](BUILD.md); alle F-01-Dateien auf `main` geprüft, kein Build erwartet |
-| P0 | F-02 | TODO | – |
+| P0 | F-02 | IN_PROGRESS | Compose-Startprojekt, Gradle Wrapper und minimaler Cloud-Build werden eingerichtet; Prüfbericht steht aus |
 | P0 | F-03 | TODO | – |
 | P0 | F-04 | TODO | – |
 | P0 | F-05 | TODO | – |
