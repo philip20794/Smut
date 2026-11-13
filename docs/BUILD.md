@@ -1,21 +1,21 @@
 # F-01 – Projektstruktur, Toolchain und Buildkonventionen
 
-**Stand: 2026-11-13.** Dies ist die verbindliche Baseline für [F-01](IMPLEMENTATION_PLAN.md). **Noch keine ausführbare Android-App vorhanden.** F-02 ergänzt die Gradle-Projektdateien und den Wrapper; F-03 ergänzt die lokale TypeScript-WebView-App. Die unten aufgeführten Buildbefehle sind daher **zukünftige CI-Befehle, keine bereits erfolgreich ausgeführten Tests**.
+**Stand: 2026-11-13.** Dies ist die verbindliche Baseline für [F-01](IMPLEMENTATION_PLAN.md). **F-02 ist umgesetzt und in GitHub Actions erfolgreich gebaut und getestet.** F-03 ergänzt die lokale TypeScript-WebView-App. Android-Buildbefehle sind ausführbar; die npm-Kommandos bleiben bis F-03 vorbereitet.
 
 ## 1. Projektstruktur
 
 | Pfad | Aufgabe / Stand |
 | --- | --- |
-| `app/` | Android-App mit Kotlin und Jetpack Compose; Modulaufbau **F-02** |
+| `app/` | Minimale startbare Android-App mit Kotlin und Jetpack Compose; **F-02 erledigt** |
 | `editor/` | offline gebündelte TypeScript-Buchseiten-UI; Build **F-03** |
 | `gradle/libs.versions.toml` | zentrale Plugin-Versionen für das kommende Gradle-Projekt; **F-01** |
 | `.node-version` | exakt gepinnte Node-Version für spätere Builds; **F-01** |
 | `.gitignore` und `.editorconfig` | Build-, Sicherheits- und Formatierungsregeln; **F-01** |
 | `docs/` | Produkt, Architektur, Aufgaben, Fortschritt und Entscheidungen |
-| `.github/workflows/` | noch nicht vorhanden; GitHub Actions **F-04/F-05/F-06** |
-| `gradle/wrapper/` und `gradlew` | noch nicht vorhanden; Wrapper **F-02**, inklusive signierbarem/checksummierbarem JAR |
+| `.github/workflows/android-bootstrap.yml` | Minimaler erfolgreicher Cloud-Build; Erweiterung um vollständige CI/Emulator in **F-04 bis F-06** |
+| `gradle/wrapper/`, `gradlew`, `gradlew.bat` | Offizieller Gradle-8.13-Wrapper inklusive JAR und SHA-256-Verifikation; **F-02 erledigt** |
 
-Keine Android-/TypeScript-Quelldateien oder erzeugten Binärdateien wurden in F-01 angelegt. Git speichert keine leeren Ordner; die zwei Modul-README-Dateien reservieren deren Verzeichnisse.
+F-01 hat zunächst die Ordner reserviert. F-02 hat Android-Kotlin-Quellcode, Manifest, Ressourcen und einen JUnit-Test ergänzt. Ein TypeScript-Editor und WebView sind noch nicht vorhanden. Generierte APKs gehören ausschließlich in Actions-Artefakte, nicht in den Git-Quellbaum.
 
 ## 2. Versionierte Baseline
 
@@ -32,7 +32,7 @@ Keine Android-/TypeScript-Quelldateien oder erzeugten Binärdateien wurden in F-
 | npm | **npm (mit gepinntem Node geliefert)** | F-03 `package-lock.json` und ggf. `packageManager` | `npm ci` statt nichtdeterministischem `npm install` in CI |
 | TypeScript | **5.9.3 als Startkandidat** | erst F-03 `editor/package.json` und Lockfile | vor Festlegung gegen Editor-Toolchain testen |
 
-Die Werte sind absichtlich konservativ und **noch nicht durch einen tatsächlichen Build validiert**. Die Weiterentwicklung von Jetpack Compose/AndroidX darf in F-02 eine dokumentierte Anpassung auslösen (mit aktualisiertem Versionskatalog und ADR). Keine wildcard-/`latest`-Versionen in CI oder Releasekonfiguration.
+Die Android-Werte wurden mit dem grünen F-02-Cloud-Build bestätigt ([Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967)). Das betrifft AGP/Kotlin/JDK, SDK 36 sowie Compose BOM 2025.09.00 und Activity Compose 1.11.0. Die Node/TypeScript-Konfiguration wird erst in F-03 im Build getestet. Keine wildcard-/`latest`-Versionen in CI oder Releasekonfiguration.
 
 **Quellen für die Kompatibilitätsentscheidung:**
 - [Android Gradle Plugin 8.13 – JDK 17, Gradle 8.13, API 36](https://developer.android.com/build/releases/agp-8-13-0-release-notes)
@@ -46,7 +46,7 @@ Die Werte sind absichtlich konservativ und **noch nicht durch einen tatsächlich
 - App-Anzeigename: `Smut`
 - Kotlin-`namespace` und reguläre `applicationId`: `io.github.philip20794.smut`
 - Entwicklerpaket: `io.github.philip20794.smut.dev` über `applicationIdSuffix = ".dev"` (spätere parallele Installation)
-- `versionCode` beginnt bei **1**, `versionName` bei **0.1.0-dev** (in F-02 umsetzen)
+- `versionCode = 1`, Basis-`versionName = 0.1.0-dev`; Debug-Build zusätzlich Suffix `-debug`
 - Schlüssel für die Release-Signierung **niemals** im Git-Repository speichern; die Einrichtung folgt in R-01.
 - `applicationId` nach öffentlicher Auslieferung nicht beiläufig ändern: Sonst erscheinen Updates auf Android als andere App.
 
@@ -61,7 +61,7 @@ Die Paketkennung ist für ein neues, rein sideload-basiertes Projekt als stabile
 - Kein Konto und keine externen Runtime-Abhängigkeiten in der fertigen App. GitHub-/Maven-/npm-Zugriff während des Builds ist erlaubt.
 - Android/Compose/Gradle/Kotlin behalten ihre jeweiligen Originallizenzen. **Für Smut selbst wurde noch keine Projektlizenz festgelegt**; das öffentliche GitHub-Repository ist deshalb nicht automatisch mit einer Open-Source-Lizenz versehen. Bibliothekslizenzen und gebündelte Fonts werden vor Aufnahme geprüft (E-01, P5).
 
-## 5. Geplante Build- und Testbefehle (ab F-02/F-03)
+## 5. Build- und Testbefehle (Android ab F-02, Editor ab F-03)
 
 ```bash
 # Ab F-02: Android Build und Tests
@@ -78,11 +78,11 @@ npm test
 npm run build
 ```
 
-**Derzeit nicht ausführbar:** `gradlew` und `editor/package.json` existieren noch nicht. F-02 muss den Gradle Wrapper inklusive Wrapper-JAR und eine startbare App auf `main` bereitstellen. F-03 muss `package.json`, Lockfile und Scripts erstellen; danach werden die npm-Befehle verbindlich.
+**Verifiziert:** Der Android-Workflow hat `:app:testDebugUnitTest`, `:app:lintDebug` und `:app:assembleDebug` erfolgreich ausgeführt. Die Debug-APK und Testreports sind im [Actions-Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) verfügbar. **Noch nicht ausführbar:** die npm-/TypeScript-Befehle; `editor/package.json`, Lockdatei und Scripts folgen in F-03.
 
 ## 6. Cloud-only Betrieb
 
-1. **F-02:** Android-Grundgerüst auf `main` committen; Gradle Wrapper aus GitHub-Runner/zugelassener Entwicklungsumgebung erzeugen (keine manuell erfundenen Wrapper-Binärdateien).
+1. **F-02 erledigt:** Android-Grundgerüst mit Compose auf `main`, offizieller Gradle Wrapper durch GitHub Actions generiert und mit veröffentlichter SHA-256-Prüfsumme validiert. Der erste Cloud-Unit-Test, Lint und Debug-APK-Build sind grün.
 2. **F-03:** lokale TypeScript-Assets inklusive Lockdatei erstellen und ohne Internet in WebView laden.
 3. **F-04:** GitHub Actions checkt Code aus, setzt JDK 17/Node aus `.node-version`/Android SDK auf, führt die obigen Checks und einen Build durch.
 4. **F-05:** Emulator-Start-/UI-Smoke-Test im Workflow.
@@ -98,3 +98,11 @@ Für den Nutzer ist keine lokale Shell und kein Rechner notwendig. Codex/GitHub 
 - Keine Konfiguration legt vor P1 den späteren Rich-Text-Editor oder die PDF-Library endgültig fest.
 - **Keine erfolgreiche Kompilierung, kein Emulatorlauf und keine APK behauptet.** Diese Prüfungen gehören F-02 bis F-06.
 - Nach erfolgreicher Dateiprüfung den F-01-Status und die nächste Task `F-02` in [PROGRESS.md](PROGRESS.md) fortschreiben.
+
+## 8. Nachweis für F-02 (13.11.2026)
+
+- [Android-Basiscommit](https://github.com/philip20794/Smut/commit/bd859c9357d24db4ed11a38b0c06407c6f9b6859)
+- [Korrektur Android-SDK-Setup](https://github.com/philip20794/Smut/commit/ea85d41e72b226d014e65bdd806befa2cdb7d729): alte SDK-Komponente `tools` aus der Setup-Action entfernt.
+- [Offizieller Gradle Wrapper im Git](https://github.com/philip20794/Smut/commit/954d2e89e98117377d09f047f46bbeca3cf073e4) nach Wrapper-JAR-SHA-256-Prüfung.
+- [Erfolgreicher GitHub-Actions-Lauf](https://github.com/philip20794/Smut/actions/runs/43441065967): `testDebugUnitTest`, `lintDebug`, `assembleDebug` alle bestanden; Artefakte `smut-f02-test-reports` und `smut-f02-debug-ea85d41e72b226d014e65bdd806befa2cdb7d729`.
+- APK ist **eine Debug-Testversion**, keine signierte Release-Version. In ihr gibt es erst eine Startansicht; das Buchschreiben kommt später. Emulator-UI-Tests werden in F-05 ergänzt.

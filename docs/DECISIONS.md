@@ -52,3 +52,13 @@ Hier werden langlebige technische Entscheidungen festgehalten. Änderungen nicht
 - **Folgen:** Gradle Wrapper samt Wrapper-JAR in F-02 einchecken, Lockdatei in F-03; Secrets/APKs bleiben aus dem Git-Quellbaum. Editor- und PDF-Bibliotheksentscheid bleiben bis E-04 offen.
 - **Dokumentation:** [docs/BUILD.md](BUILD.md).
 - **Offizielle Kompatibilitätsquellen:** [AGP 8.13](https://developer.android.com/build/releases/agp-8-13-0-release-notes), [Kotlin Releases](https://kotlinlang.org/docs/releases.html), [Node 24 LTS](https://nodejs.org/en/blog/release/v24.22.3).
+
+## ADR-007 – F-02: erster erfolgreicher Android-/GitHub-Actions-Build
+
+- **Datum:** 2026-11-13
+- **Status:** umgesetzt und durch GitHub Actions bestätigt
+- **Entscheidung:** Kotlin/Compose-Grundapp mit `minSdk 26`, `compileSdk/targetSdk 36`, AGP 8.13.2, Kotlin 2.2.21, Gradle 8.13, JDK 17 sowie Compose BOM 2025.09.00 und Activity Compose 1.11.0. Debug-`applicationIdSuffix = ".dev"`.
+- **Wrapper:** Gradle 8.13 über GitHub Actions offiziell erzeugt, anhand publiziertem Wrapper-JAR-SHA-256-Wert `81a82aaea5abcc8ff68b3dfcb58b3c3c429378efd98e7433460610fecd7ae45f` geprüft und in Git committed. Distribution SHA-256 ist in `gradle-wrapper.properties` gepinnt.
+- **Buildnachweis:** [GitHub Actions 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967), alle drei Prüfschritte Unit-Test, Lint, APK-Build erfolgreich; Testreport und Debug-APK veröffentlicht.
+- **Bootstrap:** `.github/workflows/android-bootstrap.yml` stellt minimale CI für F-02 bereit. In F-04 sind Sicherheits-/Workflow-Härtung, vollständige Checks und ggf. Upgrade der im Log als Node-20-Altversion gewarnten Actions vorgesehen.
+- **Abgrenzung:** Kein Emulator-/Echtgerätetest und keine signierte Release-APK. Die Startansicht ist ausdrücklich noch kein WYSIWYG-Bucheditor; F-03 ergänzt WebView, P1 prüft die Editorbibliothek.

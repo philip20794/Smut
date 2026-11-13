@@ -59,7 +59,7 @@ Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffä
 
 ## Implementierung und Projektstand
 
-**F-01 (Projektbaseline) ist dokumentiert; Android-App-Code und automatische Builds folgen ab F-02.** Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
+**F-01 und F-02 sind abgeschlossen.** Ein Kotlin-/Compose-Startbildschirm ist gebaut und getestet; der eigentliche Bucheditor folgt in späteren Schritten. Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
 
 ## Dokumentation
 
@@ -74,4 +74,8 @@ Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffä
 - [Technische Entscheidungen](docs/DECISIONS.md)
 - [Projektstruktur, Toolchains und Buildkonventionen](docs/BUILD.md)
 
-Der Implementierungsplan ist vorhanden. Unbestätigte technische Annahmen bleiben bis zum P1-Machbarkeitsnachweis als Prüfaufgaben gekennzeichnet. Die erste Projektbaseline ist eingecheckt; Android-App, Wrapper, Tests, GitHub-Actions-Workflows und automatische APK-Erstellung stehen noch aus.
+Der Implementierungsplan ist vorhanden. Unbestätigte technische Annahmen bleiben bis zum P1-Machbarkeitsnachweis als Prüfaufgaben gekennzeichnet. Ein Android-Grundprojekt, der offizielle Gradle Wrapper, ein Unit-Test und ein erster erfolgreicher [GitHub-Actions-Build](https://github.com/philip20794/Smut/actions/runs/43441065967) sind vorhanden. Der lokale TypeScript-Editor, vollständige CI, Emulator-Tests und signierte Releases stehen noch aus.
+
+## Erste Android-Testversion (F-02)
+
+Unter [GitHub Actions – Build 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) liegen die Debug-APK (`smut-f02-debug-...`) und der JUnit-Testbericht als Artefakte. Die APK zeigt nur die erste Startansicht und ist **noch kein funktionierender Bucheditor**. Spätere CI-Schritte werden die Verteilung und Updates vereinheitlichen.

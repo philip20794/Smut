@@ -10,4 +10,4 @@ F-02: Kotlin/Jetpack Compose-App mit absichtlich einfacher, ehrlicher Startansic
 
 Build: `./gradlew :app:assembleDebug` · Unit-Test: `./gradlew :app:testDebugUnitTest`.
 
-Der erste Cloud-Build wird durch den Bootstrap-Workflow angelegt. Sobald die Wrapper-JAR aus dem geprüften Gradle-8.13-Runner in `main` liegt, funktioniert der Wrapper auf weiteren Rechnern direkt. Die eigentlichen Editor-WebView-Assets folgen in F-03, die vollständige CI in F-04, Emulator-Tests in F-05.
+Der erste Cloud-Build ist grün: [GitHub Actions 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967). Der geprüfte offizielle Gradle-Wrapper einschließlich JAR wurde [in `main` committed](https://github.com/philip20794/Smut/commit/954d2e89e98117377d09f047f46bbeca3cf073e4). Die erzeugte Debug-APK ist als Workflow-Artefakt verfügbar. Editor-WebView-Assets folgen in F-03, vollständige CI in F-04 und Emulator-Tests in F-05.
