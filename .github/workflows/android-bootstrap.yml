@@ -130,7 +130,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: |
-            set -euo pipefail
+            set -eu
             mkdir -p app/build/reports/emulator
             adb shell svc wifi disable
             adb shell svc data disable
