@@ -133,7 +133,9 @@ function setPageTestFixture(enabled: boolean): void {
  * existing hit-testing/selection path. No Javascript test calls this handler.
  */
 let lastCanvasTouch: { x: number; y: number; time: number } | null = null;
+let isNativeSelectionDrag = false;
 container?.addEventListener("touchstart", event => {
+  isNativeSelectionDrag = false;
   const target = event.target;
   const touch = event.touches.item(0);
   if (event.touches.length !== 1 || !touch || !(target instanceof HTMLCanvasElement)
@@ -141,24 +143,45 @@ container?.addEventListener("touchstart", event => {
     lastCanvasTouch = null;
     return;
   }
-  lastCanvasTouch = {
-    x: touch.clientX,
-    y: touch.clientY,
-    time: Date.now(),
-  };
+  lastCanvasTouch = { x: touch.clientX, y: touch.clientY, time: Date.now() };
 }, { passive: true });
 container?.addEventListener("touchmove", event => {
   const touch = event.touches.item(0);
-  if (!lastCanvasTouch || event.touches.length !== 1 || !touch) {
+  if (event.touches.length !== 1 || !touch) {
     lastCanvasTouch = null;
+    isNativeSelectionDrag = false;
     return;
   }
-  if (Math.hypot(touch.clientX - lastCanvasTouch.x, touch.clientY - lastCanvasTouch.y) > 14) {
+  if (isNativeSelectionDrag) {
+    // Only a confirmed long-press selects text. Normal swipe scrolling is
+    // untouched; prevent native pan only while extending that selection.
+    event.preventDefault();
+    const hit = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (hit instanceof HTMLCanvasElement && hit.closest(".ce-page-container")) {
+      hit.dispatchEvent(new MouseEvent("mousemove", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        buttons: 1,
+      }));
+    }
+    return;
+  }
+  if (lastCanvasTouch &&
+      Math.hypot(touch.clientX - lastCanvasTouch.x, touch.clientY - lastCanvasTouch.y) > 14) {
     lastCanvasTouch = null;
   }
-}, { passive: true });
-container?.addEventListener("touchend", () => { lastCanvasTouch = null; });
-container?.addEventListener("touchcancel", () => { lastCanvasTouch = null; });
+}, { passive: false });
+container?.addEventListener("touchend", () => {
+  lastCanvasTouch = null;
+  isNativeSelectionDrag = false;
+});
+container?.addEventListener("touchcancel", () => {
+  lastCanvasTouch = null;
+  isNativeSelectionDrag = false;
+});
 container?.addEventListener("contextmenu", event => {
   if (!editor || !window.SmutAndroid || !lastCanvasTouch) return;
   if (Date.now() - lastCanvasTouch.time > 3500) return;
@@ -179,6 +202,8 @@ container?.addEventListener("contextmenu", event => {
       detail: type === "dblclick" ? 2 : 1,
     }));
   }
+  const selection = editor.command.getRange();
+  isNativeSelectionDrag = Boolean(selection && selection.endIndex > selection.startIndex);
 });
 
 function requestHandshake(requestId: string): void {
