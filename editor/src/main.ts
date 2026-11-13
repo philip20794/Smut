@@ -13,6 +13,7 @@ interface CanvasEditor {
     getValue(): { data: PrototypeData };
     getRange(): { startIndex: number; endIndex: number } | null;
     getRangeText(): unknown;
+    executeSelectAll(): void;
     executePageScale(scale: number): void;
     executeSetValue(data: Partial<PrototypeData>): void;
   };
@@ -35,6 +36,7 @@ declare global {
       getZoom(): number;
       getPageCount(): number;
       getSelection(): { startIndex: number; endIndex: number; hasSelection: boolean; text: string } | null;
+      selectAllTestFixture(): boolean;
       setPageTestFixture(enabled: boolean): void;
     };
   }
@@ -265,6 +267,13 @@ window.smutPrototype = {
       hasSelection: range.startIndex >= 0 && range.endIndex > range.startIndex,
       text: typeof selectedText === "string" ? selectedText : JSON.stringify(selectedText ?? null),
     };
+  },
+  // Test-only proof that the editor can select a range spanning A5 pages.
+  // Never expose this operation for a real saved manuscript.
+  selectAllTestFixture: () => {
+    if (!editor || !testDocumentBackup || !suppressTestAutoSave) return false;
+    editor.command.executeSelectAll();
+    return true;
   },
   setPageTestFixture,
 };
