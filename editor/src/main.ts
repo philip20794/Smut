@@ -147,7 +147,7 @@ function forwardNativeSelectionDrag(x: number, y: number): void {
   if (!container || !isNativeSelectionDrag) return;
   let target: HTMLCanvasElement | null = null;
   let distance = Number.POSITIVE_INFINITY;
-  for (const canvas of container.querySelectorAll<HTMLCanvasElement>(".ce-page-container canvas")) {
+  for (const canvas of Array.from(container.querySelectorAll<HTMLCanvasElement>(".ce-page-container canvas"))) {
     const r = canvas.getBoundingClientRect();
     if (!r.width || !r.height || r.bottom < 0 || r.top > window.innerHeight) continue;
     const dx = Math.max(r.left - x, 0, x - r.right);
