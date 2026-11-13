@@ -345,6 +345,96 @@ class OfflineEditorSmokeTest {
         )
     }
 
+    /**
+     * E-03: the actual Android finger must select across two distinct A5 page
+     * canvases. No JavaScript range setter is allowed; the 75-paragraph fixture
+     * must be restored even when a gesture assertion fails.
+     */
+    @Test
+    fun nativeLongPressDragSelectsAcrossTwoA5PagesWithoutPersistingFixture() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        ensureEditorWindowFocused()
+        val savedManuscript = evaluate("window.smutPrototype?.getText()")
+        try {
+            evaluate("window.smutPrototype?.setPageTestFixture(true)")
+            awaitJavaScriptValue("window.smutPrototype?.getPageCount() >= 2", "true", exact = true)
+
+            // Center the seam between the first two real canvases in the
+            // viewport, so both the origin and destination can be touched.
+            evaluate(
+                """(() => {
+                    const pages = document.querySelectorAll('.ce-page-container canvas');
+                    const a = pages[0]?.getBoundingClientRect();
+                    const b = pages[1]?.getBoundingClientRect();
+                    if (!a || !b) return false;
+                    window.scrollBy(0, (a.bottom + b.top) / 2 - innerHeight * 0.5);
+                    return true;
+                })()"""
+            )
+            val cssStartX = evaluate(
+                "(() => { const r=document.querySelectorAll('.ce-page-container canvas')[0].getBoundingClientRect(); return r.left + Math.min(85,r.width*0.25); })()"
+            ).toDouble()
+            val cssStartY = evaluate(
+                "(() => { const r=document.querySelectorAll('.ce-page-container canvas')[0].getBoundingClientRect(); return r.bottom - Math.min(85,r.height*0.18); })()"
+            ).toDouble()
+            val cssEndX = evaluate(
+                "(() => { const r=document.querySelectorAll('.ce-page-container canvas')[1].getBoundingClientRect(); return r.left + Math.min(90,r.width*0.26); })()"
+            ).toDouble()
+            val cssEndY = evaluate(
+                "(() => { const r=document.querySelectorAll('.ce-page-container canvas')[1].getBoundingClientRect(); return r.top + Math.min(95,r.height*0.2); })()"
+            ).toDouble()
+            assertEquals(
+                "Start must hit page 1 canvas", "true",
+                evaluate("document.elementFromPoint($cssStartX,$cssStartY) === document.querySelectorAll('.ce-page-container canvas')[0]")
+            )
+            assertEquals(
+                "End must hit a DIFFERENT page 2 canvas", "true",
+                evaluate("document.elementFromPoint($cssEndX,$cssEndY) === document.querySelectorAll('.ce-page-container canvas')[1]")
+            )
+            val viewportWidth = evaluate("innerWidth").toDouble()
+            var startX = -1
+            var startY = -1
+            var endX = -1
+            var endY = -1
+            scenarioRule.scenario.onActivity { activity ->
+                val webView = findWebView(activity.window.decorView)!!
+                val origin = IntArray(2)
+                webView.getLocationOnScreen(origin)
+                val ratio = webView.width / viewportWidth
+                startX = origin[0] + (cssStartX * ratio).toInt()
+                startY = origin[1] + (cssStartY * ratio).toInt()
+                endX = origin[0] + (cssEndX * ratio).toInt()
+                endY = origin[1] + (cssEndY * ratio).toInt()
+            }
+            assertTrue("Native cross-page drag must dispatch",
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+                    .drag(startX, startY, endX, endY, 100))
+            try {
+                awaitJavaScriptValue(
+                    "(window.smutPrototype?.getSelection()?.endIndex - window.smutPrototype?.getSelection()?.startIndex) > 85",
+                    "true", exact = true
+                )
+            } catch (failure: AssertionError) {
+                val diagnostic = evaluate(
+                    """JSON.stringify({
+                        range:window.smutPrototype?.getSelection(),
+                        scroll:window.scrollY,
+                        pages:[...document.querySelectorAll('.ce-page-container canvas')]
+                            .slice(0,2).map(c => c.getBoundingClientRect().toJSON())
+                    })"""
+                )
+                throw AssertionError(
+                    "Cross-page native drag $startX,$startY -> $endX,$endY failed; $diagnostic; ${failure.message}",
+                    failure
+                )
+            }
+        } finally {
+            evaluate("window.smutPrototype?.setPageTestFixture(false)")
+        }
+        assertEquals("Native multi-page touch selection must preserve real book",
+            savedManuscript, evaluate("window.smutPrototype?.getText()"))
+    }
+
     private fun selectWordByNativeLongPress() {
         awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
         ensureEditorWindowFocused()
