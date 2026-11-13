@@ -45,3 +45,17 @@
 - [ ] Vor dem vollständigen Implementierungsplan existiert ein dokumentierter Technologietest für Cursor, Touch-Selektion, Tastatur und PDF-Export.
 - [ ] Abweichungen und nicht bestandene Tests werden ausdrücklich festgehalten.
 - [ ] Der Implementierungsplan verknüpft konkrete Arbeitsschritte mit diesen Abnahmekriterien.
+
+## GitHub-only Entwicklung, CI und APK-Verteilung
+
+- [ ] Build, alle Pflichtprüfungen und APK-Veröffentlichung sind über GitHub Actions ohne lokalen Entwicklungsrechner ausführbar.
+- [ ] Jeder Push auf `main` und jeder Pull Request (falls verwendet) startet reproduzierbare Checks.
+- [ ] Kotlin-, TypeScript-, Modell- und Integrationstests sind bei relevantem Code verpflichtend; die Testresultate werden in GitHub angezeigt.
+- [ ] Kritische Android-Bedienabläufe werden auf einem GitHub-gehosteten Emulator getestet.
+- [ ] Schlägt ein Pflichtcheck fehl, wird keine APK als erfolgreich geprüfte Version veröffentlicht.
+- [ ] Nach erfolgreichem `main`-Build steht eine installierbare Test-APK mit nachvollziehbarer Commit-ID unter GitHub Actions bereit.
+- [ ] Ein expliziter Versionstag bzw. Release-Auslöser erzeugt nach vollständiger Prüfung eine signierte, dauerhaft in GitHub Releases herunterladbare APK.
+- [ ] Signaturschlüssel und Passwörter werden nicht in Git eingecheckt; der Schlüssel wird sicher gesichert und ermöglicht Updates bereits installierter Versionen.
+- [ ] CI-Fehler sind ohne lokalen Rechner durch Logs, Testberichte und bei Bedarf Screenshots diagnostizierbar.
+- [ ] Die App kann auf einem realen Android-Smartphone aus der veröffentlichten APK installiert und überprüft werden.
+- [ ] Ein technischer Fehler in CI ist dokumentiert und wird vor Abnahme des Arbeitspakets behoben; Actions allein behebt keine Fehler automatisch.
