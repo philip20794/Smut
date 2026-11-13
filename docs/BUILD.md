@@ -116,3 +116,9 @@ Für den Nutzer ist keine lokale Shell und kein Rechner notwendig. Codex/GitHub 
 - JVM-/Node-Tests prüfen Nachrichtenschema, URL-Allowlist und negative Fälle. Die reale WebView-Laufzeit gehört zum Emulator-Test F-05.
 
 **F-03-Abnahme (13.11.2026):** [Commit d85503b](https://github.com/philip20794/Smut/commit/d85503bfa990b31ad8cc6bc63253e680138798d1), [GitHub Actions 43445552751 – success](https://github.com/philip20794/Smut/actions/runs/43445552751). APK-Artefakt `smut-f03-debug-d85503bfa990b31ad8cc6bc63253e680138798d1`, Testberichte `smut-f03-test-reports`. Installations-/WebView-Smoketest am Gerät ist **nicht** Teil von F-03 und nicht bestanden.
+
+## 10. F-04 – Pflicht-CI
+
+- [Grüner Push-Workflow 43447739353](https://github.com/philip20794/Smut/actions/runs/43447739353): Editor-Typprüfung/Lint/Node-Tests, Android-Unit-Tests/Lint und Build.
+- [Rote Negativprobe 43447797215](https://github.com/philip20794/Smut/actions/runs/43447797215) in [nicht gemergtem PR #1](https://github.com/philip20794/Smut/pull/1): absichtlich fehlschlagender Node-Test führt zu rotem Editor-Job; Android-Job wird übersprungen.
+- Auslöser: `push` auf `main`, `pull_request` gegen `main`, `workflow_dispatch`; keine auf Dateien beschränkten Filter. Artifacts erst nach erfolgreichen Pflichtprüfungen. Emulator-Smoke und geprüftes APK-Gate folgen in F-05/F-06.
