@@ -92,7 +92,12 @@ class OfflineEditorSmokeTest {
             if (if (exact) last == expected else last.contains(expected)) return
             Thread.sleep(250)
         }
-        assertTrue("WebView $script: expected $expected, received $last", false)
+        val editorError = evaluate("document.getElementById('editor-status')?.textContent")
+        val bridgeState = evaluate("document.getElementById('bridge-status')?.textContent")
+        assertTrue(
+            "WebView $script: expected $expected, received $last; editor=$editorError; bridge=$bridgeState",
+            false
+        )
     }
 
     private fun evaluate(script: String): String {
