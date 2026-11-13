@@ -183,6 +183,29 @@ class OfflineEditorSmokeTest {
             evaluate("window.smutPrototype?.getText()"))
     }
 
+    @Test
+    fun longGermanManuscriptFlowsAcrossA5PagesWithoutChangingSavedBook() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        val original = evaluate("window.smutPrototype?.getText()")
+        try {
+            evaluate("window.smutPrototype?.setPageTestFixture(true)")
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getPageCount() >= 2",
+                "true",
+                exact = true
+            )
+            awaitJavaScriptValue("window.smutPrototype?.getText()", "Absatz 75")
+            assertTrue(
+                "A5 page flow must render multiple actual editor canvases",
+                evaluate("window.smutPrototype?.getPageCount()").toInt() >= 2
+            )
+        } finally {
+            evaluate("window.smutPrototype?.setPageTestFixture(false)")
+        }
+        assertEquals("Mehrseitiger Test darf Manuskript nicht überschreiben",
+            original, evaluate("window.smutPrototype?.getText()"))
+    }
+
     /**
      * Emulator setup and the Google keyboard may briefly steal window focus.
      * Reorder the ActivityScenario-owned task to the front instead of
