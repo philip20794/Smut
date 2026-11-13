@@ -15,7 +15,7 @@ Testdatei: `app/src/androidTest/java/io/github/philip20794/smut/OfflineEditorSmo
 - Speichern über die WebView-Schaltfläche, Activity neu erstellen, gespeicherten Text vergleichen.
 - Vorhandener Offline-Smoke bestätigt Editorinitialisierung, Handshake, Laden und atomare Speicherung.
 
-Der Test nutzt echte Android-Touchereignisse und die IME-Eingabeverbindung, aber keine physische Android-Tastatur. Die Langzeitstabilität der Tastaturvorschläge auf einem konkreten Smartphone bleibt der Geräteabnahme E-05 vorbehalten. **E-02 ist erst nach grünem vollständigem CI-Lauf mit diesen Assertions abgeschlossen.**
+Der Test nutzt echte Android-Touchereignisse und die IME-Eingabeverbindung, aber keine physische Android-Tastatur. Die Langzeitstabilität der Tastaturvorschläge auf einem konkreten Smartphone bleibt der Geräteabnahme E-05 vorbehalten. **E-02 abgeschlossen:** Der vollständige [CI-Lauf 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666) hat die Android-IME-/Kompositionstests, Emulator-Smoke, Tests und APK-Gate bestanden. Der reale Smartphone-Test E-05 bleibt ausdrücklich offen.
 
 ## Prüfschritte am Smartphone (E-05; noch nicht als bestanden markieren)
 
