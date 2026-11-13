@@ -183,6 +183,76 @@ class OfflineEditorSmokeTest {
             evaluate("window.smutPrototype?.getText()"))
     }
 
+    /**
+     * E-03: a real long-press must select text on the Canvas page. This is a
+     * native Android touch gesture, not a JavaScript range injection.
+     * If the candidate editor has no mobile selection gesture, keep this gate
+     * red and evaluate an accessible alternative before claiming support.
+     */
+    @Test
+    fun longPressOnBookPageSelectsTextWithoutMutatingManuscript() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        ensureEditorWindowFocused()
+        val originalText = evaluate("window.smutPrototype?.getText()")
+        evaluate(
+            """(() => {
+                window.__smutSelectionTouches = {touch:0, pointer:0, context:0};
+                const canvas = document.querySelector('.ce-page-container canvas');
+                canvas?.addEventListener('touchstart', () => window.__smutSelectionTouches.touch++, {capture:true});
+                canvas?.addEventListener('pointerdown', () => window.__smutSelectionTouches.pointer++, {capture:true});
+                canvas?.addEventListener('contextmenu', () => window.__smutSelectionTouches.context++, {capture:true});
+                return !!canvas;
+            })()"""
+        )
+        val cssX = evaluate(
+            "(() => { const r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.left + Math.min(85, r.width*0.25) : -1; })()"
+        ).toDouble()
+        val cssY = evaluate(
+            "(() => { const r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.top + Math.min(42, r.height*0.1) : -1; })()"
+        ).toDouble()
+        assertTrue("Canvas text target must exist", cssX >= 0 && cssY >= 0)
+        val viewportWidth = evaluate("window.innerWidth").toDouble()
+        var x = -1
+        var y = -1
+        var target = ""
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            val origin = IntArray(2)
+            webView.getLocationOnScreen(origin)
+            val ratio = webView.width / viewportWidth
+            x = origin[0] + (cssX * ratio).toInt()
+            y = origin[1] + (cssY * ratio).toInt()
+            target = "origin=${origin.toList()}, webView=${webView.width}x${webView.height}, ratio=$ratio"
+        }
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        // Stationary native swipe held past Android's long-press timeout.
+        assertTrue("Native long-press at $x,$y must dispatch", device.swipe(x, y, x, y, 85))
+        try {
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getSelection()?.hasSelection",
+                "true", exact = true
+            )
+        } catch (failure: AssertionError) {
+            val diagnostic = evaluate(
+                """JSON.stringify({
+                    gesture:window.__smutSelectionTouches,
+                    range:window.smutPrototype?.getSelection(),
+                    active:document.activeElement?.className,
+                    focused:document.hasFocus(),
+                    canvas:document.querySelector('.ce-page-container canvas')?.getBoundingClientRect()?.toJSON()
+                })"""
+            )
+            throw AssertionError(
+                "Long-press did not select text at $x,$y ($target); state=$diagnostic; ${failure.message}",
+                failure
+            )
+        }
+        assertEquals(
+            "Long-press selection must not modify the saved manuscript",
+            originalText, evaluate("window.smutPrototype?.getText()")
+        )
+    }
+
     @Test
     fun longGermanManuscriptFlowsAcrossA5PagesWithoutChangingSavedBook() {
         awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
