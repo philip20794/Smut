@@ -15,17 +15,19 @@
     <main class="screen">
       <header class="editor-header">
         <span class="title">Smut <span class="subtle">A5-Prototyp</span></span>
-        <div class="zoom-controls" role="group" aria-label="Zoom der Buchansicht">
-          <button type="button" id="zoom-out" aria-label="Verkleinern">−</button>
-          <output id="zoom-value" aria-live="polite">60 %</output>
-          <button type="button" id="zoom-in" aria-label="Vergrößern">+</button>
+        <div class="header-actions">
+          <button id="save-button" class="header-save" type="button">Speichern</button>
+          <div class="zoom-controls" role="group" aria-label="Zoom der Buchansicht">
+            <button type="button" id="zoom-out" aria-label="Verkleinern">−</button>
+            <output id="zoom-value" aria-live="polite">60 %</output>
+            <button type="button" id="zoom-in" aria-label="Vergrößern">+</button>
+          </div>
         </div>
       </header>
       <section class="editor-sheet" aria-label="Editierbare A5-Buchseite">
         <div id="canvas-editor"></div>
       </section>
       <div class="controls">
-        <button id="save-button" type="button">Jetzt speichern</button>
         <button id="recheck-button" type="button">Verbindung erneut prüfen</button>
         <p id="editor-status" role="status" aria-live="polite">Editor wird vorbereitet …</p>
         <p id="bridge-status" role="status">Android-Verbindung wird geprüft …</p>

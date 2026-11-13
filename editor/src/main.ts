@@ -124,6 +124,60 @@ function setPageTestFixture(enabled: boolean): void {
   }
 }
 
+/**
+ * A native Android canvas long-press produces a contextmenu event. Canvas
+ * Editor 1.1.0 handles mouse double-click word selection, but not touch
+ * long-press. Forward only genuine, stationary Android touches to that
+ * existing hit-testing/selection path. No Javascript test calls this handler.
+ */
+let lastCanvasTouch: { x: number; y: number; time: number } | null = null;
+container?.addEventListener("touchstart", event => {
+  const target = event.target;
+  if (event.touches.length !== 1 || !(target instanceof HTMLCanvasElement)
+      || !target.closest(".ce-page-container")) {
+    lastCanvasTouch = null;
+    return;
+  }
+  lastCanvasTouch = {
+    x: event.touches[0].clientX,
+    y: event.touches[0].clientY,
+    time: Date.now(),
+  };
+}, { passive: true });
+container?.addEventListener("touchmove", event => {
+  if (!lastCanvasTouch || event.touches.length !== 1) {
+    lastCanvasTouch = null;
+    return;
+  }
+  const touch = event.touches[0];
+  if (Math.hypot(touch.clientX - lastCanvasTouch.x, touch.clientY - lastCanvasTouch.y) > 14) {
+    lastCanvasTouch = null;
+  }
+}, { passive: true });
+container?.addEventListener("touchend", () => { lastCanvasTouch = null; });
+container?.addEventListener("touchcancel", () => { lastCanvasTouch = null; });
+container?.addEventListener("contextmenu", event => {
+  if (!editor || !window.SmutAndroid || !lastCanvasTouch) return;
+  if (Date.now() - lastCanvasTouch.time > 3500) return;
+  const target = event.target;
+  if (!(target instanceof HTMLCanvasElement) || !target.closest(".ce-page-container")) return;
+  event.preventDefault();
+  const range = editor.command.getRange();
+  if (range && range.endIndex > range.startIndex) return;
+  const { x, y } = lastCanvasTouch;
+  for (const type of ["mousedown", "dblclick"] as const) {
+    target.dispatchEvent(new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: x,
+      clientY: y,
+      button: 0,
+      detail: type === "dblclick" ? 2 : 1,
+    }));
+  }
+});
+
 function requestHandshake(requestId: string): void {
   pendingRequestId = requestId;
   if (status) status.textContent = "Android-Verbindung wird geprüft …";

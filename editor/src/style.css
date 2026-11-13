@@ -20,6 +20,12 @@ body { margin: 0; }
   margin-bottom: 12px;
 }
 .title { font-size: 18px; font-weight: 650; }
+.header-actions { display: flex; align-items: center; gap: 7px; }
+.header-save { min-height: 44px; margin: 0; padding: 8px 10px; font-size: 12px; }
+@media (max-width: 360px) {
+  .editor-header { flex-wrap: wrap; }
+  .header-actions { width: 100%; justify-content: space-between; }
+}
 .zoom-controls { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .zoom-controls button { min-width: 43px; min-height: 44px; margin: 0; }
 .zoom-controls output { width: 48px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
