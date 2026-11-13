@@ -304,7 +304,7 @@ class OfflineEditorSmokeTest {
         try {
             awaitJavaScriptValue(
                 "document.getElementById('$id')?.dataset.smutNativeClicks",
-                "\\"1\\"",
+                "\"1\"",
                 exact = true
             )
         } catch (failure: AssertionError) {
