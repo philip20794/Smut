@@ -1,6 +1,6 @@
 # Lokaler Editorcontainer (`editor/`)
 
-**F-03 implementiert; Cloud-Verifikation über GitHub Actions erforderlich.** TypeScript (5.9.3) wird ohne Rich-Text-Bibliothek zu statischen ES-Modulen kompiliert. Der Android-Gradle-Build installiert die gepinnten npm-Pakete und kopiert `dist/` automatisch als `assets/editor/` in die APK. `dist/` und `node_modules/` gehören nicht ins Git.
+**F-03 umgesetzt und über [GitHub Actions 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751) erfolgreich gebaut und getestet.** TypeScript (5.9.3) wird ohne Rich-Text-Bibliothek zu statischen ES-Modulen kompiliert. Der Android-Gradle-Build installiert die gepinnten npm-Pakete und kopiert `dist/` automatisch als `assets/editor/` in die APK. `dist/` und `node_modules/` gehören nicht ins Git.
 
 ```bash
 cd editor

@@ -1,6 +1,6 @@
 # F-01 – Projektstruktur, Toolchain und Buildkonventionen
 
-**Stand: 2026-11-13.** Dies ist die verbindliche Baseline für [F-01](IMPLEMENTATION_PLAN.md). **F-02 ist in GitHub Actions erfolgreich gebaut und getestet.** F-03 enthält nun den lokalen TypeScript-WebView-Container; die Cloud-Verifikation ist im F-03-Bootstrap-Workflow vorgesehen. Die npm-Kommandos sind implementiert.
+**Stand: 2026-11-13.** Dies ist die verbindliche Baseline für [F-01](IMPLEMENTATION_PLAN.md). **F-02 ist in GitHub Actions erfolgreich gebaut und getestet.** F-03 enthält den lokal gebündelten TypeScript-WebView-Container; der [F-03-Cloud-Build 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751) ist erfolgreich. Die npm-Kommandos sind implementiert.
 
 ## 1. Projektstruktur
 
@@ -32,7 +32,7 @@ F-01 hat zunächst die Ordner reserviert. F-02 hat Android-Kotlin-Quellcode, Man
 | npm | **npm (mit gepinntem Node geliefert)** | F-03 `package-lock.json` und ggf. `packageManager` | `npm ci` statt nichtdeterministischem `npm install` in CI |
 | TypeScript | **5.9.3** | `editor/package.json` und Lockfile | lokale, offline gebündelte JS-/CSS-/HTML-Assets; Rich-Text-Wahl noch offen |
 
-Die Android-Werte wurden mit dem grünen F-02-Cloud-Build bestätigt ([Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967)). Das betrifft AGP/Kotlin/JDK, SDK 36 sowie Compose BOM 2025.09.00 und Activity Compose 1.11.0. Die Node/TypeScript-Konfiguration wird im F-03-Cloud-Build geprüft. Keine wildcard-/`latest`-Versionen in CI oder Releasekonfiguration.
+Die Android-Werte wurden mit dem grünen F-02-Cloud-Build bestätigt ([Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967)). Das betrifft AGP/Kotlin/JDK, SDK 36 sowie Compose BOM 2025.09.00 und Activity Compose 1.11.0. Die Node/TypeScript-Konfiguration ist durch den [F-03-Cloud-Build 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751) bestätigt. Keine wildcard-/`latest`-Versionen in CI oder Releasekonfiguration.
 
 **Quellen für die Kompatibilitätsentscheidung:**
 - [Android Gradle Plugin 8.13 – JDK 17, Gradle 8.13, API 36](https://developer.android.com/build/releases/agp-8-13-0-release-notes)
@@ -78,7 +78,7 @@ npm test
 npm run build
 ```
 
-**Verifiziert:** Der Android-Workflow hat `:app:testDebugUnitTest`, `:app:lintDebug` und `:app:assembleDebug` erfolgreich ausgeführt. Die Debug-APK und Testreports sind im [Actions-Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) verfügbar. **F-03-Quellen vorhanden:** npm-/TypeScript-Befehle und automatische Gradle-Asset-Integration. Der tatsächliche grüne F-03-Workflow muss vor Status `DONE` dokumentiert werden.
+**Verifiziert:** Der Android-Workflow hat `:app:testDebugUnitTest`, `:app:lintDebug` und `:app:assembleDebug` erfolgreich ausgeführt. Die Debug-APK und Testreports sind im [Actions-Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) verfügbar. **F-03 verifiziert:** npm-Typecheck, Sicherheitslint, Node-Bridge-Tests, Kotlin-Unit-Tests/Lint und automatische Gradle-Asset-Integration sind im [grünen Workflow 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751) nachgewiesen.
 
 ## 6. Cloud-only Betrieb
 
@@ -114,3 +114,5 @@ Für den Nutzer ist keine lokale Shell und kein Rechner notwendig. Codex/GitHub 
 - `WebViewAssetLoader` bindet nur das lokale `/assets/editor/`-Verzeichnis ein. Die Android-Manifestdatei erfordert kein `INTERNET`-Recht; HTTPS-Außenaufrufe, Frames, `file://` und `content://` werden blockiert.
 - Die einseitige UI bestätigt den JSON-Handshake `ready` → `ready-ack`. Native API bietet keine Daten-/Dateioperationen; dafür sind erst weitere versionierte Nachrichten und Tests erlaubt.
 - JVM-/Node-Tests prüfen Nachrichtenschema, URL-Allowlist und negative Fälle. Die reale WebView-Laufzeit gehört zum Emulator-Test F-05.
+
+**F-03-Abnahme (13.11.2026):** [Commit d85503b](https://github.com/philip20794/Smut/commit/d85503bfa990b31ad8cc6bc63253e680138798d1), [GitHub Actions 43445552751 – success](https://github.com/philip20794/Smut/actions/runs/43445552751). APK-Artefakt `smut-f03-debug-d85503bfa990b31ad8cc6bc63253e680138798d1`, Testberichte `smut-f03-test-reports`. Installations-/WebView-Smoketest am Gerät ist **nicht** Teil von F-03 und nicht bestanden.

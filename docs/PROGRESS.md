@@ -5,23 +5,25 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-13
-- **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 und F-02 abgeschlossen, F-03 implementiert und in Cloud-Prüfung. Lokaler TypeScript-/WebView-Container, Bridge-Tests und Asset-Build sind eingecheckt; F-03 noch nicht als grün nachgewiesen.
+- **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 bis F-03 abgeschlossen. Der lokale TypeScript-/WebView-Container ist mit Node-/Kotlin-Tests, Android-Lint und gebündelter Debug-APK im Cloud-Build nachgewiesen.
 - **Meilenstein:** `P0 – Projektgerüst und Cloud-Build`
-- **Aktive Aufgabe:** `F-03` – `IN_REVIEW`, wartend auf einen erfolgreichen CI-Run der neuen Quellen
-- **Nächste ausführbare Aufgabe:** F-03-CI prüfen und eventuelle Fehler beheben; danach `F-04`
-- **Abgeschlossene Aufgaben:** **2 / 35 (5,7 %)**; ausschließlich Aufgaben mit `DONE` zählen.
-- **Letzter verifizierter grüner CI-Lauf:** [Android F-02 Bootstrap – 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) – Erfolg, Unit-Test/Lint/Debug-APK gebaut. Vollständige CI folgt in F-04.
-- **Letzte geprüfte APK:** `smut-f02-debug-ea85d41e72b226d014e65bdd806befa2cdb7d729` (Actions-Artefakt im [erfolgreichen Lauf](https://github.com/philip20794/Smut/actions/runs/43441065967)); **nicht auf realem Gerät getestet**.
+- **Aktive Aufgabe:** keine; F-03 erfolgreich abgeschlossen
+- **Nächste ausführbare Aufgabe:** `F-04` – GitHub Actions für vollständige Push-/PR-/manuelle Pflichtchecks
+- **Abgeschlossene Aufgaben:** **3 / 35 (8,6 %)**; ausschließlich Aufgaben mit `DONE` zählen.
+- **Letzter verifizierter grüner CI-Lauf:** [Android F-03 Bootstrap – 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751) – `success` für TypeScript-Typecheck, Sicherheitslint, Node-Bridge-Tests, Android-Unit-Tests/Lint, APK und Asset-Kontrolle. Vollständige CI folgt in F-04.
+- **Letzte geprüfte APK:** `smut-f03-debug-d85503bfa990b31ad8cc6bc63253e680138798d1` (ca. 9,5 MB, Actions-Artefakt im [erfolgreichen Lauf](https://github.com/philip20794/Smut/actions/runs/43445552751)); **nicht auf realem Gerät getestet**.
 - **Letztes dokumentiertes Release:** keines.
 - **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
 - **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
-- **Unmittelbarer Blocker:** keiner; F-03 darf erst nach tatsächlich grünem Cloud-Build auf `DONE`.
+- **Unmittelbarer Blocker:** keiner für `F-04`; Emulator-Start und echte Touch-Bedienung bleiben noch ungetestet.
 
 ## 2. Verbindlicher nächster Schritt
 
-**F-03 – Code eingecheckt, Cloud-Verifikation offen.** TypeScript 5.9.3, npm-Lockdatei, lokale HTML-/CSS-/JS-Ausgabe, Kotlin-WebViewAssetLoader und enger versionierter JSON-Handshake sind implementiert. Der Bootstrap-Workflow prüft jetzt npm-Typecheck, Sicherheitslint, Node-Bridge-Tests, Android-Unit-Tests, Android-Lint und die Assets in der APK.
+**Aufgabe:** `F-04` – GitHub Actions für statische Checks und Unit-Tests.
 
-**Weiterarbeit:** Den GitHub-Actions-Lauf des F-03-Code-Commits auswerten, Fehler beheben und erneut prüfen. Bei Grün F-03 auf `DONE` setzen und `F-04` aktivieren. Keine reale Touch-/IME-Abnahme behaupten; diese kommt später.
+**Ziel:** Den erfolgreichen F-03-Bootstrap zu dauerhaften Pflichtprüfungen für `push` auf `main`, Pull Requests und manuelle Starts ausbauen. Für Kotlin und TypeScript Lint, Typecheck, Unit-Tests und Android-Build fest verankern; Cache und reproduzierbare Toolchains prüfen. Ein bewusst fehlschlagender Test muss den gesamten Workflow rot färben. Keine Tests überspringen.
+
+**Vorhandene Grundlage:** [F-03-Code-Commit d85503b](https://github.com/philip20794/Smut/commit/d85503bfa990b31ad8cc6bc63253e680138798d1), [grüner Workflow 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751) mit TypeScript-/Kotlin-Prüfungen und der APK mit lokalen Editor-Assets. Ein Emulatorlauf bleibt F-05 vorbehalten.
 
 ## 3. Task-Tracker
 
@@ -31,7 +33,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | --- | --- | --- | --- |
 | P0 | F-01 | DONE | [Baseline-Commit](https://github.com/philip20794/Smut/commit/5801f814e619999645b658fdd9930b02c5fb00c1), [Build-Doku](BUILD.md); alle F-01-Dateien auf `main` geprüft, kein Build erwartet |
 | P0 | F-02 | DONE | [Basiscommit](https://github.com/philip20794/Smut/commit/bd859c9357d24db4ed11a38b0c06407c6f9b6859), [Wrapper-Commit](https://github.com/philip20794/Smut/commit/954d2e89e98117377d09f047f46bbeca3cf073e4), [grüner CI-Lauf mit Unit-Test/Lint/APK](https://github.com/philip20794/Smut/actions/runs/43441065967) |
-| P0 | F-03 | IN_REVIEW | TypeScript-/WebView-Code + Tests auf `main`; neuer CI-Run noch ausstehend |
+| P0 | F-03 | DONE | [Code-Commit d85503b](https://github.com/philip20794/Smut/commit/d85503bfa990b31ad8cc6bc63253e680138798d1), [grüner Workflow 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751): TS-Typecheck/Lint/Tests, Kotlin-Unit/Lint, APK-Assets/Artifact |
 | P0 | F-04 | TODO | – |
 | P0 | F-05 | TODO | – |
 | P0 | F-06 | TODO | – |
@@ -69,7 +71,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 | Phase | Fortschritt | Abschlussbedingung | Gate |
 | --- | --- | --- | --- |
-| P0 | 2/6 | Build, CI, Emulator-Smoke und Test-APK | offen |
+| P0 | 3/6 | Build, CI, Emulator-Smoke und Test-APK | offen |
 | P1 | 0/5 | Machbarkeit/ADR; echter Gerätetest separat | offen |
 | P2 | 0/4 | Modell, Operationen, sichere Persistenz, Backup | offen |
 | P3 | 0/3 | Bücher-/Kapitelverwaltung | offen |
@@ -83,14 +85,15 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 ## 5. Letzte Arbeitssitzung / Handoff
 
 - **Datum:** 2026-11-13
-- **Aktive Task-ID:** F-03 `IN_REVIEW`.
-- **Erreicht:** TypeScript-Modul mit gepinnter Lockdatei und Node-Tests, statisches A5-Offline-HTML, Kotlin-WebView mit AssetLoader/URL-Allowlist, schmaler JSON-Handshake, negative JVM-Tests, Android-Gradle-Asset-Tasks sowie F-03-Cloud-Workflow.
-- **Letzter verifizierter grüner CI-Lauf:** [43442035683](https://github.com/philip20794/Smut/actions/runs/43442035683) vom vorherigen Stand F-02, **nicht** F-03.
-- **Letzter Code-Commit:** siehe Git-Commit direkt vor diesem Tracker; dessen F-03-Cloud-Workflow muss separat ausgewertet werden.
-- **Was funktioniert nachweislich:** F-02-Android-Build und Tests. **Noch nicht nachgewiesen:** F-03-Compile/Assetpackaging, WebView-Laufzeit im Emulator, Echtgerät-Tests, Buchfunktionen und PDF.
-- **Was fehlt / ist blockiert:** F-03-Workflow grün bestätigen; danach F-04 (PR/push/manuell, Pflichtchecks, Red-Test-Nachweis).
-- **Nächster kleinster ausführbarer Schritt:** Actions-Lauf für F-03-Code prüfen und Tracker auf tatsächlichen Status bringen.
-- **Entscheidung / Risiken:** Kein Rich-Text-Framework vor dem P1-GO; die native Bridge ist bewusst auf den `ready`-Handshake begrenzt.
+- **Aktive Task-ID:** keine; F-03 `DONE`.
+- **Erreicht:** TypeScript 5.9.3 mit reproduzierbarer Lockdatei, statisches A5-Offline-HTML/CSS, Kotlin-WebViewAssetLoader mit Request-Allowlist, JSON-Handshake `ready`/`ready-ack` und negative JVM-/Node-Tests. Gradle baut die Editor-Assets und verpackt sie automatisch in der APK.
+- **Letzter Code-Commit:** [d85503b](https://github.com/philip20794/Smut/commit/d85503bfa990b31ad8cc6bc63253e680138798d1).
+- **Letzter CI-Lauf und Ergebnis:** [43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751), **`success`**, TypeScript-Typecheck/Sicherheitslint/Bridge-Tests, Android-Unit-Tests/Lint, APK-Build und entpackte Asset-Kontrolle erfolgreich.
+- **APK-Artefakt:** `smut-f03-debug-d85503bfa990b31ad8cc6bc63253e680138798d1` (ca. 9,5 MB), dazu `smut-f03-test-reports`.
+- **Was funktioniert nachweislich:** Kotlin-/TypeScript-Kompilierung und Unit-Tests, statischer Security-Lint, APK-Build mit `assets/editor/{index.html,style.css,main.js,bridge.js}`.
+- **Was fehlt / ist blockiert:** Kein Blocker für F-04; noch keine instrumentierte WebView-/Emulator-Bedienprüfung, kein Rich-Text-Editor, PDF oder echte Smartphone-Abnahme. WebView-Handshake ist durch Unit-Tests geprüft, nicht durch einen Lauf auf dem Gerät.
+- **Nächster kleinster ausführbarer Schritt:** F-04: PR-/Push-/manuell auslösbare Pflichtchecks und kontrolliert roten Test nachweisen.
+- **Entscheidung / Risiken:** Rich-Text-Framework/PDF-Technik bleiben bis P1-GO offen; Native Bridge kann derzeit ausschließlich `ready` quittieren.
 - **Nutzeraktion nötig?:** nein.
 
 ## 6. Aktualisierungsregeln
