@@ -42,9 +42,9 @@
 
 ## Dokumentationspflichten für Codex
 
-- [ ] Vor dem vollständigen Implementierungsplan existiert ein dokumentierter Technologietest für Cursor, Touch-Selektion, Tastatur und PDF-Export.
+- [ ] Vor der verbindlichen Wahl der Editor-/PDF-Architektur und vor dem darauf aufbauenden Funktionsausbau existiert ein dokumentierter Technologietest für Cursor, Touch-Selektion, Tastatur und PDF-Export.
 - [ ] Abweichungen und nicht bestandene Tests werden ausdrücklich festgehalten.
-- [ ] Der Implementierungsplan verknüpft konkrete Arbeitsschritte mit diesen Abnahmekriterien.
+- [x] Der Implementierungsplan verknüpft konkrete Arbeitsschritte mit diesen Abnahmekriterien; [Plan](IMPLEMENTATION_PLAN.md) und [Fortschritt](PROGRESS.md) sind angelegt.
 
 ## GitHub-only Entwicklung, CI und APK-Verteilung
 
