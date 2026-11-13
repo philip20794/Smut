@@ -5,6 +5,9 @@ import android.content.pm.PackageManager
 import android.os.SystemClock
 import android.view.View
 import android.view.KeyEvent
+import android.view.WindowInsets
+import android.content.Context
+import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.EditorInfo
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -432,6 +435,124 @@ class OfflineEditorSmokeTest {
             evaluate("window.smutPrototype?.setPageTestFixture(false)")
         }
         assertEquals("Native multi-page touch selection must preserve real book",
+            savedManuscript, evaluate("window.smutPrototype?.getText()"))
+    }
+
+    /**
+     * E-03: the real Android IME must not cover the active caret when writing
+     * on a later A5 page. The test taps the canvas through UiDevice, opens the
+     * native keyboard and commits text through Android InputConnection.
+     */
+    @Test
+    fun laterA5PageCaretRemainsVisibleAfterAndroidKeyboardOpensAndTyping() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        ensureEditorWindowFocused()
+        val savedManuscript = evaluate("window.smutPrototype?.getText()")
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        try {
+            evaluate("window.smutPrototype?.setPageTestFixture(true)")
+            awaitJavaScriptValue("window.smutPrototype?.getPageCount() >= 3", "true", exact = true)
+            device.executeShellCommand("settings put secure show_ime_with_hard_keyboard 1")
+
+            // Bring a point WITHIN the second page's text into the lower
+            // portion of the pre-keyboard viewport so IME insets must be
+            // accounted for after the native focus/keyboard transition.
+            evaluate(
+                """(() => {
+                    const page = document.querySelectorAll('.ce-page-container canvas')[1];
+                    const r = page?.getBoundingClientRect();
+                    if (!r) return false;
+                    window.scrollBy(0, r.top + Math.min(100, r.height * 0.20) - innerHeight * 0.74);
+                    return true;
+                })()"""
+            )
+            val cssX = evaluate(
+                "(() => { const r=document.querySelectorAll('.ce-page-container canvas')[1].getBoundingClientRect(); return r.left + Math.min(85,r.width*.25); })()"
+            ).toDouble()
+            val cssY = evaluate(
+                "(() => { const r=document.querySelectorAll('.ce-page-container canvas')[1].getBoundingClientRect(); return r.top + Math.min(100,r.height*.20); })()"
+            ).toDouble()
+            assertEquals(
+                "Native tap must target A5 page 2", "true",
+                evaluate("document.elementFromPoint($cssX,$cssY) === document.querySelectorAll('.ce-page-container canvas')[1]")
+            )
+            val viewportWidth = evaluate("innerWidth").toDouble()
+            var screenX = -1
+            var screenY = -1
+            scenarioRule.scenario.onActivity { activity ->
+                val webView = findWebView(activity.window.decorView)!!
+                val origin = IntArray(2)
+                webView.getLocationOnScreen(origin)
+                val ratio = webView.width / viewportWidth
+                screenX = origin[0] + (cssX * ratio).toInt()
+                screenY = origin[1] + (cssY * ratio).toInt()
+            }
+            assertTrue("Tap on later canvas must dispatch", device.click(screenX, screenY))
+            awaitJavaScriptValue(
+                "document.activeElement?.classList?.contains('ce-inputarea')",
+                "true", exact = true
+            )
+            scenarioRule.scenario.onActivity { activity ->
+                val webView = findWebView(activity.window.decorView)!!
+                val manager = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                manager.showSoftInput(webView, InputMethodManager.SHOW_IMPLICIT)
+            }
+            val imeDeadline = SystemClock.elapsedRealtime() + 12_000L
+            var imeVisible = false
+            while (SystemClock.elapsedRealtime() < imeDeadline) {
+                scenarioRule.scenario.onActivity { activity ->
+                    imeVisible = activity.window.decorView.rootWindowInsets
+                        ?.isVisible(WindowInsets.Type.ime()) == true
+                }
+                if (imeVisible) break
+                SystemClock.sleep(250)
+            }
+            assertTrue("Android keyboard must actually be visible for E-03 regression", imeVisible)
+
+            sendImeText(" Tastaturtest Äöüß")
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getText()?.includes('Tastaturtest Äöüß')",
+                "true", exact = true
+            )
+            try {
+                awaitJavaScriptValue(
+                    """(() => {
+                        const caret = document.querySelector('#canvas-editor .ce-cursor');
+                        const input = document.querySelector('#canvas-editor .ce-inputarea');
+                        if (!caret || document.activeElement !== input) return false;
+                        const r = caret.getBoundingClientRect();
+                        const v = window.visualViewport;
+                        const top = Math.max(0, v?.offsetTop ?? 0);
+                        const bottom = Math.min(innerHeight,
+                            (v?.offsetTop ?? 0) + (v?.height ?? innerHeight));
+                        return r.height > 0 && r.top >= top + 8 && r.bottom <= bottom - 8;
+                    })()""",
+                    "true", exact = true
+                )
+            } catch (failure: AssertionError) {
+                val diagnostic = evaluate(
+                    """(() => {
+                        const c=document.querySelector('#canvas-editor .ce-cursor');
+                        return JSON.stringify({
+                            caret:c?.getBoundingClientRect().toJSON(),
+                            viewport:[innerHeight,visualViewport?.height,visualViewport?.offsetTop],
+                            scroll:scrollY,
+                            pageCount:window.smutPrototype?.getPageCount(),
+                            focus:document.activeElement?.className
+                        });
+                    })()"""
+                )
+                throw AssertionError("IME must not hide page-2 caret; $diagnostic; ${failure.message}", failure)
+            }
+        } finally {
+            scenarioRule.scenario.onActivity { activity ->
+                val webView = findWebView(activity.window.decorView)!!
+                val manager = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                manager.hideSoftInputFromWindow(webView.windowToken, 0)
+            }
+            evaluate("window.smutPrototype?.setPageTestFixture(false)")
+        }
+        assertEquals("IME visibility test must not persist the 75-paragraph manuscript",
             savedManuscript, evaluate("window.smutPrototype?.getText()"))
     }
 
