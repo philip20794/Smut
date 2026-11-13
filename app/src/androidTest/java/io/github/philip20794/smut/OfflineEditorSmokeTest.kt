@@ -241,19 +241,53 @@ class OfflineEditorSmokeTest {
 
     private fun tapHtmlButton(id: String) {
         ensureEditorWindowFocused()
-        // DOM determines the target coordinate, but the click itself is a
-        // genuine Android touchscreen event (not HTMLElement.click()).
+        // Inspect where a real Android touch will land, without substituting
+        // JavaScript's HTMLElement.click() for the native input path.
         evaluate("document.getElementById('$id')?.scrollIntoView({block:'center'})")
+        evaluate(
+            """(() => {
+                const button = document.getElementById('$id');
+                if (!button) return false;
+                button.dataset.smutNativeClicks = '0';
+                button.dataset.smutNativePointers = '0';
+                button.addEventListener('pointerdown', () => {
+                    button.dataset.smutNativePointers = '1';
+                }, {once:true});
+                button.addEventListener('click', () => {
+                    button.dataset.smutNativeClicks = '1';
+                }, {once:true});
+                return true;
+            })()"""
+        )
         val cssX = evaluate(
             "(() => { const r=document.getElementById('$id')?.getBoundingClientRect(); return r ? r.left + r.width/2 : -1; })()"
         ).toDouble()
         val cssY = evaluate(
             "(() => { const r=document.getElementById('$id')?.getBoundingClientRect(); return r ? r.top + r.height/2 : -1; })()"
         ).toDouble()
-        assertTrue("Button $id must exist", cssX >= 0 && cssY >= 0)
+        val targetDiagnostic = evaluate(
+            """(() => {
+                const button = document.getElementById('$id');
+                const rect = button?.getBoundingClientRect();
+                if (!rect) return 'missing';
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const hit = document.elementFromPoint(cx, cy);
+                return JSON.stringify({
+                    center: [cx, cy],
+                    hitButton: hit?.closest('button')?.id,
+                    visible: [window.innerWidth, window.innerHeight],
+                    pageScroll: [window.scrollX, window.scrollY],
+                    disabled: button.disabled,
+                    focused: document.hasFocus()
+                });
+            })()"""
+        )
+        assertTrue("Button $id must exist; target=$targetDiagnostic", cssX >= 0 && cssY >= 0)
         val cssViewportWidth = evaluate("window.innerWidth").toDouble()
         var x = 0
         var y = 0
+        var webViewBounds = ""
         scenarioRule.scenario.onActivity { activity ->
             val webView = findWebView(activity.window.decorView)!!
             val origin = IntArray(2)
@@ -261,9 +295,32 @@ class OfflineEditorSmokeTest {
             val ratio = webView.width / cssViewportWidth
             x = origin[0] + (cssX * ratio).toInt()
             y = origin[1] + (cssY * ratio).toInt()
+            webViewBounds = "origin=${origin.toList()},size=${webView.width}x${webView.height},ratio=$ratio"
         }
-        assertTrue("Android touch did not click $id at $x,$y",
-            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).click(x, y))
+        assertTrue(
+            "Android touch did not dispatch $id at $x,$y; $webViewBounds; DOM=$targetDiagnostic",
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).click(x, y)
+        )
+        try {
+            awaitJavaScriptValue(
+                "document.getElementById('$id')?.dataset.smutNativeClicks",
+                "\\"1\\"",
+                exact = true
+            )
+        } catch (failure: AssertionError) {
+            val events = evaluate(
+                """JSON.stringify({
+                    pointer:document.getElementById('$id')?.dataset.smutNativePointers,
+                    click:document.getElementById('$id')?.dataset.smutNativeClicks,
+                    zoom:window.smutPrototype?.getZoom(),
+                    status:document.getElementById('editor-status')?.textContent
+                })"""
+            )
+            throw AssertionError(
+                "Native Android tap missed $id at $x,$y; $webViewBounds; DOM=$targetDiagnostic; events=$events; ${failure.message}",
+                failure
+            )
+        }
     }
 
     private fun sendImeText(value: String) {
