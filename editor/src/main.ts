@@ -272,6 +272,14 @@ container?.addEventListener("touchmove", event => {
 }, { passive: false });
 container?.addEventListener("touchend", stopNativeSelectionDrag);
 container?.addEventListener("touchcancel", stopNativeSelectionDrag);
+// A native selection must never keep scrolling after the Android WebView
+// loses focus (Home/Recents, another app, or a hidden document). Android
+// does not guarantee a touchcancel event in these cases.
+window.addEventListener("blur", stopNativeSelectionDrag);
+window.addEventListener("pagehide", stopNativeSelectionDrag);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopNativeSelectionDrag();
+});
 container?.addEventListener("contextmenu", event => {
   if (!editor || !window.SmutAndroid || !lastCanvasTouch) return;
   if (Date.now() - lastCanvasTouch.time > 3500) return;
