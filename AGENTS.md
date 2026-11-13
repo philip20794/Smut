@@ -29,7 +29,7 @@
 
 ## Arbeitsauftrag für folgende Implementierungssitzungen
 
-Der **Implementierungsplan ist erstellt**. Der bisherige Projektstand ändert sich mit jeder Aufgabe. Starte stets mit der **aktuell** in `docs/PROGRESS.md` bezeichneten nächsten Aufgabe (nach F-01: `F-02`), nicht mit einer statischen ID aus diesem Dokument, und arbeite schrittweise entlang der Abhängigkeiten.
+Der **Implementierungsplan ist erstellt**. Der bisherige Projektstand ändert sich mit jeder Aufgabe. Starte stets mit der **aktuell** in `docs/PROGRESS.md` bezeichneten nächsten Aufgabe (nach F-06 und E-01: `E-02`), nicht mit einer statischen ID aus diesem Dokument, und arbeite schrittweise entlang der Abhängigkeiten.
 
 Eine Dokumentation allein startet keine selbständig laufende Hintergrundarbeit. Setze in der tatsächlich laufenden Sitzung um, was mit den verfügbaren Werkzeugen machbar ist, und committe vor Sitzungsende eine präzise Übergabe.
 

@@ -48,12 +48,12 @@
 
 ## GitHub-only Entwicklung, CI und APK-Verteilung
 
-- [ ] Build, alle Pflichtprüfungen und APK-Veröffentlichung sind über GitHub Actions ohne lokalen Entwicklungsrechner ausführbar.
-- [ ] Jeder Push auf `main` und jeder Pull Request (falls verwendet) startet reproduzierbare Checks.
+- [x] P0: Build, bisherige Pflichtprüfungen und geprüfte Entwicklungs-APK laufen ohne lokalen Rechner ([Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955)); spätere Funktionen ergänzen neue Pflichtprüfungen.
+- [x] Jeder Push auf `main` und jeder Pull Request startet reproduzierbare Checks (F-04; positiver und absichtlich negativer Lauf nachgewiesen).
 - [ ] Kotlin-, TypeScript-, Modell- und Integrationstests sind bei relevantem Code verpflichtend; die Testresultate werden in GitHub angezeigt.
 - [x] Der Basis-Offline-WebView-Handshake und ein UI-Klick werden im GitHub-API-35-Emulator getestet ([Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346)); komplexe Textbedienabläufe bleiben offen.
-- [ ] Schlägt ein Pflichtcheck fehl, wird keine APK als erfolgreich geprüfte Version veröffentlicht.
-- [ ] Nach erfolgreichem `main`-Build steht eine installierbare Test-APK mit nachvollziehbarer Commit-ID unter GitHub Actions bereit.
+- [x] Schlägt ein Pflichtcheck fehl, wird keine APK als erfolgreich geprüft veröffentlicht ([negative CI 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861): null Artifacts).
+- [x] Nach erfolgreichem `main`-Build steht eine installierbare Test-APK mit Commit-ID unter GitHub Actions bereit ([Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955)); noch kein realer Gerätetest.
 - [ ] Ein expliziter Versionstag bzw. Release-Auslöser erzeugt nach vollständiger Prüfung eine signierte, dauerhaft in GitHub Releases herunterladbare APK.
 - [ ] Signaturschlüssel und Passwörter werden nicht in Git eingecheckt; der Schlüssel wird sicher gesichert und ermöglicht Updates bereits installierter Versionen.
 - [ ] CI-Fehler sind ohne lokalen Rechner durch Logs, Testberichte und bei Bedarf Screenshots diagnostizierbar.

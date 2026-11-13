@@ -129,3 +129,11 @@ Für den Nutzer ist keine lokale Shell und kein Rechner notwendig. Codex/GitHub 
 - Browser lädt lokales A5-HTML, native Kotlin-JS-Bridge bestätigt `ready`, Test klickt Recheck-Button in der WebView und prüft erneuten Handshake.
 - [Fehlgeschlagener erster Lauf 43448562765](https://github.com/philip20794/Smut/actions/runs/43448562765): Runner verwendet POSIX-Shell, nicht Bash; `set -o pipefail` führte zu Fehler vor Teststart. Mit `set -eu` korrigiert.
 - Workflow bewahrt JUnit-/Android-Testberichte und Logcat auf, Fehler-Screenshot per `adb screencap`. **Nicht getestet:** echtes Telefon und reale Touch-IME-Eingabe in Rich-Text-Engine (P1).
+
+## 12. F-06 – Geprüfte Entwickler-APK
+
+- [Grüner Workflow 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955): Editor, Android, Offline-Emulator und `tested-apk` erfolgreich.
+- Finale APK `smut-tested-dev-bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0` (GitHub-Actions-Artefakt, 30 Tage). Enthält `smut-dev-bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0.apk` und `SHA256SUMS`.
+- [Negativtest 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861) über [geschlossenen PR #2](https://github.com/philip20794/Smut/pull/2): Node-Test rot, Android/Emulator und `tested-apk` `skipped`, **0 Artifacts**.
+- Nur `main` nach positiven Checks darf die geprüfte APK ausgeben; interne `smut-internal-apk-*` sind ausdrücklich nicht geprüft und nach 3 Tagen auslaufend.
+- [Handy-Installationsanleitung](APK_DOWNLOAD.md); Debug-Keys sind nicht für verlässliche Updates geeignet.

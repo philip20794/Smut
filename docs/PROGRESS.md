@@ -5,23 +5,28 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-13
-- **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 bis F-05 abgeschlossen. TypeScript/Kotlin-Checks und instrumentierter API-35-Offline-WebView-Test sind in GitHub Actions nachgewiesen; das geprüfte APK-Gate folgt F-06.
-- **Meilenstein:** `P0 – Projektgerüst und Cloud-Build`
-- **Aktive Aufgabe:** `F-06` – `IN_REVIEW`: geprüfte APK-Ausgabe nach allen CI-Gates implementiert, erster Lauf ausstehend
-- **Nächste ausführbare Aufgabe:** F-06-Workflow kontrollieren: intern gebaute APK nur nach Emulator-Erfolg als geprüften Artifact bereitstellen und mit SHA-256 prüfen; danach `E-01`
-- **Abgeschlossene Aufgaben:** **5 / 35 (14,3 %)**; ausschließlich Aufgaben mit `DONE` zählen.
-- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346) – `success` für Editor-Typecheck/Lint/Tests, Android-Unit/Lint/APK sowie instrumentierten API-35-Emulator-Smoke bei deaktiviertem WLAN/Mobilfunk. [F-04-Negativprobe rot 43447797215](https://github.com/philip20794/Smut/actions/runs/43447797215).
-- **Letzte geprüfte APK:** `smut-f03-debug-d85503bfa990b31ad8cc6bc63253e680138798d1` (ca. 9,5 MB, Actions-Artefakt im [erfolgreichen Lauf](https://github.com/philip20794/Smut/actions/runs/43445552751)); **nicht auf realem Gerät getestet**.
+- **Projektstatus:** `IN_PROGRESS` – **P0-Gate abgeschlossen (F-01 bis F-06)**, P1 gestartet: E-01-Technologiematrix erstellt. A5-Offline-WebView und CI-geprüfte Debug-APK mit Emulator-Smoke vorhanden; echter Rich-Text-Prototyp folgt E-02.
+- **Meilenstein:** `P1 – Machbarkeitsnachweis und Technologieentscheidung`
+- **Aktive Aufgabe:** keine; F-06 und E-01 abgeschlossen
+- **Nächste ausführbare Aufgabe:** `E-02` – im A5-Canvas-Editor direkt tippen, Android-IME/Unicode und lokales Save/Reload im Emulator nachweisen
+- **Abgeschlossene Aufgaben:** **7 / 35 (20,0 %)**; ausschließlich Aufgaben mit `DONE` zählen.
+- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955), `success`: Editor + Android + API-35-Emulator + geprüfte APK. [F-06-Negativprobe 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861), `failure`: alle nachgelagerten Jobs/`tested-apk` `skipped`, **keine Artifacts**.
+- **Letzte geprüfte APK:** `smut-tested-dev-bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0` (ca. 9,5 MB, [GitHub Actions 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955), SHA256SUMS enthalten, temporäres 30-Tage-Artifact). **Nicht auf realem Telefon getestet.**
 - **Letztes dokumentiertes Release:** keines.
 - **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
 - **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
-- **Unmittelbarer Blocker:** keiner für F-06; die neue geprüfte APK-Ausgabe muss den nächsten grünen Workflow passieren.
+- **Unmittelbarer Blocker:** keiner für E-02; Canvas-Editor-IME und lokale Speicherintegration sind technisch noch ungeprüft.
 
 ## 2. Verbindlicher nächster Schritt
 
-**F-06 – Geprüfte Test-APK als Actions-Artefakt.** Nach erfolgreichem F-05-Emulatorlauf [43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346) prüft der neue Workflow die Dev-Paketkennung `io.github.philip20794.smut.dev` und fehlende Internet-Berechtigung. Zunächst wird intern eine **unverifizierte** APK transportiert. Erst der separate `tested-apk`-Job nach `editor`, `android` und `emulator` erstellt `smut-tested-dev-<Commit-ID>` mit SHA-256-Datei; auf PRs erfolgt keine Veröffentlichung.
+**E-02 – Direktes Schreiben und Android-Tastatur im Prototyp.**
 
-**Weiterarbeit:** Grünen F-06-Lauf und tatsächliches APK-Artefakt für diesen Commit prüfen. Bei Rot oder fehlendem Artifact keine Abnahme fingieren. Nach F-06-DONE das P0-Gate schließen und E-01 starten.
+1. [E-01-Technologiematrix](EDITOR_EVALUATION.md) und [ADR-008](DECISIONS.md) lesen. `@hufe921/canvas-editor@1.1.0` ist nur der **erste Testkandidat**, keine endgültige Wahl.
+2. Die vollständig offline gebündelte WebView mit einem **echten** Canvas-Editor auf A5 ausstatten (nicht mit vorgeschaltetem Overlay-Textfeld).
+3. Einfache deutsche Testpassage, Cursor per Tap, IME, Umlaute, Autokorrektur, Enter/Backspace und lokale Speicherung/Neustart über die instrumentierte App prüfen.
+4. CI/Emulator-Ergebnisse und ggf. technische Einschränkungen nachweisen; nur dann `E-02` auf `DONE`. Bei kritischem Fehler Fallback evaluieren statt ungeprüft weiterbauen.
+
+**P0-Abnahme:** [grüner Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) mit [APK-Artefakt](https://github.com/philip20794/Smut/actions/runs/43451063955); [absichtlich roter PR #2](https://github.com/philip20794/Smut/pull/2) zeigte [korrekt übersprungenes APK-Publishing und null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861). Anleitung: [APK_DOWNLOAD.md](APK_DOWNLOAD.md).
 
 ## 3. Task-Tracker
 
@@ -34,8 +39,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-03 | DONE | [Code-Commit d85503b](https://github.com/philip20794/Smut/commit/d85503bfa990b31ad8cc6bc63253e680138798d1), [grüner Workflow 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751): TS-Typecheck/Lint/Tests, Kotlin-Unit/Lint, APK-Assets/Artifact |
 | P0 | F-04 | DONE | [CI-Commit 8670def](https://github.com/philip20794/Smut/commit/8670def9a98a642d97a1508e006acca6dfd5029f), [grüner Push 43447739353](https://github.com/philip20794/Smut/actions/runs/43447739353), [roter PR 43447797215](https://github.com/philip20794/Smut/actions/runs/43447797215); abhängiger Android-Job korrekt übersprungen; PR #1 geschlossen, nicht gemergt |
 | P0 | F-05 | DONE | [Emulator-Code 4ddc6a3](https://github.com/philip20794/Smut/commit/4ddc6a37911e5b45dd9b4a4e62a448d44bda233a), [sh-Fix d132b72](https://github.com/philip20794/Smut/commit/d132b7279d260f26b9dd375948e958cee9a27e13), [grüner Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346): API-35-Emulator, offline WebView/Handshake und Button-Interaktion bestanden |
-| P0 | F-06 | IN_REVIEW | APK-Ausgabe nach drei Pflichtjobs einschließlich Emulator, Dev-Paketkennung und SHA-256 implementiert; CI/Artifact-Nachweis ausstehend |
-| P1 | E-01 | TODO | – |
+| P0 | F-06 | DONE | [CI-/APK-Commit bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0), [Run 43451063955 grün](https://github.com/philip20794/Smut/actions/runs/43451063955), `smut-tested-dev-bbafe4f...` inkl. SHA256SUMS; [roter PR #2, null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861) |
+| P1 | E-01 | DONE | [Datierte MIT-/Offline-/IME-/A5-/PDF-Entscheidungsmatrix](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor 1.1.0 zuerst als **Testkandidat**, keine vorzeitige E-04-GO-Freigabe |
 | P1 | E-02 | TODO | – |
 | P1 | E-03 | TODO | – |
 | P1 | E-04 | TODO | – |
@@ -69,8 +74,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 | Phase | Fortschritt | Abschlussbedingung | Gate |
 | --- | --- | --- | --- |
-| P0 | 5/6 | Build, CI, Emulator-Smoke und Test-APK | offen |
-| P1 | 0/5 | Machbarkeit/ADR; echter Gerätetest separat | offen |
+| P0 | 6/6 | Build, CI, Emulator-Smoke und Test-APK | **erfüllt** |
+| P1 | 1/5 | Machbarkeit/ADR; echter Gerätetest separat | offen |
 | P2 | 0/4 | Modell, Operationen, sichere Persistenz, Backup | offen |
 | P3 | 0/3 | Bücher-/Kapitelverwaltung | offen |
 | P4 | 0/5 | Direktbearbeitung und Textfunktionen | offen |
@@ -83,13 +88,16 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 ## 5. Letzte Arbeitssitzung / Handoff
 
 - **Datum:** 2026-11-13
-- **Aktive Task-ID:** F-06 `IN_REVIEW`.
-- **F-05-Nachweis:** [Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346) `success`: Android API 35 startete den lokal gebündelten Editor ohne WLAN und Mobilfunk, bestätigte den Bridge-Handshake und bediente den Recheck-Button. Instrumentierter JUnit-Test und Logcat/Report-Artefakte sind eingerichtet.
-- **Fehler und Behebung:** [erster Lauf 43448562765](https://github.com/philip20794/Smut/actions/runs/43448562765) scheiterte, weil Emulator-Runner `/bin/sh` statt Bash für das Skript nutzt; der `pipefail`-Schalter war nicht erlaubt. [Commit d132b72](https://github.com/philip20794/Smut/commit/d132b7279d260f26b9dd375948e958cee9a27e13) stellte auf POSIX-`set -eu` um. Der nächste Lauf war vollständig grün.
-- **F-06-Ergebnis bisher:** CI-Gate, temporärer interner APK-Transfer und geprüfte Dev-APK mit SHA-256 im Code vorgesehen. Erst nach grünem neuen Lauf und vorhandenem Artifact `DONE`.
-- **Offen:** keine Freigabe der APK aus F-06 vor Ergebnisprüfung; E-01 Technologiematrix wartet auf geschlossenes P0-Gate.
-- **Nächster kleinster Schritt:** F-06-CI-Run auswerten und Artifact prüfen.
-- **Nutzeraktion nötig?:** keine.
+- **Aktive Task-ID:** keine; F-06 und E-01 `DONE`.
+- **Erreicht:** F-01 bis F-06 (P0-Gate) vollständig abgeschlossen, plus E-01 datierte Technologiebewertung einschließlich Lizenz- und Offline-Risiken.
+- **Letzter bestätigter grüner Code-Commit:** [bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0) mit [Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) `success`.
+- **APK:** `smut-tested-dev-bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0`, ca. 9,5 MB im Workflow, SHA256SUMS im ZIP, 30 Tage gespeichert, paketiert als `io.github.philip20794.smut.dev`. Noch **keine** stabile Signierung oder Echtgerät-Abnahme.
+- **Negativtest:** [PR #2](https://github.com/philip20794/Smut/pull/2) wurde **nicht gemergt** und geschlossen; [Lauf 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861) `failure`, Editor rot, Android/Emulator/Veröffentlichung übersprungen, **kein einziges Artifact**.
+- **E-01:** [EDITOR_EVALUATION.md](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor als erster testbarer Kandidat, Tiptap ohne kostenpflichtige Pages/Conversion-Funktion als Fallback. Mobile Texteingabe/PDF bleiben ungeprüft.
+- **Funktioniert nachweislich:** isolierte Offline-WebView mit Button und Bridge, CI-/APK-Ausgabe nach Emulator-Go; fehlerhafte Tests sperren geprüfte APK.
+- **Was fehlt:** E-02 echtes Rich-Text-Tippen/Android-IME und Speicherung, E-03 Selektion/Seitenwechsel, E-04 A5-PDF/GO-Entscheidung, später echter Smartphone-Test.
+- **Nächster kleinster Schritt:** E-02 Canvas-Editor-Prototyp und gepinnte WebView-Assets.
+- **Nutzeraktion nötig?:** nein.
 
 ## 6. Aktualisierungsregeln
 

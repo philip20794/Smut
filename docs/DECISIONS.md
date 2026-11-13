@@ -62,3 +62,14 @@ Hier werden langlebige technische Entscheidungen festgehalten. Änderungen nicht
 - **Buildnachweis:** [GitHub Actions 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967), alle drei Prüfschritte Unit-Test, Lint, APK-Build erfolgreich; Testreport und Debug-APK veröffentlicht.
 - **Bootstrap:** `.github/workflows/android-bootstrap.yml` stellt minimale CI für F-02 bereit. In F-04 sind Sicherheits-/Workflow-Härtung, vollständige Checks und ggf. Upgrade der im Log als Node-20-Altversion gewarnten Actions vorgesehen.
 - **Abgrenzung:** Kein Emulator-/Echtgerätetest und keine signierte Release-APK. Die Startansicht ist ausdrücklich noch kein WYSIWYG-Bucheditor; F-03 ergänzt WebView, P1 prüft die Editorbibliothek.
+
+## ADR-008 – E-01: Canvas Editor zuerst als mobiler Machbarkeitsprototyp
+
+- **Datum:** 2026-11-13
+- **Status:** vorläufige Prototyp-Reihenfolge, **kein P1-GO**
+- **Bewertung:** [E-01-Entscheidungsmatrix](EDITOR_EVALUATION.md).
+- **Erste Testkombination:** `@hufe921/canvas-editor@1.1.0` (MIT, lokal gebündelt). `canvas-editor-pdf@0.8.0` (MIT, jsPDF) bleibt ein separat zu prüfender Exportkandidat; Browser-CDN-Standardfonts dürfen nicht verwendet werden.
+- **Fallback:** `@tiptap/core@3.33.1` (MIT) plus freies ProseMirror und **eigene** lokale Paginierung/Exportpipeline. Offizielle Tiptap Pages sind Team-Plan/Pro, und der offizielle Conversion-PDF-Weg benötigt Token/Server. Daher nicht als Grundlage einer unabhängig offline nutzbaren v1 werten.
+- **Warum:** Canvas Editor bietet bereits einen integrierten paginierten Renderer. Auf Android sind IME, Cursor-/Auswahlmechanik und PDF-Textqualität dennoch offen. Der erste Prototyp muss echte Bearbeitung im Canvas nachweisen; keine Scheinlösung durch darübergelegtes Textfeld.
+- **Prüfgates:** E-02 (Android-IME, Unicode, Tippen, Speichern), E-03 (Seitenwechsel/Selektion/Zoom), E-04 (Vektor-/Unicode-PDF, A5-Geometrie, Editor-PDF-Abgleich). Beim kritischen Scheitern Fallback untersuchen und ein dokumentiertes `NO-GO` festhalten.
+- **Folgen:** Keine langfristige Bindung oder Datenmigration in Canvas-Editor-Interna vor E-04. Schriftlizenzen und vollständig lokale Font-Auslieferung separat prüfen.

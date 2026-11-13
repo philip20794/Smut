@@ -137,3 +137,5 @@ Eine Funktion gilt nur als umgesetzt, wenn sie im Code vorhanden ist, passende a
 - [Grüner F-05-Emulatorlauf 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346). Kein manuelles Telefon-Feedback vorliegend.
 - F-06-Actions-Artefakt wird nur im `tested-apk`-Job erzeugt: `needs: [editor, android, emulator]`, nur `main`, SHA-256-Prüfsumme und vollständige Commit-ID. Die vorgeschaltete interne Build-APK darf nicht als geprüft angeboten werden.
 - [Anleitung am Smartphone](APK_DOWNLOAD.md); dauerhafte Release-Signatur bleibt R-01.
+
+**F-06 nachgewiesen:** [grüner Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955), geprüftes APK-Artefakt mit SHA-256. [Roter Test 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861) veröffentlichte keine geprüfte APK und überhaupt keine Artefakte. Cloud-CI für P0 funktioniert ohne lokalen PC. Das ist noch keine dauerhafte Release-Signierung.

@@ -22,3 +22,5 @@ npm run build
 In F-05 muss die WebView auf dem Emulator tatsächlich gestartet und der Bridge-Handshake beobachtet werden. Die endgültige Rich-Text-Engine, PDF-Technik und Geräteakzeptanz gehören zu P1, nicht zu F-03.
 
 Siehe [BUILD.md](../docs/BUILD.md), [ARCHITECTURE.md](../docs/ARCHITECTURE.md) und [PROGRESS.md](../docs/PROGRESS.md).
+
+**Cloud-Gate P0:** [43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) mit erfolgreich ausgeführtem API-35-Offline-WebView-Smoketest. E-01 bewertet [Canvas Editor 1.1.0 und Fallbacks](../docs/EDITOR_EVALUATION.md); E-02 fügt erst danach die echte Rich-Text-Bearbeitung hinzu.

@@ -59,7 +59,7 @@ Die Entwicklung läuft direkt im Repository. GitHub Actions prüft bei jeder Än
 
 ## Implementierung und Projektstand
 
-**F-01 bis F-05 sind abgeschlossen.** Android-App und offline gebündelter TypeScript-WebView-Container haben automatisierte Tests einschließlich Emulator-Smoke bestanden. F-06 prüft die Test-APK-Auslieferung; Buchbearbeitung und PDF kommen erst in P1/P4/P5. Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
+**P0 (F-01 bis F-06) ist abgeschlossen.** Android-App und Offline-TypeScript-Container bestehen Editor-/Android-Checks sowie einen Emulator-Smoke. Die durch alle Gates geprüfte Entwickler-APK ist als Actions-Artefakt verfügbar. E-01 hat die Editorkandidaten bewertet; die direkte Buchbearbeitung wird in E-02 erprobt. Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
 
 ## Dokumentation
 
@@ -74,10 +74,11 @@ Die Entwicklung läuft direkt im Repository. GitHub Actions prüft bei jeder Än
 - [Technische Entscheidungen](docs/DECISIONS.md)
 - [Projektstruktur, Toolchains und Buildkonventionen](docs/BUILD.md)
 - [APK-Download und Installation am Android-Smartphone](docs/APK_DOWNLOAD.md)
+- [Technologievergleich und E-01-Evaluation](docs/EDITOR_EVALUATION.md)
 
 Der Implementierungsplan ist vorhanden. Unbestätigte technische Annahmen bleiben bis zum P1-Machbarkeitsnachweis als Prüfaufgaben gekennzeichnet. Ein Android-Grundprojekt, der offizielle Gradle Wrapper, ein Unit-Test und ein erster erfolgreicher [GitHub-Actions-Build](https://github.com/philip20794/Smut/actions/runs/43441065967) sind vorhanden. Der TypeScript-Container, die Pflicht-CI und der Emulator-Smoke sind vorhanden. Der tatsächlich editierbare Buchinhalt, der PDF-Export und die signierten Releases stehen noch aus.
 
 ## Android-Test-APK
 
-Nach dem vollständigen Erfolg aller Pflichtchecks erscheint unter [Smut GitHub Actions](https://github.com/philip20794/Smut/actions) ein `smut-tested-dev-<Commit-ID>`-Artefakt. Eine Anleitung für Android ohne lokalen PC steht in [docs/APK_DOWNLOAD.md](docs/APK_DOWNLOAD.md). **Vor F-06-Abnahme ist noch keine durch alle Gates geprüfte APK ausgewiesen.** Die APK zeigt zunächst nur den Offline-Editorcontainer.
+Nach dem vollständigen Erfolg aller Pflichtchecks erscheint unter [Smut GitHub Actions](https://github.com/philip20794/Smut/actions) ein `smut-tested-dev-<Commit-ID>`-Artefakt. Eine Anleitung für Android ohne lokalen PC steht in [docs/APK_DOWNLOAD.md](docs/APK_DOWNLOAD.md). **Der Lauf [43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) enthält die erste nach allen Gates geprüfte APK.** Die APK zeigt zunächst nur den Offline-Editorcontainer.
 
