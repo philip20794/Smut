@@ -53,10 +53,15 @@ Die Arbeitsansicht ist **ein editierbares Buchlayout**, keine bereits gerenderte
 
 **Alternative:** Tiptap/ProseMirror mit selbst entwickelter oder freier Seitendarstellung, falls Touch-Eingaben oder die PDF-Fidelity mit Canvas Editor nicht überzeugen. Keine kostenpflichtige Tiptap-Pages-Erweiterung als zwingende Voraussetzung.
 
+## Ohne lokalen Computer entwickeln und testen
+
+Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffähigen Projektgerüst bei jeder Änderung automatisch Codeprüfungen, Unit- und Android-Emulatortests sowie einen APK-Build ausführen. Erfolgreiche Entwicklungs-APKs stehen temporär unter **Actions** bereit; signierte Versionen werden unter **Releases** veröffentlicht. Ein eigener Rechner oder Codemagic sind nicht erforderlich. Signierung und dauerhafte Installierbarkeit von Updates sind in [docs/CI-CD.md](docs/CI-CD.md) spezifiziert. **Die CI/CD-Workflows müssen erst noch implementiert werden.**
+
 ## Dokumentation
 
 - [Produkt- und Bedienkonzept](docs/PRODUCT.md)
 - [Technische Architektur und Machbarkeit](docs/ARCHITECTURE.md)
 - [Akzeptanzkriterien und Testfälle](docs/ACCEPTANCE.md)
+- [GitHub Actions, Tests und APK-Veröffentlichung](docs/CI-CD.md)
 
 Diese Unterlagen sind **Anforderungen für einen späteren Codex-Implementierungsplan**, noch kein Implementierungsplan. Unbestätigte technische Annahmen sind ausdrücklich als Prüfaufgaben gekennzeichnet.
