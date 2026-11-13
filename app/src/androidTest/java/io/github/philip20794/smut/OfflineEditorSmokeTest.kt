@@ -124,6 +124,16 @@ class OfflineEditorSmokeTest {
         sendImeText("Smut Äöüß")
         awaitJavaScriptValue("window.smutPrototype?.getText()", "Smut Äöüß")
 
+        // Android IME composition updates the same word before committing it.
+        // This covers the input path used by suggestions and autocorrection.
+        sendImeComposition("Korrekter", "Korrektür")
+        awaitJavaScriptValue("window.smutPrototype?.getText()", "Korrektür")
+        awaitJavaScriptValue(
+            "window.smutPrototype?.getText()?.includes('Korrekter')",
+            "false",
+            exact = true
+        )
+
         sendImeKey(KeyEvent.KEYCODE_ENTER)
         sendImeText("Zweiter Absatz")
         awaitJavaScriptValue("window.smutPrototype?.getText()", "Zweiter Absatz")
@@ -157,6 +167,19 @@ class OfflineEditorSmokeTest {
             accepted = connection!!.commitText(value, 1)
         }
         assertTrue("Android IME commitText must be accepted", accepted)
+    }
+
+    private fun sendImeComposition(draft: String, correction: String) {
+        var accepted = false
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            val connection = webView.onCreateInputConnection(EditorInfo())
+            assertNotNull("Focused WebView needs an Android IME input connection", connection)
+            accepted = connection!!.setComposingText(draft, 1) &&
+                connection.setComposingText(correction, 1) &&
+                connection.finishComposingText()
+        }
+        assertTrue("Android IME text composition must be accepted", accepted)
     }
 
     private fun sendImeKey(keyCode: Int) {
