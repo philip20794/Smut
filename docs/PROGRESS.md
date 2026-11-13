@@ -8,14 +8,14 @@
 - **Projektstatus:** `IN_PROGRESS` – P0-Gate abgeschlossen, P1 E-01 und E-02 abgeschlossen; echte Android-IME-Eingabe, Unicode, Wortkomposition, Enter/Backspace und Speichern/Neustart im Offline-Canvas-Editor im Emulator erfolgreich. E-03 (Seitenfluss, Auswahl und Zoom) begonnen.
 - **Meilenstein:** `P1 – Machbarkeitsnachweis und Technologieentscheidung`
 - **Aktive Aufgabe:** `E-03` – `IN_PROGRESS`: Zoomsteuerung sowie isolierten 75-Absatz-Mehrseitentest hinzugefügt; Cloud-Nachweis für diese Änderungen offen
-- **Nächste ausführbare Aufgabe:** E-03-Zoom-/Mehrseiten-CI vollständig prüfen; danach Langdruck-Auswahl, seitenübergreifende Selektion, Ersetzen und Scrollverhalten bei geöffneter Tastatur im Emulator nachweisen.
+- **Nächste ausführbare Aufgabe:** E-03: im [roten Emulatorlauf 43470049490](https://github.com/philip20794/Smut/actions/runs/43470049490) nicht ausgelösten nativen Zoom-Tap untersuchen und mit belastbarem Test beheben; danach Langdruck-Auswahl, seitenübergreifende Selektion, Ersetzen und IME-Scroll nachweisen.
 - **Abgeschlossene Aufgaben:** **8 / 35 (22,9 %)**; ausschließlich Aufgaben mit `DONE` zählen.
 - **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666), `success`: Editor + Android + API-35-Emulator + geprüfte APK. [F-06-Negativprobe 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861), `failure`: alle nachgelagerten Jobs/`tested-apk` `skipped`, **keine Artifacts**.
 - **Letzte geprüfte APK:** `smut-tested-dev-0d0dfc2707d0bab0cd9a4e44d62ff250ef18ec2a` (ca. 10,8 MB als ZIP, [GitHub Actions 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666), SHA256SUMS enthalten, temporäres 30-Tage-Artifact). **Nicht auf realem Telefon getestet.**
 - **Letztes dokumentiertes Release:** keines.
 - **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
 - **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
-- **Unmittelbarer Blocker:** keiner für E-03; E-02 ist durch Emulator-Gate abgeschlossen. E-05 erfordert später ausdrücklich echte Smartphone-Abnahme.
+- **Unmittelbarer Blocker:** E-03-Zoom-Touch-Test in [CI 43470049490](https://github.com/philip20794/Smut/actions/runs/43470049490) rot: Android-Tap auf `zoom-in` lässt `getZoom()` bei 0,6 statt 0,7. Die anderen drei Emulator-Tests bestanden; Ursache (Touchkoordinaten oder Zoom-API) noch zu diagnostizieren. E-05 weiterhin manuell offen.
 
 ## 2. Verbindlicher nächster Schritt
 
@@ -42,7 +42,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-06 | DONE | [CI-/APK-Commit bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0), [Run 43451063955 grün](https://github.com/philip20794/Smut/actions/runs/43451063955), `smut-tested-dev-bbafe4f...` inkl. SHA256SUMS; [roter PR #2, null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861) |
 | P1 | E-01 | DONE | [Datierte MIT-/Offline-/IME-/A5-/PDF-Entscheidungsmatrix](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor 1.1.0 zuerst als **Testkandidat**, keine vorzeitige E-04-GO-Freigabe |
 | P1 | E-02 | DONE | Android-API-35-Emulator: echter Touch, Fokus des Canvas-Editors, Eingabe über Android-IME einschließlich Unicode und Wortkomposition/Autokorrektur, Enter/Backspace, atomarer Save/Reload; vollständiger [grüner CI-Lauf 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666); [Testprotokoll](E02_ANDROID_IME_TEST.md). Kein Echtgerätetest (E-05) |
-| P1 | E-03 | IN_PROGRESS | Touch-Zoomsteuerung und isolierten Mehrseitentest hinzugefügt, [Testmatrix](E03_PAGE_FLOW.md), CI für aktuelle Revision noch offen; Langdruck/Cross-Page-Auswahl und IME-Scroll bleiben zu prüfen |
+| P1 | E-03 | IN_PROGRESS | Touch-Zoomsteuerung und isolierter Mehrseitentest implementiert, [Testmatrix](E03_PAGE_FLOW.md); [CI 43470049490](https://github.com/philip20794/Smut/actions/runs/43470049490): Zoom-Touch rot (`0,6` statt `0,7`), drei weitere Emulator-Tests bestanden; Longpress/Cross-Page und IME-Scroll offen |
 | P1 | E-04 | TODO | – |
 | P1 | E-05 | TODO | – |
 | P2 | D-01 | TODO | – |
@@ -94,7 +94,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 - **Letzte sicher geprüfte APK:** `smut-tested-dev-0d0dfc2707d0bab0cd9a4e44d62ff250ef18ec2a`, ZIP mit SHA256SUMS, GitHub-Actions-Artefakt 30 Tage, Entwickler-Paket-ID `io.github.philip20794.smut.dev`. Noch **keine** stabile Release-Signierung oder reale Smartphone-Abnahme.
 - **E-03-Code:** [Zoom-Implementierung im Editor](../editor/src/main.ts), Grenzen 50–100 % und UI-Zoomschaltflächen, isolierter 75-Absatz-Test auf mehrere A5-Seiten, Unit-/Emulator-Tests. Dies zählt noch nicht als E-03-DONE.
 - **Was fehlt:** E-03-Seitenwechsel, Long-Press-Auswahl, Selektion/Ersetzen und Android-IME-Scroll; E-04 PDF-Probe/GO; Geräteabnahme E-05 und alle späteren Phasen P2–P7.
-- **Nächster kleinster Schritt:** aktuelle CI mit Zoom und Mehrseiten-Probe prüfen, danach E-03-Langdruck/Selektion implementieren und emuliert prüfen.
+- **Nächster kleinster Schritt:** Zoom-Tap-Bug aus Run 43470049490 diagnostizieren (angezeigtes Canvas/DOM-Touchziel, Fokus, `executePageScale`); echten UI-Touch reparieren und die vollständige CI erneut grün bringen; erst danach E-03-Langdruck/Selektion.
 - **Nutzeraktion nötig?:** derzeit nein; E-05 braucht später manuelles Feedback.
 
 ## 6. Aktualisierungsregeln
