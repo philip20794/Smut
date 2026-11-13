@@ -1,14 +1,13 @@
 # Android-Modul (`app/`)
 
-**Status: F-02 offen.** Dieser Ordner ist die reservierte Modulwurzel für die Android-App.
+F-02: Kotlin/Jetpack Compose-App mit absichtlich einfacher, ehrlicher Startansicht. **Dies ist noch kein Bucheditor:** keine Bücherverwaltung, kein Rich-Text-Editor, kein PDF-Export.
 
-F-02 legt hier das echte Gradle-Android-Modul mit Kotlin, Jetpack Compose, Ressourcen, Manifest und einem ersten UI-/Unit-Smoke-Test an. In F-01 wurde absichtlich noch kein ausführbarer Quellcode erstellt.
+- `namespace` / Release-`applicationId`: `io.github.philip20794.smut`
+- Debug-`applicationId`: `io.github.philip20794.smut.dev`, separat installierbar
+- `minSdk = 26`, `compileSdk = 36`, `targetSdk = 36`
+- Gradle 8.13, AGP 8.13.2, Kotlin + Compose Compiler 2.2.21, JDK 17
+- Compose BOM 2025.09.00, Activity Compose 1.11.0
 
-Festgelegte Bezeichner:
-- Namespace und Release-`applicationId`: `io.github.philip20794.smut`
-- Spätere Entwickler-Variante: `io.github.philip20794.smut.dev` (`applicationIdSuffix = ".dev"`)
-- `minSdk = 26`, `compileSdk = 36`, `targetSdk = 36` (Baseline, zu F-02 verifizieren)
-- UI: Kotlin + Jetpack Compose
-- JDK: 17, Android Gradle Plugin 8.13.2, Gradle 8.13, Kotlin 2.2.21
+Build: `./gradlew :app:assembleDebug` · Unit-Test: `./gradlew :app:testDebugUnitTest`.
 
-Quelle und Versionsbegründung: [Build-Baseline](../docs/BUILD.md). Editor-/PDF-Bibliotheken sind ausdrücklich noch nicht ausgewählt.
+Der erste Cloud-Build wird durch den Bootstrap-Workflow angelegt. Sobald die Wrapper-JAR aus dem geprüften Gradle-8.13-Runner in `main` liegt, funktioniert der Wrapper auf weiteren Rechnern direkt. Die eigentlichen Editor-WebView-Assets folgen in F-03, die vollständige CI in F-04, Emulator-Tests in F-05.
