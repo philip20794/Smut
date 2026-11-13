@@ -63,5 +63,6 @@ Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffä
 - [Technische Architektur und Machbarkeit](docs/ARCHITECTURE.md)
 - [Akzeptanzkriterien und Testfälle](docs/ACCEPTANCE.md)
 - [GitHub Actions, Tests und APK-Veröffentlichung](docs/CI-CD.md)
+- [Anweisungen für Codex](AGENTS.md)
 
 Diese Unterlagen sind **Anforderungen für einen späteren Codex-Implementierungsplan**, noch kein Implementierungsplan. Unbestätigte technische Annahmen sind ausdrücklich als Prüfaufgaben gekennzeichnet.
