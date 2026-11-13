@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -37,5 +39,10 @@ internal fun SmutStartScreen() {
             webView.destroy()
         }
     }
-    AndroidView(factory = { webView }, modifier = Modifier.fillMaxSize())
+    // Android 15+ draws edge-to-edge. Keep WebView controls clear of the
+    // status/navigation bars and shrink the editor above the soft keyboard.
+    AndroidView(
+        factory = { webView },
+        modifier = Modifier.fillMaxSize().safeDrawingPadding().imePadding()
+    )
 }
