@@ -1,6 +1,6 @@
 # Implementierungsplan: Smut
 
-Stand: 2026-11-13 · Planversion 1 · **Planung, noch keine App-Implementierung**  
+Stand: 2026-11-13 · Planversion 1 · **Planung als stabiler Aufgabenkatalog; Implementierung läuft gemäß PROGRESS.md**  
 Verbindliche Quellen: [README](../README.md), [Produkt](PRODUCT.md), [Architektur](ARCHITECTURE.md), [Abnahme](ACCEPTANCE.md), [CI/CD](CI-CD.md).  
 **Operativer Fortschritt:** [PROGRESS.md](PROGRESS.md). **Wiederaufnahmeprotokoll:** [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md).
 
