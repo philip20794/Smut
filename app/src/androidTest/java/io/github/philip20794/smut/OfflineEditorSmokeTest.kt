@@ -6,7 +6,6 @@ import android.os.SystemClock
 import android.view.View
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
-import android.content.Intent
 import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
@@ -170,24 +169,30 @@ class OfflineEditorSmokeTest {
      */
     private fun ensureEditorWindowFocused() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        repeat(4) { attempt ->
+        device.wakeUp()
+        device.executeShellCommand("wm dismiss-keyguard")
+        var launch = ""
+        repeat(4) {
+            // CLEAR_TOP + SINGLE_TOP reuses the ActivityScenario-owned
+            // MainActivity instead of opening a second editor instance.
+            launch = device.executeShellCommand(
+                "am start -W -n io.github.philip20794.smut.dev/io.github.philip20794.smut.MainActivity -f 0x24000000"
+            )
+            SystemClock.sleep(800L)
             var focused = false
-            scenarioRule.scenario.onActivity { activity ->
-                focused = activity.hasWindowFocus()
-                if (!focused) {
-                    activity.startActivity(
-                        Intent(activity, MainActivity::class.java)
-                            .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                    )
-                }
-            }
+            scenarioRule.scenario.onActivity { focused = it.hasWindowFocus() }
             if (focused) return
             device.waitForIdle()
-            SystemClock.sleep(600L + attempt * 250L)
         }
-        var finalFocus = false
-        scenarioRule.scenario.onActivity { finalFocus = it.hasWindowFocus() }
-        assertTrue("Smut must own the emulator window before native touch input", finalFocus)
+        val focusReport = device.executeShellCommand("dumpsys window windows")
+            .lineSequence()
+            .filter { it.contains("mCurrentFocus") || it.contains("mFocusedApp") || it.contains("mInputMethodTarget") }
+            .take(6)
+            .joinToString(" | ")
+        assertTrue(
+            "Smut must own emulator window; wm=$focusReport; launch=$launch",
+            false
+        )
     }
 
     private fun tapHtmlButton(id: String) {
