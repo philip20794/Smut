@@ -1,3 +1,4 @@
+import { DEFAULT_ZOOM, MIN_ZOOM, MAX_ZOOM, nextZoom, formatZoom } from "./zoom.js";
 import { createReadyMessage, parseReadyAck } from "./bridge.js";
 import {
   INITIAL_DOCUMENT, createDocumentRequest, isPrototypeData, parseDocumentResponse,
@@ -8,7 +9,7 @@ interface AndroidBridge {
   postMessage(payload: string): void;
 }
 interface CanvasEditor {
-  command: { getValue(): { data: PrototypeData } };
+  command: { getValue(): { data: PrototypeData }; executePageScale(scale: number): void };
   listener: { contentChange?: () => void };
 }
 interface CanvasEditorModule {
@@ -25,6 +26,8 @@ declare global {
       getText(): string;
       getSavedStatus(): string | null;
       isLoaded(): boolean;
+      getZoom(): number;
+      getPageCount(): number;
     };
   }
 }
@@ -34,6 +37,9 @@ const editorStatus = document.getElementById("editor-status");
 const retryButton = document.getElementById("recheck-button");
 const saveButton = document.getElementById("save-button");
 const container = document.getElementById("canvas-editor");
+const zoomOutButton = document.getElementById("zoom-out");
+const zoomInButton = document.getElementById("zoom-in");
+const zoomValue = document.getElementById("zoom-value");
 let pendingRequestId = "";
 let checkNumber = 0;
 let saveNumber = 0;
@@ -41,6 +47,22 @@ let pendingSave = false;
 let editor: CanvasEditor | null = null;
 let isLoading = false;
 let isSaving = false;
+let currentZoom = DEFAULT_ZOOM;
+
+function updateZoomControls(): void {
+  if (zoomValue) zoomValue.textContent = formatZoom(currentZoom);
+  if (zoomOutButton instanceof HTMLButtonElement) zoomOutButton.disabled = currentZoom <= MIN_ZOOM;
+  if (zoomInButton instanceof HTMLButtonElement) zoomInButton.disabled = currentZoom >= MAX_ZOOM;
+}
+
+function adjustZoom(direction: -1 | 1): void {
+  if (!editor) return;
+  const zoom = nextZoom(currentZoom, direction);
+  editor.command.executePageScale(zoom);
+  currentZoom = zoom;
+  updateZoomControls();
+}
+
 
 function report(message: string): void {
   if (editorStatus) editorStatus.textContent = message;
@@ -93,12 +115,13 @@ async function initializeEditor(document: PrototypeData): Promise<void> {
       width: 559,
       height: 794,
       margins: [54, 50, 54, 50],
-      scale: 0.60,
+      scale: DEFAULT_ZOOM,
       defaultFont: "serif",
       defaultSize: 15,
       pageMode: "paging",
     });
     editor.listener.contentChange = scheduleSave;
+    updateZoomControls();
     report("A5-Buchseite · Tippen direkt im Text");
   } catch (error) {
     report(`Editor konnte nicht gestartet werden: ${String(error)}`);
@@ -132,6 +155,8 @@ retryButton?.addEventListener("click", () => {
   retryButton.dataset.clicks = String(checkNumber);
   requestHandshake(`recheck-${checkNumber}`);
 });
+zoomOutButton?.addEventListener("click", () => adjustZoom(-1));
+zoomInButton?.addEventListener("click", () => adjustZoom(1));
 saveButton?.addEventListener("click", () => {
   pendingSave = true;
   void saveCurrentDocument();
@@ -140,5 +165,8 @@ window.smutPrototype = {
   getText: () => editor?.command.getValue().data.main.map(x => x.value).join("") ?? "",
   getSavedStatus: () => editorStatus?.textContent ?? null,
   isLoaded: () => editor !== null,
+  getZoom: () => currentZoom,
+  getPageCount: () => container?.querySelectorAll(".ce-page-container canvas").length ?? 0,
 };
+updateZoomControls();
 requestHandshake("startup");
