@@ -1,5 +1,6 @@
 import { DEFAULT_ZOOM, MIN_ZOOM, MAX_ZOOM, nextZoom, formatZoom } from "./zoom.js";
 import { caretScrollDelta } from "./caret-visibility.js";
+import { selectionEdgeScrollDelta } from "./selection-edge-scroll.js";
 import { createReadyMessage, parseReadyAck } from "./bridge.js";
 import {
   INITIAL_DOCUMENT, createDocumentRequest, isPrototypeData, parseDocumentResponse,
@@ -228,13 +229,12 @@ function stopNativeSelectionDrag(): void {
 function autoScrollSelection(): void {
   selectionScrollFrame = 0;
   if (!isNativeSelectionDrag || !selectionDragPoint) return;
-  const edge = Math.min(72, window.innerHeight * 0.14);
   const { x, y } = selectionDragPoint;
-  let delta = 0;
-  if (y < edge) delta = -Math.max(2, (edge - y) * 0.16);
-  if (y > window.innerHeight - edge) {
-    delta = Math.max(2, (y - (window.innerHeight - edge)) * 0.16);
-  }
+  const visual = window.visualViewport;
+  const viewportTop = Math.max(0, visual?.offsetTop ?? 0);
+  const viewportBottom = Math.min(window.innerHeight,
+    (visual?.offsetTop ?? 0) + (visual?.height ?? window.innerHeight));
+  const delta = selectionEdgeScrollDelta(y, viewportTop, viewportBottom);
   if (delta) {
     const before = window.scrollY;
     window.scrollBy(0, delta);
