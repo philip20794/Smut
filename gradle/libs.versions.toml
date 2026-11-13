@@ -1,0 +1,10 @@
+# F-01 version baseline. Android module and wrapper are created in F-02.
+# Versions must be tested together by the first working Android build (F-02).
+[versions]
+agp = "8.13.2"
+kotlin = "2.2.21"
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
