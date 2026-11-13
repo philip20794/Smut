@@ -13,7 +13,14 @@
   </head>
   <body>
     <main class="screen">
-      <header class="title">Smut <span class="subtle">A5-Prototyp</span></header>
+      <header class="editor-header">
+        <span class="title">Smut <span class="subtle">A5-Prototyp</span></span>
+        <div class="zoom-controls" role="group" aria-label="Zoom der Buchansicht">
+          <button type="button" id="zoom-out" aria-label="Verkleinern">−</button>
+          <output id="zoom-value" aria-live="polite">60 %</output>
+          <button type="button" id="zoom-in" aria-label="Vergrößern">+</button>
+        </div>
+      </header>
       <section class="editor-sheet" aria-label="Editierbare A5-Buchseite">
         <div id="canvas-editor"></div>
       </section>
