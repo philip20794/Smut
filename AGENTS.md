@@ -7,6 +7,7 @@
 3. [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md) – Regeln zur Übernahme nach Abbruch oder Kontextverlust.
 4. [README.md](README.md), [docs/PRODUCT.md](docs/PRODUCT.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md), [docs/CI-CD.md](docs/CI-CD.md) – Anforderungen und Qualität.
 5. [docs/DECISIONS.md](docs/DECISIONS.md) – getroffene und noch offene Architekturentscheidungen.
+6. [docs/BUILD.md](docs/BUILD.md) – Projektstruktur, Toolchain-Pins, Buildbefehle und Sicherheitskonventionen.
 
 **Vor jedem Weiterarbeiten:** Aktuellen `main`-Stand und die letzten relevanten Commits/CI-Runs prüfen. Einen möglicherweise veralteten Fortschrittstracker anhand von Code und Tests korrigieren. Danach die aktive oder nächste ausführbare Aufgabe übernehmen – nicht ohne Anlass den Gesamtplan neu schreiben.
 
@@ -28,7 +29,7 @@
 
 ## Arbeitsauftrag für folgende Implementierungssitzungen
 
-Der **Implementierungsplan ist erstellt**. Ausgangszustand: keine Android-Implementierung, keine GitHub Actions Workflows und keine APK. Starte mit der in `docs/PROGRESS.md` bezeichneten nächsten Aufgabe (initial `F-01`) und arbeite schrittweise entlang der Abhängigkeiten.
+Der **Implementierungsplan ist erstellt**. Der bisherige Projektstand ändert sich mit jeder Aufgabe. Starte stets mit der **aktuell** in `docs/PROGRESS.md` bezeichneten nächsten Aufgabe (nach F-01: `F-02`), nicht mit einer statischen ID aus diesem Dokument, und arbeite schrittweise entlang der Abhängigkeiten.
 
 Eine Dokumentation allein startet keine selbständig laufende Hintergrundarbeit. Setze in der tatsächlich laufenden Sitzung um, was mit den verfügbaren Werkzeugen machbar ist, und committe vor Sitzungsende eine präzise Übergabe.
 
