@@ -1,11 +1,24 @@
-# Lokaler Buchseiten-Editor (`editor/`)
+# Lokaler Editorcontainer (`editor/`)
 
-**Status: F-03 offen.** Dieser Ordner reserviert die TypeScript-Editoroberfläche, die später als lokale WebView-Assets in die Android-App eingebettet wird. Für F-01 wurden weder ein npm-Paket noch ein Webserver oder eine Editor-Bibliothek eingeführt.
+**F-03 implementiert; Cloud-Verifikation über GitHub Actions erforderlich.** TypeScript (5.9.3) wird ohne Rich-Text-Bibliothek zu statischen ES-Modulen kompiliert. Der Android-Gradle-Build installiert die gepinnten npm-Pakete und kopiert `dist/` automatisch als `assets/editor/` in die APK. `dist/` und `node_modules/` gehören nicht ins Git.
 
-Grundsätze:
-- Ohne CDN oder Netzwerkzugriff zur Laufzeit; sämtliche JavaScript-, CSS- und Font-Dateien werden im APK gebündelt.
-- Node.js-Version aus [`.node-version`](../.node-version) verwenden, npm samt committeter `package-lock.json` ab F-03.
-- TypeScript-Build und Bridge-API sind in F-03 zu realisieren; Rich-Text-Engine bleibt bis P1-Technologieprüfung offen.
-- Im Entwicklungsprozess darf der Editor lokal gebaut werden. Die App darf keinen externen Server benötigen.
+```bash
+cd editor
+npm ci --ignore-scripts
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
 
-Siehe [Build-Baseline](../docs/BUILD.md) und [Implementierungsplan](../docs/IMPLEMENTATION_PLAN.md).
+- `src/index.html`, `style.css`, `main.ts`: rein lokale, noch nicht editierbare A5-Containeransicht.
+- `src/bridge.ts`: Handshake mit `version: 1`, `type: "ready"`/`"ready-ack"` und `requestId` (1–40 Zeichen, `[A-Za-z0-9_-]`). Andere Nachrichten werden verworfen.
+- `tests/bridge.test.mjs`: erlaubte/ungültige Nachrichten und Schema-Test.
+- `scripts/lint.mjs`: Sicherung gegen versehentliche externe URL-Referenzen, `eval`, fehlende CSP-Grenzen. Kein Ersatz für die späteren umfangreichen Lint-Regeln aus F-04.
+- `scripts/copy-static.mjs`: kopiert HTML/CSS nach `dist/`; keine CDN-, Internet-, Webserver- oder Cloud-Abhängigkeit zur Laufzeit.
+
+**Sicherheit:** Die App lädt nur `https://appassets.androidplatform.net/assets/editor/*` über `WebViewAssetLoader` aus der APK. Fremde Requests werden blockiert, kein `INTERNET`-Manifest-Recht, kein `file://`- oder `content://`-Zugriff. `SmutAndroid.postMessage` verarbeitet in F-03 ausschließlich die `ready`-Nachricht und antwortet mit einer JSON-quotierten Quittung. Es gibt absichtlich **keinen** Datei- oder Buch-Datenzugriff.
+
+In F-05 muss die WebView auf dem Emulator tatsächlich gestartet und der Bridge-Handshake beobachtet werden. Die endgültige Rich-Text-Engine, PDF-Technik und Geräteakzeptanz gehören zu P1, nicht zu F-03.
+
+Siehe [BUILD.md](../docs/BUILD.md), [ARCHITECTURE.md](../docs/ARCHITECTURE.md) und [PROGRESS.md](../docs/PROGRESS.md).

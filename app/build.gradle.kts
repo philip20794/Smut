@@ -44,6 +44,41 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.webkit:webkit:1.17.0")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
+}
+
+
+// F-03: Der Android-Build erstellt die Offline-Assets selbst. Kein vorgebautes
+// dist/ und kein externer Server werden für die APK benötigt.
+val editorDirectory = rootProject.file("editor")
+val editorAssetsRoot = layout.buildDirectory.dir("generated/smutEditorAssets")
+val editorNpmCi = tasks.register<Exec>("editorNpmCi") {
+    workingDir = editorDirectory
+    commandLine("npm", "ci", "--ignore-scripts", "--no-audit", "--no-fund")
+    inputs.files(editorDirectory.resolve("package.json"), editorDirectory.resolve("package-lock.json"))
+    outputs.dir(editorDirectory.resolve("node_modules"))
+}
+val editorBuild = tasks.register<Exec>("editorBuild") {
+    dependsOn(editorNpmCi)
+    workingDir = editorDirectory
+    commandLine("npm", "run", "build")
+    inputs.dir(editorDirectory.resolve("src"))
+    inputs.dir(editorDirectory.resolve("scripts"))
+    inputs.file(editorDirectory.resolve("tsconfig.json"))
+    outputs.dir(editorDirectory.resolve("dist"))
+}
+val stageEditorAssets = tasks.register<Sync>("stageEditorAssets") {
+    dependsOn(editorBuild)
+    from(editorDirectory.resolve("dist"))
+    into(editorAssetsRoot.map { it.dir("editor") })
+}
+android.sourceSets.getByName("main").assets.srcDir(editorAssetsRoot)
+tasks.named("preBuild").configure { dependsOn(stageEditorAssets) }
+tasks.configureEach {
+    if (name.startsWith("merge") && name.endsWith("Assets")) {
+        dependsOn(stageEditorAssets)
+    }
 }

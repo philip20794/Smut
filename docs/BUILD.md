@@ -1,21 +1,21 @@
 # F-01 – Projektstruktur, Toolchain und Buildkonventionen
 
-**Stand: 2026-11-13.** Dies ist die verbindliche Baseline für [F-01](IMPLEMENTATION_PLAN.md). **F-02 ist umgesetzt und in GitHub Actions erfolgreich gebaut und getestet.** F-03 ergänzt die lokale TypeScript-WebView-App. Android-Buildbefehle sind ausführbar; die npm-Kommandos bleiben bis F-03 vorbereitet.
+**Stand: 2026-11-13.** Dies ist die verbindliche Baseline für [F-01](IMPLEMENTATION_PLAN.md). **F-02 ist in GitHub Actions erfolgreich gebaut und getestet.** F-03 enthält nun den lokalen TypeScript-WebView-Container; die Cloud-Verifikation ist im F-03-Bootstrap-Workflow vorgesehen. Die npm-Kommandos sind implementiert.
 
 ## 1. Projektstruktur
 
 | Pfad | Aufgabe / Stand |
 | --- | --- |
 | `app/` | Minimale startbare Android-App mit Kotlin und Jetpack Compose; **F-02 erledigt** |
-| `editor/` | offline gebündelte TypeScript-Buchseiten-UI; Build **F-03** |
+| `editor/` | TypeScript-Quellen, Lockdatei, Sicherheitslint, Bridge-Tests und Offline-HTML/CSS; **F-03** |
 | `gradle/libs.versions.toml` | zentrale Plugin-Versionen für das kommende Gradle-Projekt; **F-01** |
 | `.node-version` | exakt gepinnte Node-Version für spätere Builds; **F-01** |
 | `.gitignore` und `.editorconfig` | Build-, Sicherheits- und Formatierungsregeln; **F-01** |
 | `docs/` | Produkt, Architektur, Aufgaben, Fortschritt und Entscheidungen |
-| `.github/workflows/android-bootstrap.yml` | Minimaler erfolgreicher Cloud-Build; Erweiterung um vollständige CI/Emulator in **F-04 bis F-06** |
+| `.github/workflows/android-bootstrap.yml` | F-03-Bootstrap mit Editorprüfungen, APK-Assetkontrolle und Android-Checks; vollständige CI/Emulator in **F-04 bis F-06** |
 | `gradle/wrapper/`, `gradlew`, `gradlew.bat` | Offizieller Gradle-8.13-Wrapper inklusive JAR und SHA-256-Verifikation; **F-02 erledigt** |
 
-F-01 hat zunächst die Ordner reserviert. F-02 hat Android-Kotlin-Quellcode, Manifest, Ressourcen und einen JUnit-Test ergänzt. Ein TypeScript-Editor und WebView sind noch nicht vorhanden. Generierte APKs gehören ausschließlich in Actions-Artefakte, nicht in den Git-Quellbaum.
+F-01 hat zunächst die Ordner reserviert. F-02 hat Android-Kotlin-Quellcode, Manifest, Ressourcen und einen JUnit-Test ergänzt. Der lokale TypeScript-Container und die WebView sind im F-03-Code vorhanden; Rich-Text-Editor und Emulator-Test folgen später. Generierte APKs gehören ausschließlich in Actions-Artefakte, nicht in den Git-Quellbaum.
 
 ## 2. Versionierte Baseline
 
@@ -30,9 +30,9 @@ F-01 hat zunächst die Ordner reserviert. F-02 hat Android-Kotlin-Quellcode, Man
 | `minSdk` | **26** | F-02 `app/build.gradle.kts` | Android 8.0 und neuer |
 | Node.js | **24.22.3 LTS** | `.node-version` | vollständige Patchversion; GitHub Action `setup-node` unterstützt die Versionsdatei |
 | npm | **npm (mit gepinntem Node geliefert)** | F-03 `package-lock.json` und ggf. `packageManager` | `npm ci` statt nichtdeterministischem `npm install` in CI |
-| TypeScript | **5.9.3 als Startkandidat** | erst F-03 `editor/package.json` und Lockfile | vor Festlegung gegen Editor-Toolchain testen |
+| TypeScript | **5.9.3** | `editor/package.json` und Lockfile | lokale, offline gebündelte JS-/CSS-/HTML-Assets; Rich-Text-Wahl noch offen |
 
-Die Android-Werte wurden mit dem grünen F-02-Cloud-Build bestätigt ([Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967)). Das betrifft AGP/Kotlin/JDK, SDK 36 sowie Compose BOM 2025.09.00 und Activity Compose 1.11.0. Die Node/TypeScript-Konfiguration wird erst in F-03 im Build getestet. Keine wildcard-/`latest`-Versionen in CI oder Releasekonfiguration.
+Die Android-Werte wurden mit dem grünen F-02-Cloud-Build bestätigt ([Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967)). Das betrifft AGP/Kotlin/JDK, SDK 36 sowie Compose BOM 2025.09.00 und Activity Compose 1.11.0. Die Node/TypeScript-Konfiguration wird im F-03-Cloud-Build geprüft. Keine wildcard-/`latest`-Versionen in CI oder Releasekonfiguration.
 
 **Quellen für die Kompatibilitätsentscheidung:**
 - [Android Gradle Plugin 8.13 – JDK 17, Gradle 8.13, API 36](https://developer.android.com/build/releases/agp-8-13-0-release-notes)
@@ -78,7 +78,7 @@ npm test
 npm run build
 ```
 
-**Verifiziert:** Der Android-Workflow hat `:app:testDebugUnitTest`, `:app:lintDebug` und `:app:assembleDebug` erfolgreich ausgeführt. Die Debug-APK und Testreports sind im [Actions-Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) verfügbar. **Noch nicht ausführbar:** die npm-/TypeScript-Befehle; `editor/package.json`, Lockdatei und Scripts folgen in F-03.
+**Verifiziert:** Der Android-Workflow hat `:app:testDebugUnitTest`, `:app:lintDebug` und `:app:assembleDebug` erfolgreich ausgeführt. Die Debug-APK und Testreports sind im [Actions-Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) verfügbar. **F-03-Quellen vorhanden:** npm-/TypeScript-Befehle und automatische Gradle-Asset-Integration. Der tatsächliche grüne F-03-Workflow muss vor Status `DONE` dokumentiert werden.
 
 ## 6. Cloud-only Betrieb
 
@@ -106,3 +106,11 @@ Für den Nutzer ist keine lokale Shell und kein Rechner notwendig. Codex/GitHub 
 - [Offizieller Gradle Wrapper im Git](https://github.com/philip20794/Smut/commit/954d2e89e98117377d09f047f46bbeca3cf073e4) nach Wrapper-JAR-SHA-256-Prüfung.
 - [Erfolgreicher GitHub-Actions-Lauf](https://github.com/philip20794/Smut/actions/runs/43441065967): `testDebugUnitTest`, `lintDebug`, `assembleDebug` alle bestanden; Artefakte `smut-f02-test-reports` und `smut-f02-debug-ea85d41e72b226d014e65bdd806befa2cdb7d729`.
 - APK ist **eine Debug-Testversion**, keine signierte Release-Version. In ihr gibt es erst eine Startansicht; das Buchschreiben kommt später. Emulator-UI-Tests werden in F-05 ergänzt.
+
+## 9. F-03 – Lokale WebView-Assets
+
+- `./gradlew :app:assembleDebug` führt `npm ci` und `npm run build` über Gradle-Tasks aus. Node muss in der Buildumgebung aus `.node-version` eingerichtet sein.
+- Die generierten Dateien `index.html`, `style.css`, `main.js`, `bridge.js` landen unter `assets/editor/` in der APK; der Bootstrap-Workflow prüft das ZIP-Inhaltsverzeichnis.
+- `WebViewAssetLoader` bindet nur das lokale `/assets/editor/`-Verzeichnis ein. Die Android-Manifestdatei erfordert kein `INTERNET`-Recht; HTTPS-Außenaufrufe, Frames, `file://` und `content://` werden blockiert.
+- Die einseitige UI bestätigt den JSON-Handshake `ready` → `ready-ack`. Native API bietet keine Daten-/Dateioperationen; dafür sind erst weitere versionierte Nachrichten und Tests erlaubt.
+- JVM-/Node-Tests prüfen Nachrichtenschema, URL-Allowlist und negative Fälle. Die reale WebView-Laufzeit gehört zum Emulator-Test F-05.

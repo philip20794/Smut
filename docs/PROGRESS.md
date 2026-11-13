@@ -5,32 +5,23 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-13
-- **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 und F-02 abgeschlossen. Minimale Compose-App, Unit-Test und Cloud-Debug-APK nachgewiesen; der lokale Editor fehlt noch.
+- **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 und F-02 abgeschlossen, F-03 implementiert und in Cloud-Prüfung. Lokaler TypeScript-/WebView-Container, Bridge-Tests und Asset-Build sind eingecheckt; F-03 noch nicht als grün nachgewiesen.
 - **Meilenstein:** `P0 – Projektgerüst und Cloud-Build`
-- **Aktive Aufgabe:** keine; F-02 erfolgreich abgeschlossen
-- **Nächste ausführbare Aufgabe:** `F-03` – lokal gebündelter Editor-Container (TypeScript + WebView)
+- **Aktive Aufgabe:** `F-03` – `IN_REVIEW`, wartend auf einen erfolgreichen CI-Run der neuen Quellen
+- **Nächste ausführbare Aufgabe:** F-03-CI prüfen und eventuelle Fehler beheben; danach `F-04`
 - **Abgeschlossene Aufgaben:** **2 / 35 (5,7 %)**; ausschließlich Aufgaben mit `DONE` zählen.
 - **Letzter verifizierter grüner CI-Lauf:** [Android F-02 Bootstrap – 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) – Erfolg, Unit-Test/Lint/Debug-APK gebaut. Vollständige CI folgt in F-04.
 - **Letzte geprüfte APK:** `smut-f02-debug-ea85d41e72b226d014e65bdd806befa2cdb7d729` (Actions-Artefakt im [erfolgreichen Lauf](https://github.com/philip20794/Smut/actions/runs/43441065967)); **nicht auf realem Gerät getestet**.
 - **Letztes dokumentiertes Release:** keines.
 - **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
 - **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
-- **Unmittelbarer Blocker:** keiner für `F-03`. Das Gradle-/Compose-Grundprojekt wurde im Cloud-Build verifiziert.
+- **Unmittelbarer Blocker:** keiner; F-03 darf erst nach tatsächlich grünem Cloud-Build auf `DONE`.
 
 ## 2. Verbindlicher nächster Schritt
 
-**Aufgabe:** `F-03` – Lokal gebündelter Editor-Container.
+**F-03 – Code eingecheckt, Cloud-Verifikation offen.** TypeScript 5.9.3, npm-Lockdatei, lokale HTML-/CSS-/JS-Ausgabe, Kotlin-WebViewAssetLoader und enger versionierter JSON-Handshake sind implementiert. Der Bootstrap-Workflow prüft jetzt npm-Typecheck, Sicherheitslint, Node-Bridge-Tests, Android-Unit-Tests, Android-Lint und die Assets in der APK.
 
-**Ziel:** Die vorhandene Compose-App um eine offline funktionierende WebView erweitern, in der zunächst ein kleines lokal gebautes TypeScript-UI läuft. Die endgültige Rich-Text-Engine wird erst in P1 entschieden.
-
-**Konkret fortfahren mit:**
-1. Die aktuelle `main`-Revision, [AGENTS.md](../AGENTS.md), [F-03 im Plan](IMPLEMENTATION_PLAN.md) und [BUILD.md](BUILD.md) lesen; F-02 nach grüner CI nicht erneut aufbauen.
-2. Im Ordner `editor/` ein reproduzierbares TypeScript-Projekt mit `package.json`, Lockdatei und Skripten für Typprüfung, Lint, Tests und Build anlegen.
-3. TypeScript/HTML/CSS offline als Assets in die APK integrieren, mit sicherer WebView-Konfiguration und schmaler Kotlin-JavaScript-Bridge.
-4. Bridge-Vertrag und lokalen Asset-Zugriff testen, keine externen Netzwerkzugriffe oder CDNs. Rich-Text-Bibliothek nicht vor P1-GO festlegen.
-5. Mit GitHub Actions den Android-Build einschließlich lokaler Editor-Assets tatsächlich verifizieren und Test-/Commit-Links hier dokumentieren.
-
-**Vorhandene Grundlage:** [GitHub Actions Lauf 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) ist grün; `testDebugUnitTest`, `lintDebug`, `assembleDebug` bestanden, offizielle Wrapper-JAR wurde nach Prüfsumme committed. Test-APK und JUnit-Reports wurden als Artefakte hochgeladen.
+**Weiterarbeit:** Den GitHub-Actions-Lauf des F-03-Code-Commits auswerten, Fehler beheben und erneut prüfen. Bei Grün F-03 auf `DONE` setzen und `F-04` aktivieren. Keine reale Touch-/IME-Abnahme behaupten; diese kommt später.
 
 ## 3. Task-Tracker
 
@@ -40,7 +31,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | --- | --- | --- | --- |
 | P0 | F-01 | DONE | [Baseline-Commit](https://github.com/philip20794/Smut/commit/5801f814e619999645b658fdd9930b02c5fb00c1), [Build-Doku](BUILD.md); alle F-01-Dateien auf `main` geprüft, kein Build erwartet |
 | P0 | F-02 | DONE | [Basiscommit](https://github.com/philip20794/Smut/commit/bd859c9357d24db4ed11a38b0c06407c6f9b6859), [Wrapper-Commit](https://github.com/philip20794/Smut/commit/954d2e89e98117377d09f047f46bbeca3cf073e4), [grüner CI-Lauf mit Unit-Test/Lint/APK](https://github.com/philip20794/Smut/actions/runs/43441065967) |
-| P0 | F-03 | TODO | – |
+| P0 | F-03 | IN_REVIEW | TypeScript-/WebView-Code + Tests auf `main`; neuer CI-Run noch ausstehend |
 | P0 | F-04 | TODO | – |
 | P0 | F-05 | TODO | – |
 | P0 | F-06 | TODO | – |
@@ -92,17 +83,15 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 ## 5. Letzte Arbeitssitzung / Handoff
 
 - **Datum:** 2026-11-13
-- **Aktive Task-ID:** keine; F-02 `DONE`.
-- **Erreicht:** Kotlin-/Jetpack-Compose-Android-Modul mit Startscreen, Manifest, Strings, A5-Konfigurationswerten und JUnit-Test; Gradle Root/Versionen, offizieller Wrapper samt JAR; minimaler automatischer Cloud-Build als Bootstrap-Workflow.
-- **Letzter verifizierter Code-Commit:** [954d2e89](https://github.com/philip20794/Smut/commit/954d2e89e98117377d09f047f46bbeca3cf073e4) (offizielle Wrapper-JAR nach [Basiscommit](https://github.com/philip20794/Smut/commit/bd859c9357d24db4ed11a38b0c06407c6f9b6859) und [SDK-Fix](https://github.com/philip20794/Smut/commit/ea85d41e72b226d014e65bdd806befa2cdb7d729)).
-- **Verifizierte Builds/Tests:** [Workflow 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) `success`; `app:testDebugUnitTest`, `app:lintDebug`, `app:assembleDebug` erfolgreich.
-- **APK-Artefakt:** `smut-f02-debug-ea85d41e72b226d014e65bdd806befa2cdb7d729` (ca. 9,4 MB als GitHub-Artifakt); Report `smut-f02-test-reports`.
-- **Erster CI-Fehler und Lösung:** [Lauf 43440943578](https://github.com/philip20794/Smut/actions/runs/43440943578) scheiterte am veralteten SDK-Paket `tools`. Entfernt; Folgelauf grün.
-- **Funktioniert nachweislich:** Gradle-Build, Kotlin/Compose-Kompilierung, Unit-Test, Lint, APK-Erstellung. **Nicht nachgewiesen:** Installation auf echtem Telefon, vollständige UI-Gesten, Editor, PDF, Signier-/Updatepfad.
-- **Offene Risiken:** Android-IME/Touch-Editor und PDF-Fidelity; Technologiewahl erst P1. F-04 erweitert den derzeitigen Bootstrap-Build zur vollständigen CI, F-05 ergänzt Emulator-UI-Tests.
-- **Was fehlt:** F-03 bis R-04.
-- **Nächster kleinster ausführbarer Schritt:** F-03 beginnen, lokales TypeScript-Projekt und Offline-WebView integrieren.
-- **Benötigte Nutzeraktion:** keine.
+- **Aktive Task-ID:** F-03 `IN_REVIEW`.
+- **Erreicht:** TypeScript-Modul mit gepinnter Lockdatei und Node-Tests, statisches A5-Offline-HTML, Kotlin-WebView mit AssetLoader/URL-Allowlist, schmaler JSON-Handshake, negative JVM-Tests, Android-Gradle-Asset-Tasks sowie F-03-Cloud-Workflow.
+- **Letzter verifizierter grüner CI-Lauf:** [43442035683](https://github.com/philip20794/Smut/actions/runs/43442035683) vom vorherigen Stand F-02, **nicht** F-03.
+- **Letzter Code-Commit:** siehe Git-Commit direkt vor diesem Tracker; dessen F-03-Cloud-Workflow muss separat ausgewertet werden.
+- **Was funktioniert nachweislich:** F-02-Android-Build und Tests. **Noch nicht nachgewiesen:** F-03-Compile/Assetpackaging, WebView-Laufzeit im Emulator, Echtgerät-Tests, Buchfunktionen und PDF.
+- **Was fehlt / ist blockiert:** F-03-Workflow grün bestätigen; danach F-04 (PR/push/manuell, Pflichtchecks, Red-Test-Nachweis).
+- **Nächster kleinster ausführbarer Schritt:** Actions-Lauf für F-03-Code prüfen und Tracker auf tatsächlichen Status bringen.
+- **Entscheidung / Risiken:** Kein Rich-Text-Framework vor dem P1-GO; die native Bridge ist bewusst auf den `ready`-Handshake begrenzt.
+- **Nutzeraktion nötig?:** nein.
 
 ## 6. Aktualisierungsregeln
 
