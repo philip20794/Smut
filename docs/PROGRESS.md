@@ -5,10 +5,10 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-13
-- **Projektstatus:** `PLANNED` – Dokumentation und Implementierungsplan vorhanden; Anwendung, Build-Workflows und Tests noch nicht implementiert.
+- **Projektstatus:** `IN_PROGRESS` – F-01 (Repo-Baseline) wird umgesetzt; noch keine App, Workflows oder Tests.
 - **Meilenstein:** `P0 – Projektgerüst und Cloud-Build`
-- **Aktive Aufgabe:** keine
-- **Nächste ausführbare Aufgabe:** `F-01` – Repo-Baseline und Buildkonventionen
+- **Aktive Aufgabe:** `F-01` – Repo-Baseline und Buildkonventionen
+- **Nächste ausführbare Aufgabe:** `F-01` fertigstellen: Struktur und Versionen einchecken und verifizieren
 - **Abgeschlossene Aufgaben:** **0 / 35 (0 %)**; ausschließlich Aufgaben mit `DONE` zählen.
 - **Letzter verifizierter grüner CI-Lauf:** keiner; noch keine GitHub Actions Workflows.
 - **Letzte geprüfte APK:** keine.
@@ -38,7 +38,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 | Phase | Task-ID | Status | Prüfbeleg / Blocker |
 | --- | --- | --- | --- |
-| P0 | F-01 | TODO | – |
+| P0 | F-01 | IN_PROGRESS | Toolchains, Git-Konventionen und Build-Dokumentation werden angelegt |
 | P0 | F-02 | TODO | – |
 | P0 | F-03 | TODO | – |
 | P0 | F-04 | TODO | – |
@@ -96,8 +96,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 - **Implementierter Code:** keiner.
 - **Geänderte Anforderungen:** Die technische Entscheidung wird nach dem P1-Prototyp getroffen; ein **vorläufiger** Gesamtplan besteht bereits.
 - **Verifizierte Builds/Tests:** keine (noch nicht vorhanden).
-- **Offen:** F-01.
-- **Nächster konkreter Schritt:** `F-01` starten, Plan/AGENTS beachten, Basisprojekt und erste Buildfestlegungen einchecken.
+- **Offen:** F-01 in Arbeit; noch keine Build- oder Test-Infrastruktur.
+- **Nächster konkreter Schritt:** F-01-Konfigurationsdateien in `main` anlegen, Konsistenz prüfen, Tracker danach aktualisieren.
 - **Risiken:** Touch-/IME-Kompatibilität und PDF-Fidelity; als P1-Gates geplant.
 - **Benötigte Nutzerentscheidung jetzt:** keine.
 
