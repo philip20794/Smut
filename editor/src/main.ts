@@ -39,7 +39,6 @@ let checkNumber = 0;
 let saveNumber = 0;
 let pendingSave = false;
 let editor: CanvasEditor | null = null;
-let latestSave = "";
 let isLoading = false;
 let isSaving = false;
 
@@ -122,7 +121,6 @@ window.addEventListener("smut:native", (event: Event) => {
     void initializeEditor(response.document ?? INITIAL_DOCUMENT);
   }
   if (response.type === "save-result" && response.requestId === `save-${saveNumber}`) {
-    latestSave = response.saved ? "Gespeichert" : "Speicherfehler";
     report(response.saved ? "Lokal gespeichert" : "Speichern fehlgeschlagen");
     isSaving = false;
     if (pendingSave) void saveCurrentDocument();
