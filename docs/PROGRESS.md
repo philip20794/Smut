@@ -41,7 +41,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-05 | DONE | [Emulator-Code 4ddc6a3](https://github.com/philip20794/Smut/commit/4ddc6a37911e5b45dd9b4a4e62a448d44bda233a), [sh-Fix d132b72](https://github.com/philip20794/Smut/commit/d132b7279d260f26b9dd375948e958cee9a27e13), [grüner Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346): API-35-Emulator, offline WebView/Handshake und Button-Interaktion bestanden |
 | P0 | F-06 | DONE | [CI-/APK-Commit bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0), [Run 43451063955 grün](https://github.com/philip20794/Smut/actions/runs/43451063955), `smut-tested-dev-bbafe4f...` inkl. SHA256SUMS; [roter PR #2, null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861) |
 | P1 | E-01 | DONE | [Datierte MIT-/Offline-/IME-/A5-/PDF-Entscheidungsmatrix](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor 1.1.0 zuerst als **Testkandidat**, keine vorzeitige E-04-GO-Freigabe |
-| P1 | E-02 | IN_REVIEW | Erste Canvas-A5-Editor-Integration und atomare Prototyp-Speicher-Bridge, Node/JVM-/Emulator-Save-Reload-Tests im Code; CI-Erfolg und echte Tastatureingabe noch offen |
+| P1 | E-02 | IN_REVIEW | Erste Canvas-A5-Editor-Integration und atomare Prototyp-Speicher-Bridge, Node-/JVM-Checks erfolgreich. [Emulatorlauf 43453983224](https://github.com/philip20794/Smut/actions/runs/43453983224) zeigt fehlenden Worker-/Inline-Style-CSP-Zugriff; gezielte Offline-CSP-Anpassung wird geprüft. Echte Tastatureingabe noch offen |
 | P1 | E-03 | TODO | – |
 | P1 | E-04 | TODO | – |
 | P1 | E-05 | TODO | – |
@@ -96,7 +96,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 - **E-01:** [EDITOR_EVALUATION.md](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor als erster testbarer Kandidat, Tiptap ohne kostenpflichtige Pages/Conversion-Funktion als Fallback. Mobile Texteingabe/PDF bleiben ungeprüft.
 - **Funktioniert nachweislich:** isolierte Offline-WebView mit Button und Bridge, CI-/APK-Ausgabe nach Emulator-Go; fehlerhafte Tests sperren geprüfte APK.
 - **Was fehlt:** E-02 echtes Rich-Text-Tippen/Android-IME und Speicherung, E-03 Selektion/Seitenwechsel, E-04 A5-PDF/GO-Entscheidung, später echter Smartphone-Test.
-- **Nächster kleinster Schritt:** E-02 CI-Lauf für Canvas-Editor-Assets, AtomicFile und Emulator-Save/Reload kontrollieren; danach echte IME-Tastatureingabe testen.
+- **Fehler und Gegenmaßnahme:** [Run 43453983224](https://github.com/philip20794/Smut/actions/runs/43453983224) rot im Emulator, Canvas Editor konnte nicht initialisieren: Browser-Log zeigte blockierte lokale `blob:`-/`data:`-WebWorkers und dynamische Inline-Styles. CSP wurde auf diese konkreten Offline-Erfordernisse gelockert; `script-src 'self'` und `connect-src 'none'` bleiben strikt. Zweiter Diagnose-Run läuft.
+- **Nächster kleinster Schritt:** E-02-Emulatorlauf nach CSP-Fix auswerten, Save/Reload testen; dann reale IME-Tastatureingabe ergänzen.
 - **Nutzeraktion nötig?:** nein.
 
 ## 6. Aktualisierungsregeln
