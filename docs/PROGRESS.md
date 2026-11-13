@@ -8,10 +8,10 @@
 - **Projektstatus:** `IN_PROGRESS` – **P0-Gate abgeschlossen (F-01 bis F-06)**, P1 gestartet: E-01-Technologiematrix erstellt. A5-Offline-WebView und CI-geprüfte Debug-APK mit Emulator-Smoke vorhanden; echter Rich-Text-Prototyp folgt E-02.
 - **Meilenstein:** `P1 – Machbarkeitsnachweis und Technologieentscheidung`
 - **Aktive Aufgabe:** `E-02` – `IN_REVIEW`: erster Canvas-A5-Editor mit lokaler Datei-Bridge und Prototyp-Tests implementiert; Cloud-Emulator-/IME-Nachweis offen
-- **Nächste ausführbare Aufgabe:** E-02-CI-Lauf prüfen und Fehler beheben; danach reale Android-Tastatur-Eingabe, Cursor und Unicode in einem Instrumentationstest nachweisen
+- **Nächste ausführbare Aufgabe:** E-02: nativen Touch- und Android-InputConnection-Test im Cloud-Emulator auswerten; bei Grün Cursor/Unicode/Enter/Backspace und Save/Reload dokumentieren
 - **Abgeschlossene Aufgaben:** **7 / 35 (20,0 %)**; ausschließlich Aufgaben mit `DONE` zählen.
-- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955), `success`: Editor + Android + API-35-Emulator + geprüfte APK. [F-06-Negativprobe 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861), `failure`: alle nachgelagerten Jobs/`tested-apk` `skipped`, **keine Artifacts**.
-- **Letzte geprüfte APK:** `smut-tested-dev-bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0` (ca. 9,5 MB, [GitHub Actions 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955), SHA256SUMS enthalten, temporäres 30-Tage-Artifact). **Nicht auf realem Telefon getestet.**
+- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43455357356](https://github.com/philip20794/Smut/actions/runs/43455357356), `success`: Editor + Android + API-35-Emulator + geprüfte APK. [F-06-Negativprobe 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861), `failure`: alle nachgelagerten Jobs/`tested-apk` `skipped`, **keine Artifacts**.
+- **Letzte geprüfte APK:** `smut-tested-dev-102b56b604b30bd81dcede47d4e9f24432d33b43` (ca. 10,8 MB als ZIP, [GitHub Actions 43455357356](https://github.com/philip20794/Smut/actions/runs/43455357356), SHA256SUMS enthalten, temporäres 30-Tage-Artifact). **Nicht auf realem Telefon getestet.**
 - **Letztes dokumentiertes Release:** keines.
 - **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
 - **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
@@ -41,7 +41,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-05 | DONE | [Emulator-Code 4ddc6a3](https://github.com/philip20794/Smut/commit/4ddc6a37911e5b45dd9b4a4e62a448d44bda233a), [sh-Fix d132b72](https://github.com/philip20794/Smut/commit/d132b7279d260f26b9dd375948e958cee9a27e13), [grüner Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346): API-35-Emulator, offline WebView/Handshake und Button-Interaktion bestanden |
 | P0 | F-06 | DONE | [CI-/APK-Commit bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0), [Run 43451063955 grün](https://github.com/philip20794/Smut/actions/runs/43451063955), `smut-tested-dev-bbafe4f...` inkl. SHA256SUMS; [roter PR #2, null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861) |
 | P1 | E-01 | DONE | [Datierte MIT-/Offline-/IME-/A5-/PDF-Entscheidungsmatrix](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor 1.1.0 zuerst als **Testkandidat**, keine vorzeitige E-04-GO-Freigabe |
-| P1 | E-02 | IN_REVIEW | Erste Canvas-A5-Editor-Integration und atomare Prototyp-Speicher-Bridge, Node-/JVM-Checks erfolgreich. [Emulatorlauf 43453983224](https://github.com/philip20794/Smut/actions/runs/43453983224) zeigt fehlenden Worker-/Inline-Style-CSP-Zugriff; gezielte Offline-CSP-Anpassung wird geprüft. Echte Tastatureingabe noch offen |
+| P1 | E-02 | IN_REVIEW | Canvas-A5-Editor, native Datei-Bridge, Store/Reload mit [grünem Emulatorlauf 43455357356](https://github.com/philip20794/Smut/actions/runs/43455357356) bestätigt. Nativer Tap-/Android-IME-Test ergänzt; dessen CI-Nachweis noch offen |
 | P1 | E-03 | TODO | – |
 | P1 | E-04 | TODO | – |
 | P1 | E-05 | TODO | – |
