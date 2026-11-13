@@ -156,8 +156,7 @@ class OfflineEditorSmokeTest {
             exact = true
         )
 
-        onWebView().withElement(findElement(Locator.ID, "save-button"))
-            .perform(webClick())
+        tapHtmlButton("save-button")
         awaitJavaScriptValue("document.getElementById('editor-status')?.textContent", "Lokal gespeichert")
         scenarioRule.scenario.recreate()
         awaitJavaScriptValue("window.smutPrototype?.getText()", "Smut Äöüß")
