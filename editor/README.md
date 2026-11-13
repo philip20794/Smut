@@ -24,3 +24,11 @@ In F-05 muss die WebView auf dem Emulator tatsächlich gestartet und der Bridge-
 Siehe [BUILD.md](../docs/BUILD.md), [ARCHITECTURE.md](../docs/ARCHITECTURE.md) und [PROGRESS.md](../docs/PROGRESS.md).
 
 **Cloud-Gate P0:** [43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) mit erfolgreich ausgeführtem API-35-Offline-WebView-Smoketest. E-01 bewertet [Canvas Editor 1.1.0 und Fallbacks](../docs/EDITOR_EVALUATION.md); E-02 fügt erst danach die echte Rich-Text-Bearbeitung hinzu.
+
+## E-02: echter Canvas-A5-Editor (Prototyp)
+
+- `@hufe921/canvas-editor@1.1.0` wird beim Build via npm-Lockfile unter `dist/vendor/` vollständig in die APK kopiert und ausschließlich lokal importiert. Keine endgültige Editorwahl bis zum E-04-GO.
+- A5-Prototyp (559 × 794 CSS-Pixel bei 96 dpi, proportional zu 148 × 210 mm) bietet eine echte Canvas-Schreibfläche. Die Pixelmaße sind **noch kein druckvalidierter A5-PDF-Export**.
+- Die native JSON-Bridge verarbeitet `ready`, `load`, `save` mit Version/Request-ID, begrenzter Nachrichtenlänge und validierten Dokumentelementen. `AtomicFile` schützt die temporäre private Testdatei beim Schreiben.
+- Der Editor speichert als vorläufiges Bibliotheksformat, nicht als endgültiges Buch-/Kapitelmodell. Datenmodell, Backups und sichere Migration folgen P2.
+- Tests: Unit-Verträge für erlaubte/verweigerte Dokumente und instrumentierte Prüfung von Start, Speichern, Neustart und Reload. **Noch erforderlich:** Cursor-/IME-/Autokorrektur-/Backspace-/Enter-Tests auf Android; bevor diese grün sind, darf E-02 nicht `DONE` sein.

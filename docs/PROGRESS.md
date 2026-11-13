@@ -7,24 +7,24 @@
 - **Stand:** 2026-11-13
 - **Projektstatus:** `IN_PROGRESS` – **P0-Gate abgeschlossen (F-01 bis F-06)**, P1 gestartet: E-01-Technologiematrix erstellt. A5-Offline-WebView und CI-geprüfte Debug-APK mit Emulator-Smoke vorhanden; echter Rich-Text-Prototyp folgt E-02.
 - **Meilenstein:** `P1 – Machbarkeitsnachweis und Technologieentscheidung`
-- **Aktive Aufgabe:** keine; F-06 und E-01 abgeschlossen
-- **Nächste ausführbare Aufgabe:** `E-02` – im A5-Canvas-Editor direkt tippen, Android-IME/Unicode und lokales Save/Reload im Emulator nachweisen
+- **Aktive Aufgabe:** `E-02` – `IN_REVIEW`: erster Canvas-A5-Editor mit lokaler Datei-Bridge und Prototyp-Tests implementiert; Cloud-Emulator-/IME-Nachweis offen
+- **Nächste ausführbare Aufgabe:** E-02-CI-Lauf prüfen und Fehler beheben; danach reale Android-Tastatur-Eingabe, Cursor und Unicode in einem Instrumentationstest nachweisen
 - **Abgeschlossene Aufgaben:** **7 / 35 (20,0 %)**; ausschließlich Aufgaben mit `DONE` zählen.
 - **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955), `success`: Editor + Android + API-35-Emulator + geprüfte APK. [F-06-Negativprobe 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861), `failure`: alle nachgelagerten Jobs/`tested-apk` `skipped`, **keine Artifacts**.
 - **Letzte geprüfte APK:** `smut-tested-dev-bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0` (ca. 9,5 MB, [GitHub Actions 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955), SHA256SUMS enthalten, temporäres 30-Tage-Artifact). **Nicht auf realem Telefon getestet.**
 - **Letztes dokumentiertes Release:** keines.
 - **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
 - **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
-- **Unmittelbarer Blocker:** keiner für E-02; Canvas-Editor-IME und lokale Speicherintegration sind technisch noch ungeprüft.
+- **Unmittelbarer Blocker:** keiner; E-02 braucht erfolgreichen CI-Lauf und echten IME-/Cursor-Test für `DONE`.
 
 ## 2. Verbindlicher nächster Schritt
 
-**E-02 – Direktes Schreiben und Android-Tastatur im Prototyp.**
+**E-02 – Cloud-Verifikation und echte Android-IME-Eingabe.**
 
 1. [E-01-Technologiematrix](EDITOR_EVALUATION.md) und [ADR-008](DECISIONS.md) lesen. `@hufe921/canvas-editor@1.1.0` ist nur der **erste Testkandidat**, keine endgültige Wahl.
-2. Die vollständig offline gebündelte WebView mit einem **echten** Canvas-Editor auf A5 ausstatten (nicht mit vorgeschaltetem Overlay-Textfeld).
-3. Einfache deutsche Testpassage, Cursor per Tap, IME, Umlaute, Autokorrektur, Enter/Backspace und lokale Speicherung/Neustart über die instrumentierte App prüfen.
-4. CI/Emulator-Ergebnisse und ggf. technische Einschränkungen nachweisen; nur dann `E-02` auf `DONE`. Bei kritischem Fehler Fallback evaluieren statt ungeprüft weiterbauen.
+2. **Implementiert:** A5-Canvas-Editor als lokal gebündelte Datei, ohne CDN. Der Browser lädt statisch aus der APK.
+3. **In Prüfung:** deutsche Testpassage und atomare lokale Speicherung/Neustart. **Noch offen:** Cursor per Tap, echte IME-Eingabe, Autokorrektur und Enter/Backspace im Emulator.
+4. CI-/Emulatorergebnisse auswerten, Fehler beheben, echten IME-Test ergänzen; nur dann `E-02` auf `DONE`. Bei kritischem Fehler Fallback evaluieren statt ungeprüft weiterbauen.
 
 **P0-Abnahme:** [grüner Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) mit [APK-Artefakt](https://github.com/philip20794/Smut/actions/runs/43451063955); [absichtlich roter PR #2](https://github.com/philip20794/Smut/pull/2) zeigte [korrekt übersprungenes APK-Publishing und null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861). Anleitung: [APK_DOWNLOAD.md](APK_DOWNLOAD.md).
 
@@ -41,7 +41,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-05 | DONE | [Emulator-Code 4ddc6a3](https://github.com/philip20794/Smut/commit/4ddc6a37911e5b45dd9b4a4e62a448d44bda233a), [sh-Fix d132b72](https://github.com/philip20794/Smut/commit/d132b7279d260f26b9dd375948e958cee9a27e13), [grüner Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346): API-35-Emulator, offline WebView/Handshake und Button-Interaktion bestanden |
 | P0 | F-06 | DONE | [CI-/APK-Commit bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0), [Run 43451063955 grün](https://github.com/philip20794/Smut/actions/runs/43451063955), `smut-tested-dev-bbafe4f...` inkl. SHA256SUMS; [roter PR #2, null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861) |
 | P1 | E-01 | DONE | [Datierte MIT-/Offline-/IME-/A5-/PDF-Entscheidungsmatrix](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor 1.1.0 zuerst als **Testkandidat**, keine vorzeitige E-04-GO-Freigabe |
-| P1 | E-02 | TODO | – |
+| P1 | E-02 | IN_REVIEW | Erste Canvas-A5-Editor-Integration und atomare Prototyp-Speicher-Bridge, Node/JVM-/Emulator-Save-Reload-Tests im Code; CI-Erfolg und echte Tastatureingabe noch offen |
 | P1 | E-03 | TODO | – |
 | P1 | E-04 | TODO | – |
 | P1 | E-05 | TODO | – |
@@ -88,7 +88,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 ## 5. Letzte Arbeitssitzung / Handoff
 
 - **Datum:** 2026-11-13
-- **Aktive Task-ID:** keine; F-06 und E-01 `DONE`.
+- **Aktive Task-ID:** E-02 `IN_REVIEW` – Canvas Editor und Prototyp-Save-Bridge implementiert, CI/IME-Nachweis fehlt.
 - **Erreicht:** F-01 bis F-06 (P0-Gate) vollständig abgeschlossen, plus E-01 datierte Technologiebewertung einschließlich Lizenz- und Offline-Risiken.
 - **Letzter bestätigter grüner Code-Commit:** [bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0) mit [Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) `success`.
 - **APK:** `smut-tested-dev-bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0`, ca. 9,5 MB im Workflow, SHA256SUMS im ZIP, 30 Tage gespeichert, paketiert als `io.github.philip20794.smut.dev`. Noch **keine** stabile Signierung oder Echtgerät-Abnahme.
@@ -96,7 +96,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 - **E-01:** [EDITOR_EVALUATION.md](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor als erster testbarer Kandidat, Tiptap ohne kostenpflichtige Pages/Conversion-Funktion als Fallback. Mobile Texteingabe/PDF bleiben ungeprüft.
 - **Funktioniert nachweislich:** isolierte Offline-WebView mit Button und Bridge, CI-/APK-Ausgabe nach Emulator-Go; fehlerhafte Tests sperren geprüfte APK.
 - **Was fehlt:** E-02 echtes Rich-Text-Tippen/Android-IME und Speicherung, E-03 Selektion/Seitenwechsel, E-04 A5-PDF/GO-Entscheidung, später echter Smartphone-Test.
-- **Nächster kleinster Schritt:** E-02 Canvas-Editor-Prototyp und gepinnte WebView-Assets.
+- **Nächster kleinster Schritt:** E-02 CI-Lauf für Canvas-Editor-Assets, AtomicFile und Emulator-Save/Reload kontrollieren; danach echte IME-Tastatureingabe testen.
 - **Nutzeraktion nötig?:** nein.
 
 ## 6. Aktualisierungsregeln

@@ -42,6 +42,17 @@ class OfflineEditorSmokeTest {
             "Android-Verbindung aktiv"
         )
 
+        // Echter Canvas Editor muss im lokalen HTML initialisiert sein.
+        awaitJavaScriptValue(
+            "window.smutPrototype?.isLoaded()",
+            "true",
+            exact = true
+        )
+        awaitJavaScriptValue(
+            "window.smutPrototype?.getText()",
+            "Äpfel"
+        )
+
         // Tatsächlicher WebView-UI-Befehl statt bloßer Bridge-Mock.
         onWebView().withElement(findElement(Locator.ID, "recheck-button"))
             .perform(webClick())
@@ -54,6 +65,18 @@ class OfflineEditorSmokeTest {
         awaitJavaScriptValue(
             "document.getElementById('bridge-status')?.textContent",
             "Android-Verbindung aktiv"
+        )
+
+        onWebView().withElement(findElement(Locator.ID, "save-button"))
+            .perform(webClick())
+        awaitJavaScriptValue(
+            "document.getElementById('editor-status')?.textContent",
+            "Lokal gespeichert"
+        )
+        scenarioRule.scenario.recreate()
+        awaitJavaScriptValue(
+            "window.smutPrototype?.getText()",
+            "Äpfel"
         )
     }
 

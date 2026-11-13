@@ -137,3 +137,9 @@ Für den Nutzer ist keine lokale Shell und kein Rechner notwendig. Codex/GitHub 
 - [Negativtest 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861) über [geschlossenen PR #2](https://github.com/philip20794/Smut/pull/2): Node-Test rot, Android/Emulator und `tested-apk` `skipped`, **0 Artifacts**.
 - Nur `main` nach positiven Checks darf die geprüfte APK ausgeben; interne `smut-internal-apk-*` sind ausdrücklich nicht geprüft und nach 3 Tagen auslaufend.
 - [Handy-Installationsanleitung](APK_DOWNLOAD.md); Debug-Keys sind nicht für verlässliche Updates geeignet.
+
+## 13. E-02 – A5-Canvas-Prototyp
+
+Der erste echte Editor verwendet eine **vorläufige** fest gepinnte Canvas-Editor-Version `1.1.0`. Das Buildskript kopiert deren `dist`-Verzeichnis in die APK; die Android-WebView verwendet keinen CDN-Zugriff. JavaScript fragt über die lokale Bridge die `AtomicFile`-Testdatei ab und speichert beim `contentChange`-Event automatisch. Die technische Datenstruktur ist ausdrücklich noch nicht das spätere Buchmodell.
+
+**Nachzuweisen:** npm-Lockfile tatsächlich reproduzierbar, TypeScript-Typecheck, JVM-Protokolltests, APK-Vendor-Assets, Emulatorstart und Save/Reload. Der E-02-Abschluss benötigt außerdem reale Tastatur-/Unicode-/IME- und Cursor-Eingabeprüfungen.

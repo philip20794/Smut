@@ -8,42 +8,29 @@
 body { margin: 0; }
 .screen {
   min-height: 100vh;
-  padding: 18px 14px 26px;
+  padding: 14px 0 26px;
+  overflow-x: hidden;
 }
-.title {
-  font-size: 18px;
-  font-weight: 650;
-  margin-bottom: 18px;
+.title { padding: 0 14px; font-size: 18px; font-weight: 650; margin-bottom: 12px; }
+.subtle { color: #777; font-size: 12px; font-weight: 400; }
+.editor-sheet {
+  width: 100%;
+  min-height: 500px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #eeeae5;
+  touch-action: pan-y;
 }
-.paper {
-  width: min(100%, 520px);
-  aspect-ratio: 148 / 210;
-  margin: 0 auto;
-  padding: 12% 12%;
-  background: #fffdfa;
-  box-shadow: 0 2px 14px rgb(0 0 0 / 10%);
-  font-family: Georgia, serif;
-  line-height: 1.5;
+#canvas-editor {
+  position: relative;
+  min-height: 500px;
+  width: 100%;
 }
-.eyebrow {
-  font-family: system-ui, sans-serif;
-  font-size: 11px;
-  letter-spacing: .08em;
-  color: #777;
-}
-h1 { font-size: 22px; margin: 22px 0; }
-.paper > p:not(.eyebrow) { font-size: 15px; }
-#bridge-status {
-  text-align: center;
-  font-size: 12px;
-  color: #555;
-  padding-top: 18px;
-}
-
-.controls { text-align: center; padding-top: 16px; }
-#recheck-button {
+.controls { text-align: center; padding: 16px 14px; }
+button {
   min-height: 48px;
-  padding: 8px 16px;
+  padding: 8px 12px;
+  margin: 4px;
   background: #403b37;
   color: white;
   font: inherit;
@@ -52,4 +39,5 @@ h1 { font-size: 22px; margin: 22px 0; }
   border-radius: 8px;
   cursor: pointer;
 }
-#recheck-button:focus-visible { outline: 3px solid #777; outline-offset: 2px; }
+button:focus-visible { outline: 3px solid #777; outline-offset: 2px; }
+#editor-status, #bridge-status { font-size: 12px; color: #555; margin-top: 10px; }

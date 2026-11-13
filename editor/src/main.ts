@@ -1,36 +1,131 @@
 import { createReadyMessage, parseReadyAck } from "./bridge.js";
+import {
+  INITIAL_DOCUMENT, createDocumentRequest, isPrototypeData, parseDocumentResponse,
+  type PrototypeData,
+} from "./prototype.js";
 
 interface AndroidBridge {
   postMessage(payload: string): void;
 }
-
+interface CanvasEditor {
+  command: { getValue(): { data: PrototypeData } };
+  listener: { contentChange?: () => void };
+}
+interface CanvasEditorModule {
+  default: new (
+    container: HTMLElement,
+    data: PrototypeData,
+    options: Record<string, unknown>
+  ) => CanvasEditor;
+}
 declare global {
   interface Window {
     SmutAndroid?: AndroidBridge;
+    smutPrototype?: {
+      getText(): string;
+      getSavedStatus(): string | null;
+      isLoaded(): boolean;
+    };
   }
 }
 
 const status = document.getElementById("bridge-status");
+const editorStatus = document.getElementById("editor-status");
 const retryButton = document.getElementById("recheck-button");
+const saveButton = document.getElementById("save-button");
+const container = document.getElementById("canvas-editor");
 let pendingRequestId = "";
 let checkNumber = 0;
+let saveNumber = 0;
+let pendingSave = false;
+let editor: CanvasEditor | null = null;
+let latestSave = "";
+let isLoading = false;
+let isSaving = false;
 
+function report(message: string): void {
+  if (editorStatus) editorStatus.textContent = message;
+}
+
+function postRequest(payload: string): void {
+  window.SmutAndroid?.postMessage(payload);
+}
+
+function scheduleSave(): void {
+  if (!editor || isLoading) return;
+  pendingSave = true;
+  if (!isSaving) void saveCurrentDocument();
+}
+async function saveCurrentDocument(): Promise<void> {
+  if (!editor || isSaving || !pendingSave) return;
+  isSaving = true;
+  pendingSave = false;
+  saveNumber += 1;
+  const requestId = `save-${saveNumber}`;
+  try {
+    const document = editor.command.getValue().data;
+    if (!isPrototypeData(document)) throw new Error("Ungültige Editordaten");
+    postRequest(createDocumentRequest("save", requestId, document));
+    report("Änderungen werden lokal gespeichert …");
+  } catch (error) {
+    isSaving = false;
+    report(`Speichern nicht möglich: ${String(error)}`);
+  }
+}
 function requestHandshake(requestId: string): void {
   pendingRequestId = requestId;
-  if (status) {
-    status.textContent = "Android-Verbindung wird geprüft …";
-  }
+  if (status) status.textContent = "Android-Verbindung wird geprüft …";
   if (window.SmutAndroid) {
-    window.SmutAndroid.postMessage(createReadyMessage(requestId));
+    postRequest(createReadyMessage(requestId));
   } else if (status) {
     status.textContent = "Vorschau im Browser · keine Android-Verbindung";
+    void initializeEditor(INITIAL_DOCUMENT);
+  }
+}
+
+async function initializeEditor(document: PrototypeData): Promise<void> {
+  if (editor || isLoading || !container) return;
+  isLoading = true;
+  report("Buchseite wird geladen …");
+  try {
+    const url = new URL("./vendor/canvas-editor.js", import.meta.url);
+    const module = await import(url.href) as CanvasEditorModule;
+    editor = new module.default(container, document, {
+      width: 559,
+      height: 794,
+      margins: [54, 50, 54, 50],
+      scale: 0.60,
+      defaultFont: "serif",
+      defaultSize: 15,
+      pageMode: "paging",
+    });
+    editor.listener.contentChange = scheduleSave;
+    report("A5-Buchseite · Tippen direkt im Text");
+  } catch (error) {
+    report(`Editor konnte nicht gestartet werden: ${String(error)}`);
+  } finally {
+    isLoading = false;
   }
 }
 
 window.addEventListener("smut:native", (event: Event) => {
-  const ack = parseReadyAck((event as CustomEvent<unknown>).detail);
+  const payload: unknown = (event as CustomEvent<unknown>).detail;
+  const ack = parseReadyAck(payload);
   if (ack?.requestId === pendingRequestId && status) {
     status.textContent = "Android-Verbindung aktiv · vollständig offline";
+    if (!editor && !isLoading) postRequest(createDocumentRequest("load", "load-startup"));
+    return;
+  }
+  const response = parseDocumentResponse(payload);
+  if (!response) return;
+  if (response.type === "load-result" && response.requestId === "load-startup") {
+    void initializeEditor(response.document ?? INITIAL_DOCUMENT);
+  }
+  if (response.type === "save-result" && response.requestId === `save-${saveNumber}`) {
+    latestSave = response.saved ? "Gespeichert" : "Speicherfehler";
+    report(response.saved ? "Lokal gespeichert" : "Speichern fehlgeschlagen");
+    isSaving = false;
+    if (pendingSave) void saveCurrentDocument();
   }
 });
 
@@ -39,5 +134,13 @@ retryButton?.addEventListener("click", () => {
   retryButton.dataset.clicks = String(checkNumber);
   requestHandshake(`recheck-${checkNumber}`);
 });
-
+saveButton?.addEventListener("click", () => {
+  pendingSave = true;
+  void saveCurrentDocument();
+});
+window.smutPrototype = {
+  getText: () => editor?.command.getValue().data.main.map(x => x.value).join("") ?? "",
+  getSavedStatus: () => editorStatus?.textContent ?? null,
+  isLoaded: () => editor !== null,
+};
 requestHandshake("startup");

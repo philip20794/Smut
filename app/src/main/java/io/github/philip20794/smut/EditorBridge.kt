@@ -1,23 +1,58 @@
 package io.github.philip20794.smut
 
+import android.content.Context
+import android.util.AtomicFile
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 
 /**
- * Nur der fest gebündelte Editor darf diese Schnittstelle verwenden.
- * Keine Datei-, Netzwerk- oder Datenzugriffsoperationen in F-03.
+ * E-02: ausschließlich versionierte und begrenzte Nachrichten aus der lokalen,
+ * streng per URL-Allowlist kontrollierten WebView. Das Dateiformat ist ein
+ * temporäres Testformat, noch keine finale Buch- oder Kapitelpersistenz.
  */
 internal class EditorBridge(private val webView: WebView) {
+    private val prototypeFile = AtomicFile(File(webView.context.filesDir, "prototype-editor-v1.json"))
+
     @JavascriptInterface
     fun postMessage(payload: String) {
-        val requestId = BridgeProtocol.parseReady(payload) ?: return
+        val request = BridgeProtocol.parseRequest(payload) ?: return
+        val response = when (request) {
+            is BridgeRequest.Ready -> BridgeProtocol.ack(request.requestId)
+            is BridgeRequest.Load -> {
+                val content = try {
+                    val bytes = prototypeFile.openRead().use { it.readBytes() }
+                    if (bytes.size > BridgeProtocol.MAX_DOCUMENT_LENGTH) null
+                    else BridgeProtocol.parseDocument(String(bytes, StandardCharsets.UTF_8))
+                } catch (_: IOException) {
+                    null
+                }
+                BridgeProtocol.loadResult(request.requestId, content)
+            }
+            is BridgeRequest.Save -> {
+                val content = request.document.toString().toByteArray(StandardCharsets.UTF_8)
+                var stream: java.io.FileOutputStream? = null
+                val saved = try {
+                    stream = prototypeFile.startWrite()
+                    stream.write(content)
+                    prototypeFile.finishWrite(stream)
+                    true
+                } catch (_: IOException) {
+                    if (stream != null) prototypeFile.failWrite(stream)
+                    false
+                }
+                BridgeProtocol.saveResult(request.requestId, saved)
+            }
+        }
         webView.post {
             if (webView.url == EDITOR_URL) {
-                // JSONObject.quote schützt die Übergabe vom JSON-String in JavaScript.
-                val quotedPayload = JSONObject.quote(BridgeProtocol.ack(requestId))
+                val quoted = JSONObject.quote(response)
                 webView.evaluateJavascript(
-                    "window.dispatchEvent(new CustomEvent('smut:native', { detail: $quotedPayload }));",
+                    "window.dispatchEvent(new CustomEvent('smut:native', { detail: $quoted }));",
                     null
                 )
             }
@@ -25,25 +60,48 @@ internal class EditorBridge(private val webView: WebView) {
     }
 }
 
+internal sealed class BridgeRequest(open val requestId: String) {
+    data class Ready(override val requestId: String) : BridgeRequest(requestId)
+    data class Load(override val requestId: String) : BridgeRequest(requestId)
+    data class Save(override val requestId: String, val document: JSONObject) : BridgeRequest(requestId)
+}
+
 internal object BridgeProtocol {
-    private const val MAX_PAYLOAD = 512
+    const val MAX_DOCUMENT_LENGTH = 750_000
     private val idPattern = Regex("[A-Za-z0-9_-]{1,40}")
 
-    fun parseReady(payload: String): String? {
-        if (payload.length > MAX_PAYLOAD) return null
-        val json = try {
-            JSONObject(payload)
-        } catch (_: Exception) {
-            return null
-        }
-        if (
-            json.length() != 3 ||
-            json.optInt("version", -1) != 1 ||
-            json.optString("type") != "ready"
-        ) return null
+    fun parseReady(payload: String): String? =
+        (parseRequest(payload) as? BridgeRequest.Ready)?.requestId
+
+    fun parseRequest(payload: String): BridgeRequest? {
+        if (payload.length > MAX_DOCUMENT_LENGTH) return null
+        val json = try { JSONObject(payload) } catch (_: Exception) { return null }
+        if (json.optInt("version", -1) != 1) return null
         val requestId = json.opt("requestId")
         if (requestId !is String || !idPattern.matches(requestId)) return null
-        return requestId
+        return when (json.optString("type")) {
+            "ready" -> if (json.length() == 3) BridgeRequest.Ready(requestId) else null
+            "load" -> if (json.length() == 3) BridgeRequest.Load(requestId) else null
+            "save" -> {
+                if (json.length() != 4) return null
+                val document = json.optJSONObject("document") ?: return null
+                if (parseDocument(document.toString()) == null) return null
+                BridgeRequest.Save(requestId, document)
+            }
+            else -> null
+        }
+    }
+
+    fun parseDocument(serialized: String): JSONObject? {
+        if (serialized.length > MAX_DOCUMENT_LENGTH) return null
+        val document = try { JSONObject(serialized) } catch (_: Exception) { return null }
+        val main = document.optJSONArray("main") ?: return null
+        if (main.length() > 50_000) return null
+        for (index in 0 until main.length()) {
+            val element = main.optJSONObject(index) ?: return null
+            if (element.opt("value") !is String) return null
+        }
+        return document
     }
 
     fun ack(requestId: String): String {
@@ -52,6 +110,26 @@ internal object BridgeProtocol {
             .put("version", 1)
             .put("type", "ready-ack")
             .put("requestId", requestId)
+            .toString()
+    }
+
+    fun loadResult(requestId: String, document: JSONObject?): String {
+        require(idPattern.matches(requestId))
+        return JSONObject()
+            .put("version", 1)
+            .put("type", "load-result")
+            .put("requestId", requestId)
+            .put("document", document ?: JSONObject.NULL)
+            .toString()
+    }
+
+    fun saveResult(requestId: String, saved: Boolean): String {
+        require(idPattern.matches(requestId))
+        return JSONObject()
+            .put("version", 1)
+            .put("type", "save-result")
+            .put("requestId", requestId)
+            .put("saved", saved)
             .toString()
     }
 }
