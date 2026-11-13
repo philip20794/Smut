@@ -9,7 +9,13 @@ interface AndroidBridge {
   postMessage(payload: string): void;
 }
 interface CanvasEditor {
-  command: { getValue(): { data: PrototypeData }; executePageScale(scale: number): void; executeSetValue(data: Partial<PrototypeData>): void };
+  command: {
+    getValue(): { data: PrototypeData };
+    getRange(): { startIndex: number; endIndex: number } | null;
+    getRangeText(): unknown;
+    executePageScale(scale: number): void;
+    executeSetValue(data: Partial<PrototypeData>): void;
+  };
   listener: { contentChange?: () => void };
 }
 interface CanvasEditorModule {
@@ -28,6 +34,7 @@ declare global {
       isLoaded(): boolean;
       getZoom(): number;
       getPageCount(): number;
+      getSelection(): { startIndex: number; endIndex: number; hasSelection: boolean; text: string } | null;
       setPageTestFixture(enabled: boolean): void;
     };
   }
@@ -191,6 +198,19 @@ window.smutPrototype = {
   isLoaded: () => editor !== null,
   getZoom: () => currentZoom,
   getPageCount: () => container?.querySelectorAll(".ce-page-container canvas").length ?? 0,
+  // Read-only diagnostic for instrumented *native* touch selection tests.
+  // The test must generate the touch; it never sets an editor range through JS.
+  getSelection: () => {
+    const range = editor?.command.getRange();
+    if (!range) return null;
+    const selectedText = editor?.command.getRangeText();
+    return {
+      startIndex: range.startIndex,
+      endIndex: range.endIndex,
+      hasSelection: range.startIndex >= 0 && range.endIndex > range.startIndex,
+      text: typeof selectedText === "string" ? selectedText : JSON.stringify(selectedText ?? null),
+    };
+  },
   setPageTestFixture,
 };
 updateZoomControls();
