@@ -4,9 +4,13 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.SystemClock
 import android.view.View
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
 import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.espresso.web.sugar.Web.onWebView
 import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
@@ -78,6 +82,94 @@ class OfflineEditorSmokeTest {
             "window.smutPrototype?.getText()",
             "Äpfel"
         )
+    }
+
+
+    /**
+     * E-02: Native touch + Android InputConnection, not a JS-injected
+     * document change. The actual Canvas Editor proxy textarea must receive
+     * focus, then IME commitText and key events must edit the book data.
+     */
+    @Test
+    fun touchingBookPageAndTypingThroughAndroidInputConnectionPersistsUnicode() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+
+        val cssX = evaluate(
+            "(() => { const r = document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.left + Math.min(52, r.width * 0.2) : -1; })()"
+        ).toDouble()
+        val cssY = evaluate(
+            "(() => { const r = document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.top + Math.min(40, r.height * 0.1) : -1; })()"
+        ).toDouble()
+        assertTrue("Canvas page must exist", cssX >= 0 && cssY >= 0)
+        val viewportWidth = evaluate("window.innerWidth").toDouble()
+        var tapX = 0
+        var tapY = 0
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            val origin = IntArray(2)
+            webView.getLocationOnScreen(origin)
+            val ratio = webView.width / viewportWidth
+            tapX = origin[0] + (cssX * ratio).toInt()
+            tapY = origin[1] + (cssY * ratio).toInt()
+        }
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        assertTrue("Native page tap must succeed", device.click(tapX, tapY))
+        awaitJavaScriptValue(
+            "document.activeElement?.classList?.contains('ce-inputarea')",
+            "true",
+            exact = true
+        )
+
+        // Commit a real non-ASCII composition through Android's IME interface.
+        sendImeText("Smut Äöüß")
+        awaitJavaScriptValue("window.smutPrototype?.getText()", "Smut Äöüß")
+
+        sendImeKey(KeyEvent.KEYCODE_ENTER)
+        sendImeText("Zweiter Absatz")
+        awaitJavaScriptValue("window.smutPrototype?.getText()", "Zweiter Absatz")
+
+        sendImeKey(KeyEvent.KEYCODE_DEL)
+        awaitJavaScriptValue(
+            "window.smutPrototype?.getText()?.includes('Zweiter Absatz')",
+            "false",
+            exact = true
+        )
+        awaitJavaScriptValue(
+            "window.smutPrototype?.getText()?.includes('Zweiter Absat')",
+            "true",
+            exact = true
+        )
+
+        onWebView().withElement(findElement(Locator.ID, "save-button"))
+            .perform(webClick())
+        awaitJavaScriptValue("document.getElementById('editor-status')?.textContent", "Lokal gespeichert")
+        scenarioRule.scenario.recreate()
+        awaitJavaScriptValue("window.smutPrototype?.getText()", "Smut Äöüß")
+        awaitJavaScriptValue("window.smutPrototype?.getText()", "Zweiter Absat")
+    }
+
+    private fun sendImeText(value: String) {
+        var accepted = false
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            val connection = webView.onCreateInputConnection(EditorInfo())
+            assertNotNull("Focused WebView needs an Android IME input connection", connection)
+            accepted = connection!!.commitText(value, 1)
+        }
+        assertTrue("Android IME commitText must be accepted", accepted)
+    }
+
+    private fun sendImeKey(keyCode: Int) {
+        var accepted = false
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            val connection = webView.onCreateInputConnection(EditorInfo())
+            assertNotNull("Focused WebView needs an Android IME input connection", connection)
+            val down = KeyEvent(KeyEvent.ACTION_DOWN, keyCode)
+            val up = KeyEvent(KeyEvent.ACTION_UP, keyCode)
+            accepted = connection!!.sendKeyEvent(down) && connection.sendKeyEvent(up)
+        }
+        assertTrue("IME key event must be accepted: $keyCode", accepted)
     }
 
     private fun awaitJavaScriptValue(
