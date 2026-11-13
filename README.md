@@ -1,4 +1,4 @@
-# BuchEditor – Android-Bucheditor
+# Smut – Android-Bucheditor
 
 ## Ziel
 
@@ -57,6 +57,10 @@ Die Arbeitsansicht ist **ein editierbares Buchlayout**, keine bereits gerenderte
 
 Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffähigen Projektgerüst bei jeder Änderung automatisch Codeprüfungen, Unit- und Android-Emulatortests sowie einen APK-Build ausführen. Erfolgreiche Entwicklungs-APKs stehen temporär unter **Actions** bereit; signierte Versionen werden unter **Releases** veröffentlicht. Ein eigener Rechner oder Codemagic sind nicht erforderlich. Signierung und dauerhafte Installierbarkeit von Updates sind in [docs/CI-CD.md](docs/CI-CD.md) spezifiziert. **Die CI/CD-Workflows müssen erst noch implementiert werden.**
 
+## Implementierung und Projektstand
+
+**Der Implementierungsplan ist angelegt; der App-Code ist noch nicht vorhanden.** Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
+
 ## Dokumentation
 
 - [Produkt- und Bedienkonzept](docs/PRODUCT.md)
@@ -64,5 +68,9 @@ Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffä
 - [Akzeptanzkriterien und Testfälle](docs/ACCEPTANCE.md)
 - [GitHub Actions, Tests und APK-Veröffentlichung](docs/CI-CD.md)
 - [Anweisungen für Codex](AGENTS.md)
+- [Implementierungsplan – Meilensteine und Aufgaben](docs/IMPLEMENTATION_PLAN.md)
+- [Fortschrittstracker und Übergabe](docs/PROGRESS.md)
+- [Entwicklungs- und Wiederaufnahmeprotokoll](docs/DEVELOPMENT_WORKFLOW.md)
+- [Technische Entscheidungen](docs/DECISIONS.md)
 
-Diese Unterlagen sind **Anforderungen für einen späteren Codex-Implementierungsplan**, noch kein Implementierungsplan. Unbestätigte technische Annahmen sind ausdrücklich als Prüfaufgaben gekennzeichnet.
+Der Implementierungsplan ist vorhanden. Unbestätigte technische Annahmen bleiben bis zum P1-Machbarkeitsnachweis als Prüfaufgaben gekennzeichnet. Die Umsetzung und die automatische APK-Erstellung stehen noch aus.
