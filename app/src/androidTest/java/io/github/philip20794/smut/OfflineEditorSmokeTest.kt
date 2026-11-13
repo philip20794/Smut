@@ -183,17 +183,55 @@ class OfflineEditorSmokeTest {
             evaluate("window.smutPrototype?.getText()"))
     }
 
+    @Test
+    fun longPressOnBookPageSelectsTextWithoutMutatingManuscript() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        val originalText = evaluate("window.smutPrototype?.getText()")
+        selectWordByNativeLongPress()
+        assertEquals(
+            "Long-press selection must not modify the saved manuscript",
+            originalText, evaluate("window.smutPrototype?.getText()")
+        )
+    }
+
+    @Test
+    fun selectedWordCanBeReplacedThroughAndroidImeWithoutPersistingTestFixture() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        val savedManuscript = evaluate("window.smutPrototype?.getText()")
+        try {
+            evaluate("window.smutPrototype?.setPageTestFixture(true)")
+            awaitJavaScriptValue("window.smutPrototype?.getText()", "Absatz 75")
+            val fixtureBefore = evaluate("window.smutPrototype?.getText()")
+            selectWordByNativeLongPress()
+            val selectionLength = evaluate(
+                "window.smutPrototype?.getSelection()?.endIndex - window.smutPrototype?.getSelection()?.startIndex"
+            ).toInt()
+            assertTrue("Word selection must cover real document characters", selectionLength > 0)
+            sendImeText("SmutErsatz")
+            awaitJavaScriptValue("window.smutPrototype?.getText()", "SmutErsatz")
+            assertTrue(
+                "Android IME must replace selected content, not leave document unchanged",
+                fixtureBefore != evaluate("window.smutPrototype?.getText()")
+            )
+        } finally {
+            // This local test document is never written to app storage.
+            evaluate("window.smutPrototype?.setPageTestFixture(false)")
+        }
+        assertEquals(
+            "Replacing a test selection must leave the user's saved book untouched",
+            savedManuscript, evaluate("window.smutPrototype?.getText()")
+        )
+    }
+
     /**
      * E-03: a real long-press must select text on the Canvas page. This is a
      * native Android touch gesture, not a JavaScript range injection.
      * If the candidate editor has no mobile selection gesture, keep this gate
      * red and evaluate an accessible alternative before claiming support.
      */
-    @Test
-    fun longPressOnBookPageSelectsTextWithoutMutatingManuscript() {
+    private fun selectWordByNativeLongPress() {
         awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
         ensureEditorWindowFocused()
-        val originalText = evaluate("window.smutPrototype?.getText()")
         evaluate(
             """(() => {
                 window.__smutSelectionTouches = {touch:0, pointer:0, context:0};
@@ -247,10 +285,6 @@ class OfflineEditorSmokeTest {
                 failure
             )
         }
-        assertEquals(
-            "Long-press selection must not modify the saved manuscript",
-            originalText, evaluate("window.smutPrototype?.getText()")
-        )
     }
 
     @Test
