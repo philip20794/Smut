@@ -1,34 +1,35 @@
 # Anweisungen für Codex und andere Entwicklungsagenten
 
-## Verbindliche Quellen
+## Pflichtlektüre und Wiederaufnahme bei jedem Start
 
-Vor Planung oder Codeänderungen lesen:
-1. [README.md](README.md)
-2. [docs/PRODUCT.md](docs/PRODUCT.md)
-3. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-4. [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)
-5. [docs/CI-CD.md](docs/CI-CD.md)
+1. [docs/PROGRESS.md](docs/PROGRESS.md) – **einzige operative Fortschrittsquelle**, enthält nächste Task-ID und Handoff.
+2. [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) – verbindlicher Aufgabenplan mit stabilen IDs, Abhängigkeiten und Gates.
+3. [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md) – Regeln zur Übernahme nach Abbruch oder Kontextverlust.
+4. [README.md](README.md), [docs/PRODUCT.md](docs/PRODUCT.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md), [docs/CI-CD.md](docs/CI-CD.md) – Anforderungen und Qualität.
+5. [docs/DECISIONS.md](docs/DECISIONS.md) – getroffene und noch offene Architekturentscheidungen.
 
-Widersprüche dokumentieren und fachlich klären; unbelegte Annahmen nicht als bereits funktionierende Features ausgeben.
+**Vor jedem Weiterarbeiten:** Aktuellen `main`-Stand und die letzten relevanten Commits/CI-Runs prüfen. Einen möglicherweise veralteten Fortschrittstracker anhand von Code und Tests korrigieren. Danach die aktive oder nächste ausführbare Aufgabe übernehmen – nicht ohne Anlass den Gesamtplan neu schreiben.
 
 ## Grundregeln
 
-- Das Produkt wird **vollständig ohne lokalen Entwicklungscomputer** gebaut, getestet und über GitHub distribuiert.
-- GitHub Actions für Tests und Android-APK-Builds verwenden; Codemagic ist keine Voraussetzung.
-- Erste technische Meilensteine: reproduzierbarer Build, CI-Tests, APK-Artefakt, Android-WebView-Editor-Prototyp, anschließende vollständige App.
-- Tests nicht deaktivieren, überspringen oder lockern, nur um CI grün zu bekommen.
-- Für neue Features angemessene Unit-, Integrations- und gegebenenfalls Emulator-/UI-Tests implementieren.
-- Keine Zugangsdaten oder Signaturschlüssel ins Repository committen; GitHub Secrets und sichere Schlüsselverwaltung spezifizieren.
+- Entwicklung **vollständig ohne lokalen Computer** des Nutzers. GitHub Actions für Tests und Android-APK-Builds; Codemagic ist keine Voraussetzung.
+- Änderungen auf `main` committen, sofern der Repositoryzustand das zulässt. Keine History-Rewrites oder Force-Pushes. CI-Fehler als sichtbare Blocker behandeln und beheben.
+- CI und eine installierbare Test-APK bereits in P0 aufbauen; später jede Funktion mit passenden Unit-, Integrations- und ggf. Emulator-/UI-Tests absichern.
+- Tests nicht deaktivieren, überspringen oder lockern, nur um einen Build grün zu bekommen. `DONE` nur nach belegter Prüfung.
+- Keine Zugangsdaten oder Signaturschlüssel ins Repository committen; Release-Signierung nur über sichere Secrets und zusätzliche externe Sicherung.
 - App vollständig offline benutzbar halten. Keine CDN-/Serverabhängigkeit für die Editorlaufzeit.
-- Editor soll auf direktes Tippen in einem paginierten A5-Buchlayout ausgelegt sein; PDF ist Export, nicht die editierte Quelle.
-- Keine große technische Abhängigkeit verbindlich festlegen, bevor Touch, Android-IME und PDF-Fidelity im Machbarkeitstest bestätigt sind.
-- Jede fertige Funktion benötigt dokumentierte Abnahmekriterien und einen grünen CI-Lauf.
-- Fehlende Tests, gebrochene Builds, Risiken und unerledigte Punkte in der Fortschrittsdokumentation sichtbar machen.
-- Zwischen „Implementiert“, „automatisch getestet“, „auf echtem Gerät getestet“ und „noch offen“ ausdrücklich unterscheiden.
-- Bei Änderungen die Projektdokumentation aktualisieren, wenn Verhalten/Architektur/Buildprozess betroffen sind.
+- Das Buch direkt in paginierten A5-Seiten editieren; **PDF ist Export, nicht die editierte Quelle**.
+- Die Wahl des Editors und der PDF-Technik ist bis zum P1-Machbarkeitstest vorläufig; bei `NO-GO` Fallback untersuchen.
+- Zwischen „implementiert“, „automatisch getestet“, „auf echtem Gerät getestet“ und „freigegeben“ unterscheiden.
+- Echte manuelle Geräteabnahmen nur nach tatsächlichem Nutzerfeedback auf erledigt setzen.
+- Bei Änderungen an Verhalten, Architektur oder Buildprozess die passenden Dokumente aktualisieren.
+- Das Fortschrittsprotokoll nach jedem überprüfbaren Arbeitsschritt in Git sichern: aktive ID, Status, Commit/CI-Nachweis, Blocker, nächster Schritt.
+- Bei unerwartetem Abbruch: nicht auf Chatkontext verlassen, sondern die Routine in `docs/DEVELOPMENT_WORKFLOW.md` anwenden.
 
-## Implementierungsplanung
+## Arbeitsauftrag für folgende Implementierungssitzungen
 
-Erstelle auf Basis dieser Dokumente einen nachvollziehbaren Implementierungsplan mit Abhängigkeiten, Meilensteinen, Status und Tests pro Arbeitspaket. Plane früh einen kompilierbaren Minimalstand mit GitHub Actions ein. Priorisiere den Machbarkeitsnachweis für Android-Touch-Eingabe, Tastatur und A5-PDF, bevor viel Produktfunktionalität entsteht.
+Der **Implementierungsplan ist erstellt**. Ausgangszustand: keine Android-Implementierung, keine GitHub Actions Workflows und keine APK. Starte mit der in `docs/PROGRESS.md` bezeichneten nächsten Aufgabe (initial `F-01`) und arbeite schrittweise entlang der Abhängigkeiten.
 
-Diese Datei fordert **keine sofortige Implementierung**; sie legt Regeln für spätere Codex-Arbeit fest.
+Eine Dokumentation allein startet keine selbständig laufende Hintergrundarbeit. Setze in der tatsächlich laufenden Sitzung um, was mit den verfügbaren Werkzeugen machbar ist, und committe vor Sitzungsende eine präzise Übergabe.
+
+Widersprüche oder technische Fehlschläge als konkrete Entscheidung bzw. Blocker dokumentieren; nicht stillschweigend Funktionen behaupten oder bereits erledigte Aufgaben erneut ausführen.
