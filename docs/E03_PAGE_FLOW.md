@@ -11,13 +11,15 @@ Stand: 13.11.2026. Status: **IN_PROGRESS**, keinesfalls bereits vollständiges E
 - Ein Android-Langdruck löst auf einer Canvas-Seite ein echtes `contextmenu` aus. Der Touch-Adapter im Editor nutzt den Bibliotheks-Mauspfad für Wortmarkierung. Die mobile Wortauswahl und das Ersetzen des markierten Worts über Android-`InputConnection.commitText` sind getestet.
 - Zusätzlicher Technologie-Nachweis: In der isolierten mehrseitigen Test-Fixture erzeugt der Canvas-Befehl `executeSelectAll` eine mehrseitige Auswahl; Android-IME kann diese ersetzen, danach bleibt der ursprüngliche persistierte Inhalt unverändert. Das prüft die Engine, nicht die Bedienung über native Auswahlgriffe.
 - Die Speichern-Schaltfläche steht im oberen Editorbereich, damit sie bei sichtbarer IME erreichbar bleibt.
+- Echte Android-Longpress-und-Zieh-Geste kann eine Auswahl von Canvas-Seite 1 auf Canvas-Seite 2 verlängern: [CI 43493716491](https://github.com/philip20794/Smut/actions/runs/43493716491), inklusive Prüfung zweier unterschiedlicher sichtbarer A5-Canvas-Ziele und isolierter, wiederhergestellter Test-Fixture. Die Touch-Weiterleitung wählt beim Ziehen die nächste Canvas-Seite und begrenzt die Pointerkoordinate auf deren Fläche.
+- Beim Ziehen nahe der oberen/unteren WebView-Kante ist Scrollen mit nachgeführter Textauswahl implementiert, aber ein eigener Emulator-Beleg für diesen Sonderfall steht noch aus.
 - Das vorbestehende Dokument wird dabei vorab gesichert und im `finally`-Block wiederhergestellt. Der spezielle Testmodus unterdrückt die automatische Speicherung dieser Testdaten. Dies ist keine Funktion der Nutzeroberfläche.
 
 ## Noch offen bis E-03 DONE
 
-- **Wortauswahl per echtem Android-Langdruck ist nachgewiesen.** Mobile Auswahlgriffe und Verlängern der Auswahl mit dem Finger fehlen noch.
-- **Programmatisch** seitenübergreifende Auswahl/Ersetzung ist nachgewiesen. Die native Geste zum Erweitern über Absatz- und Seitengrenzen fehlt.
+- **Wortauswahl und Verlängern per echter Android-Fingergeste über zwei Seiten sind nachgewiesen.** Visuelle mobile Auswahlgriffe fehlen noch.
+- **Programmatische** Auswahl/Ersetzung über den ganzen mehrseitigen Testtext und **native** Auswahl von Seite 1 nach Seite 2 sind nachgewiesen. Eine separate Prüfung längerer Drag-Strecken mit Rand-Autoscroll und Textänderungen nach nativer Mehrseitenauswahl fehlt.
 - Scrollen und Cursorführung bei offener Android-Tastatur sowie Zoom-/Scroll-Wechselwirkungen.
 - Dokumentierte und reproduzierbare Einschränkungen; ggf. begründeter Fallback auf eine andere Editorengine.
 
-Prüfbeleg: [Smut CI 43487669567](https://github.com/philip20794/Smut/actions/runs/43487669567) ist vollständig grün: TypeScript, Kotlin, Android-Lint, **sieben** instrumentierte API-35-Emulatortests und geprüfte Test-APK. Native Auswahlgriffe, seitenübergreifende Drag-Gesten und Cursor-/Tastatur-Scroll wurden damit **nicht** nachgewiesen. Echter Smartphone-Test erst E-05.
+Prüfbeleg: [Smut CI 43493716491](https://github.com/philip20794/Smut/actions/runs/43493716491) ist vollständig grün: TypeScript, Kotlin, Android-Lint, **acht** instrumentierte API-35-Emulatortests und geprüfte Test-APK. Reale Zwei-Seiten-Drag-Auswahl nachgewiesen; native Auswahlgriffe, Rand-Autoscroll und Cursor-/Tastatur-Scroll sind noch offen. Echter Smartphone-Test erst E-05.
