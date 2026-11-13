@@ -439,6 +439,77 @@ class OfflineEditorSmokeTest {
     }
 
     /**
+     * E-03 regression: a real held Android long-press drag must keep extending
+     * the native selection while the page scrolls near the lower WebView edge.
+     * The fixture is never saved, and this test never injects a JS selection.
+     */
+    @Test
+    fun nativeSelectionDragNearBottomEdgeScrollsAndExtendsRange() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        ensureEditorWindowFocused()
+        val savedManuscript = evaluate("window.smutPrototype?.getText()")
+        try {
+            evaluate("window.smutPrototype?.setPageTestFixture(true)")
+            awaitJavaScriptValue("window.smutPrototype?.getPageCount() >= 3", "true", exact = true)
+            evaluate(
+                """(() => {
+                    const c=document.querySelector('.ce-page-container canvas');
+                    const r=c?.getBoundingClientRect();
+                    if (!r) return false;
+                    window.scrollBy(0, r.top - 110);
+                    return true;
+                })()"""
+            )
+            val startX = evaluate(
+                "(() => { const r=document.querySelector('.ce-page-container canvas').getBoundingClientRect(); return r.left + Math.min(85,r.width*.25); })()"
+            ).toDouble()
+            val startY = evaluate(
+                "(() => { const r=document.querySelector('.ce-page-container canvas').getBoundingClientRect(); return r.top + 65; })()"
+            ).toDouble()
+            val endY = evaluate(
+                "(() => { const v=visualViewport; return Math.min(innerHeight-15,(v?.offsetTop??0)+(v?.height??innerHeight)-14); })()"
+            ).toDouble()
+            assertTrue("Start must be above bottom edge", startY + 100 < endY)
+            assertEquals(
+                "Start must hit the actual first canvas", "true",
+                evaluate("document.elementFromPoint($startX,$startY) === document.querySelector('.ce-page-container canvas')")
+            )
+            val scrollBefore = evaluate("window.scrollY").toDouble()
+            val viewportWidth = evaluate("innerWidth").toDouble()
+            var x1 = -1
+            var y1 = -1
+            var x2 = -1
+            var y2 = -1
+            scenarioRule.scenario.onActivity { activity ->
+                val webView = findWebView(activity.window.decorView)!!
+                val origin = IntArray(2)
+                webView.getLocationOnScreen(origin)
+                val ratio = webView.width / viewportWidth
+                x1 = origin[0] + (startX * ratio).toInt()
+                y1 = origin[1] + (startY * ratio).toInt()
+                x2 = x1
+                y2 = origin[1] + (endY * ratio).toInt()
+            }
+            val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            assertTrue("Native held selection drag must dispatch", device.drag(x1,y1,x2,y2,180))
+            val scrollAfter = evaluate("window.scrollY").toDouble()
+            val selectionLength = evaluate(
+                "(window.smutPrototype?.getSelection()?.endIndex ?? 0) - (window.smutPrototype?.getSelection()?.startIndex ?? 0)"
+            ).toInt()
+            assertTrue(
+                "Native edge drag must scroll and extend range: scroll=$scrollBefore -> $scrollAfter; range=$selectionLength",
+                scrollAfter > scrollBefore + 8 && selectionLength > 85
+            )
+            assertEquals("Gesture must not mutate manuscript fixture", "true",
+                evaluate("window.smutPrototype?.getText()?.includes('Absatz 75')"))
+        } finally {
+            evaluate("window.smutPrototype?.setPageTestFixture(false)")
+        }
+        assertEquals("Native edge drag must not persist fixture",
+            savedManuscript, evaluate("window.smutPrototype?.getText()"))
+    }
+
+    /**
      * E-03: the real Android IME must not cover the active caret when writing
      * on a later A5 page. The test taps the canvas through UiDevice, opens the
      * native keyboard and commits text through Android InputConnection.
