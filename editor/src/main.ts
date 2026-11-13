@@ -133,23 +133,24 @@ function setPageTestFixture(enabled: boolean): void {
 let lastCanvasTouch: { x: number; y: number; time: number } | null = null;
 container?.addEventListener("touchstart", event => {
   const target = event.target;
-  if (event.touches.length !== 1 || !(target instanceof HTMLCanvasElement)
+  const touch = event.touches.item(0);
+  if (event.touches.length !== 1 || !touch || !(target instanceof HTMLCanvasElement)
       || !target.closest(".ce-page-container")) {
     lastCanvasTouch = null;
     return;
   }
   lastCanvasTouch = {
-    x: event.touches[0].clientX,
-    y: event.touches[0].clientY,
+    x: touch.clientX,
+    y: touch.clientY,
     time: Date.now(),
   };
 }, { passive: true });
 container?.addEventListener("touchmove", event => {
-  if (!lastCanvasTouch || event.touches.length !== 1) {
+  const touch = event.touches.item(0);
+  if (!lastCanvasTouch || event.touches.length !== 1 || !touch) {
     lastCanvasTouch = null;
     return;
   }
-  const touch = event.touches[0];
   if (Math.hypot(touch.clientX - lastCanvasTouch.x, touch.clientY - lastCanvasTouch.y) > 14) {
     lastCanvasTouch = null;
   }
