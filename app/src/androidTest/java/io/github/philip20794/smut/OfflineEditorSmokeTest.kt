@@ -615,6 +615,49 @@ class OfflineEditorSmokeTest {
                 )
                 throw AssertionError("IME must not hide page-2 caret; $diagnostic; ${failure.message}", failure)
             }
+
+            // E-03: changing the A5 page scale while the Android keyboard is
+            // open must preserve focus, text and a visible caret. Trigger the
+            // existing zoom control without tapping away from the IME field.
+            assertEquals("Zoom starts at 60 %", "0.6",
+                evaluate("window.smutPrototype?.getZoom()"))
+            evaluate("document.getElementById('zoom-in')?.click()")
+            awaitJavaScriptValue("window.smutPrototype?.getZoom()", "0.7", exact = true)
+            awaitJavaScriptValue(
+                """(() => {
+                    const c=document.querySelector('#canvas-editor .ce-cursor');
+                    const input=document.querySelector('#canvas-editor .ce-inputarea');
+                    const r=c?.getBoundingClientRect();
+                    const v=visualViewport;
+                    const top=Math.max(0,v?.offsetTop??0);
+                    const bottom=Math.min(innerHeight,(v?.offsetTop??0)+(v?.height??innerHeight));
+                    return document.activeElement===input && !!r && r.height>0 &&
+                        r.top>=top+8 && r.bottom<=bottom-8;
+                })()""", "true", exact = true
+            )
+            var imeAfterZoom = false
+            scenarioRule.scenario.onActivity { activity ->
+                imeAfterZoom = activity.window.decorView.rootWindowInsets
+                    ?.isVisible(WindowInsets.Type.ime()) == true
+            }
+            assertTrue("Zoom must not dismiss Android IME", imeAfterZoom)
+            sendImeText(" Zoomprüfung")
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getText()?.includes('Zoomprüfung')",
+                "true", exact = true
+            )
+            evaluate("document.getElementById('zoom-out')?.click()")
+            awaitJavaScriptValue("window.smutPrototype?.getZoom()", "0.6", exact = true)
+            awaitJavaScriptValue(
+                """(() => {
+                    const c=document.querySelector('#canvas-editor .ce-cursor');
+                    const r=c?.getBoundingClientRect();
+                    const v=visualViewport;
+                    const top=Math.max(0,v?.offsetTop??0);
+                    const bottom=Math.min(innerHeight,(v?.offsetTop??0)+(v?.height??innerHeight));
+                    return !!r && r.height>0 && r.top>=top+8 && r.bottom<=bottom-8;
+                })()""", "true", exact = true
+            )
         } finally {
             scenarioRule.scenario.onActivity { activity ->
                 val webView = findWebView(activity.window.decorView)!!
