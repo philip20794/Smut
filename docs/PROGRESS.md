@@ -5,26 +5,26 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-13
-- **Projektstatus:** `IN_PROGRESS` – **P0-Gate abgeschlossen (F-01 bis F-06)**, P1 gestartet: E-01-Technologiematrix erstellt. A5-Offline-WebView und CI-geprüfte Debug-APK mit Emulator-Smoke vorhanden; echter Rich-Text-Prototyp folgt E-02.
+- **Projektstatus:** `IN_PROGRESS` – P0-Gate abgeschlossen, P1 E-01 und E-02 abgeschlossen; echte Android-IME-Eingabe, Unicode, Wortkomposition, Enter/Backspace und Speichern/Neustart im Offline-Canvas-Editor im Emulator erfolgreich. E-03 (Seitenfluss, Auswahl und Zoom) begonnen.
 - **Meilenstein:** `P1 – Machbarkeitsnachweis und Technologieentscheidung`
-- **Aktive Aufgabe:** `E-02` – `IN_REVIEW`: erster Canvas-A5-Editor mit lokaler Datei-Bridge und Prototyp-Tests implementiert; Cloud-Emulator-/IME-Nachweis offen
-- **Nächste ausführbare Aufgabe:** E-02: nativen Touch- und Android-InputConnection-Test im Cloud-Emulator auswerten; bei Grün Cursor/Unicode/Enter/Backspace und Save/Reload dokumentieren
-- **Abgeschlossene Aufgaben:** **7 / 35 (20,0 %)**; ausschließlich Aufgaben mit `DONE` zählen.
-- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43455357356](https://github.com/philip20794/Smut/actions/runs/43455357356), `success`: Editor + Android + API-35-Emulator + geprüfte APK. [F-06-Negativprobe 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861), `failure`: alle nachgelagerten Jobs/`tested-apk` `skipped`, **keine Artifacts**.
-- **Letzte geprüfte APK:** `smut-tested-dev-102b56b604b30bd81dcede47d4e9f24432d33b43` (ca. 10,8 MB als ZIP, [GitHub Actions 43455357356](https://github.com/philip20794/Smut/actions/runs/43455357356), SHA256SUMS enthalten, temporäres 30-Tage-Artifact). **Nicht auf realem Telefon getestet.**
+- **Aktive Aufgabe:** `E-03` – `IN_PROGRESS`: Zoomsteuerung in der A5-Seitenansicht und erste Emulator-Regression hinzugefügt; Cloud-Nachweis für diese Änderungen offen
+- **Nächste ausführbare Aufgabe:** E-03-Zoom-CI vollständig prüfen; danach mehrseitigen Testtext, Langdruck-Auswahl, seitenübergreifende Selektion, Ersetzen und Scrollverhalten bei geöffneter Tastatur im Emulator nachweisen.
+- **Abgeschlossene Aufgaben:** **8 / 35 (22,9 %)**; ausschließlich Aufgaben mit `DONE` zählen.
+- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666), `success`: Editor + Android + API-35-Emulator + geprüfte APK. [F-06-Negativprobe 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861), `failure`: alle nachgelagerten Jobs/`tested-apk` `skipped`, **keine Artifacts**.
+- **Letzte geprüfte APK:** `smut-tested-dev-0d0dfc2707d0bab0cd9a4e44d62ff250ef18ec2a` (ca. 10,8 MB als ZIP, [GitHub Actions 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666), SHA256SUMS enthalten, temporäres 30-Tage-Artifact). **Nicht auf realem Telefon getestet.**
 - **Letztes dokumentiertes Release:** keines.
 - **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
 - **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
-- **Unmittelbarer Blocker:** keiner; E-02 braucht erfolgreichen CI-Lauf und echten IME-/Cursor-Test für `DONE`.
+- **Unmittelbarer Blocker:** keiner für E-03; E-02 ist durch Emulator-Gate abgeschlossen. E-05 erfordert später ausdrücklich echte Smartphone-Abnahme.
 
 ## 2. Verbindlicher nächster Schritt
 
-**E-02 – Cloud-Verifikation und echte Android-IME-Eingabe.**
+**E-03 – Markieren, Zoom und dynamischer Seitenwechsel.**
 
-1. [E-01-Technologiematrix](EDITOR_EVALUATION.md) und [ADR-008](DECISIONS.md) lesen. `@hufe921/canvas-editor@1.1.0` ist nur der **erste Testkandidat**, keine endgültige Wahl.
-2. **Implementiert:** A5-Canvas-Editor als lokal gebündelte Datei, ohne CDN. Der Browser lädt statisch aus der APK.
-3. **In Prüfung:** deutsche Testpassage und atomare lokale Speicherung/Neustart. **Noch offen:** Cursor per Tap, echte IME-Eingabe, Autokorrektur und Enter/Backspace im Emulator.
-4. CI-/Emulatorergebnisse auswerten, Fehler beheben, echten IME-Test ergänzen; nur dann `E-02` auf `DONE`. Bei kritischem Fehler Fallback evaluieren statt ungeprüft weiterbauen.
+1. E-02-Gate erfüllt: [Smut CI 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666) grün, einschließlich echter Android-Touches, `InputConnection.commitText`, Komposition, Enter, Backspace und erneuter Speicherung. [IME-Testprotokoll](E02_ANDROID_IME_TEST.md).
+2. Zoomsteuerung implementiert, Android-Regression und Node-Tests eingecheckt; aktuellen Cloud-Lauf abwarten und etwaige Fehler beheben.
+3. Danach langen mehrseitigen deutschen Testtext in isolierter Emulator-Testumgebung prüfen: Anzahl und Inhalt der Seiten, Auswahl/Ersetzen über Grenzen, Scroll bei geöffneter IME. Bei Bedarf Canvas-Editor-Limitierung mit reproduzierbarem Befund dokumentieren.
+4. `E-03` nur nach vollständigem erfolgreichen Emulator-Nachweis als `DONE` markieren; E-04 (A5-PDF-Probe) folgt erst danach.
 
 **P0-Abnahme:** [grüner Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) mit [APK-Artefakt](https://github.com/philip20794/Smut/actions/runs/43451063955); [absichtlich roter PR #2](https://github.com/philip20794/Smut/pull/2) zeigte [korrekt übersprungenes APK-Publishing und null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861). Anleitung: [APK_DOWNLOAD.md](APK_DOWNLOAD.md).
 
@@ -41,8 +41,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-05 | DONE | [Emulator-Code 4ddc6a3](https://github.com/philip20794/Smut/commit/4ddc6a37911e5b45dd9b4a4e62a448d44bda233a), [sh-Fix d132b72](https://github.com/philip20794/Smut/commit/d132b7279d260f26b9dd375948e958cee9a27e13), [grüner Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346): API-35-Emulator, offline WebView/Handshake und Button-Interaktion bestanden |
 | P0 | F-06 | DONE | [CI-/APK-Commit bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0), [Run 43451063955 grün](https://github.com/philip20794/Smut/actions/runs/43451063955), `smut-tested-dev-bbafe4f...` inkl. SHA256SUMS; [roter PR #2, null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861) |
 | P1 | E-01 | DONE | [Datierte MIT-/Offline-/IME-/A5-/PDF-Entscheidungsmatrix](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor 1.1.0 zuerst als **Testkandidat**, keine vorzeitige E-04-GO-Freigabe |
-| P1 | E-02 | IN_REVIEW | Canvas-A5-Editor, native Datei-Bridge, Store/Reload mit [grünem Emulatorlauf 43455357356](https://github.com/philip20794/Smut/actions/runs/43455357356) bestätigt. Nativer Tap-/Android-IME-Test ergänzt; dessen CI-Nachweis noch offen |
-| P1 | E-03 | TODO | – |
+| P1 | E-02 | DONE | Android-API-35-Emulator: echter Touch, Fokus des Canvas-Editors, Eingabe über Android-IME einschließlich Unicode und Wortkomposition/Autokorrektur, Enter/Backspace, atomarer Save/Reload; vollständiger [grüner CI-Lauf 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666); [Testprotokoll](E02_ANDROID_IME_TEST.md). Kein Echtgerätetest (E-05) |
+| P1 | E-03 | IN_PROGRESS | Touch-Zoomsteuerung und Regressionstests hinzugefügt, CI für aktuelle Revision noch offen; Langdruck/Cross-Page und Seitenumbruch bleiben zu prüfen |
 | P1 | E-04 | TODO | – |
 | P1 | E-05 | TODO | – |
 | P2 | D-01 | TODO | – |
@@ -75,7 +75,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | Phase | Fortschritt | Abschlussbedingung | Gate |
 | --- | --- | --- | --- |
 | P0 | 6/6 | Build, CI, Emulator-Smoke und Test-APK | **erfüllt** |
-| P1 | 1/5 | Machbarkeit/ADR; echter Gerätetest separat | offen |
+| P1 | 2/5 | Machbarkeit/ADR; echter Gerätetest separat | offen |
 | P2 | 0/4 | Modell, Operationen, sichere Persistenz, Backup | offen |
 | P3 | 0/3 | Bücher-/Kapitelverwaltung | offen |
 | P4 | 0/5 | Direktbearbeitung und Textfunktionen | offen |
@@ -88,17 +88,14 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 ## 5. Letzte Arbeitssitzung / Handoff
 
 - **Datum:** 2026-11-13
-- **Aktive Task-ID:** E-02 `IN_REVIEW` – Canvas Editor und Prototyp-Save-Bridge implementiert, CI/IME-Nachweis fehlt.
-- **Erreicht:** F-01 bis F-06 (P0-Gate) vollständig abgeschlossen, plus E-01 datierte Technologiebewertung einschließlich Lizenz- und Offline-Risiken.
-- **Letzter bestätigter grüner Code-Commit:** [bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0) mit [Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) `success`.
-- **APK:** `smut-tested-dev-bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0`, ca. 9,5 MB im Workflow, SHA256SUMS im ZIP, 30 Tage gespeichert, paketiert als `io.github.philip20794.smut.dev`. Noch **keine** stabile Signierung oder Echtgerät-Abnahme.
-- **Negativtest:** [PR #2](https://github.com/philip20794/Smut/pull/2) wurde **nicht gemergt** und geschlossen; [Lauf 43451561861](https://github.com/philip20794/Smut/actions/runs/43451561861) `failure`, Editor rot, Android/Emulator/Veröffentlichung übersprungen, **kein einziges Artifact**.
-- **E-01:** [EDITOR_EVALUATION.md](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor als erster testbarer Kandidat, Tiptap ohne kostenpflichtige Pages/Conversion-Funktion als Fallback. Mobile Texteingabe/PDF bleiben ungeprüft.
-- **Funktioniert nachweislich:** isolierte Offline-WebView mit Button und Bridge, CI-/APK-Ausgabe nach Emulator-Go; fehlerhafte Tests sperren geprüfte APK.
-- **Was fehlt:** E-02 echtes Rich-Text-Tippen/Android-IME und Speicherung, E-03 Selektion/Seitenwechsel, E-04 A5-PDF/GO-Entscheidung, später echter Smartphone-Test.
-- **Fehler und Gegenmaßnahme:** [Run 43453983224](https://github.com/philip20794/Smut/actions/runs/43453983224) rot im Emulator, Canvas Editor konnte nicht initialisieren: Browser-Log zeigte blockierte lokale `blob:`-/`data:`-WebWorkers und dynamische Inline-Styles. CSP wurde auf diese konkreten Offline-Erfordernisse gelockert; `script-src 'self'` und `connect-src 'none'` bleiben strikt. Zweiter Diagnose-Run läuft.
-- **Nächster kleinster Schritt:** E-02-Emulatorlauf nach CSP-Fix auswerten, Save/Reload testen; dann reale IME-Tastatureingabe ergänzen.
-- **Nutzeraktion nötig?:** nein.
+- **Aktive Task-ID:** E-03 `IN_PROGRESS` – Zoomsteuerung und Regression für A5-Prototyp implementiert, CI noch nicht abschließend bewertet.
+- **Erreicht:** F-01 bis F-06 und E-01/E-02 vollständig DONE (8 von 35), darunter Android-IME-Unicode, Android-Kompositionskorrektur, Enter, Backspace und Wiederherstellung. Fokusprobleme in [roten Zwischenläufen 43463790793](https://github.com/philip20794/Smut/actions/runs/43463790793) und [43466552817](https://github.com/philip20794/Smut/actions/runs/43466552817) durch Emulator-WakeUp, Keyguard-Abbau und expliziten Foreground-Start behoben.
+- **Letzter bestätigter grüner Code-Commit:** [0d0dfc2](https://github.com/philip20794/Smut/commit/0d0dfc2707d0bab0cd9a4e44d62ff250ef18ec2a) mit [Run 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666) `success`.
+- **Letzte sicher geprüfte APK:** `smut-tested-dev-0d0dfc2707d0bab0cd9a4e44d62ff250ef18ec2a`, ZIP mit SHA256SUMS, GitHub-Actions-Artefakt 30 Tage, Entwickler-Paket-ID `io.github.philip20794.smut.dev`. Noch **keine** stabile Release-Signierung oder reale Smartphone-Abnahme.
+- **E-03-Code:** [Zoom-Implementierung im Editor](../editor/src/main.ts), Grenzen 50–100 % und UI-Zoomschaltflächen, Unit-/Emulator-Tests. Dies zählt noch nicht als E-03-DONE.
+- **Was fehlt:** E-03-Seitenwechsel, Long-Press-Auswahl, Selektion/Ersetzen und Android-IME-Scroll; E-04 PDF-Probe/GO; Geräteabnahme E-05 und alle späteren Phasen P2–P7.
+- **Nächster kleinster Schritt:** aktuelle CI zum Zoom-Ergänzungscommit prüfen, dann E-03-Seitenfluss/Selektion implementieren und auf Android emuliert prüfen.
+- **Nutzeraktion nötig?:** derzeit nein; E-05 braucht später manuelles Feedback.
 
 ## 6. Aktualisierungsregeln
 
