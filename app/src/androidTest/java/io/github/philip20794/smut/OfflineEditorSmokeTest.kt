@@ -6,16 +6,13 @@ import android.os.SystemClock
 import android.view.View
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.content.Intent
 import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.espresso.web.sugar.Web.onWebView
-import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
-import androidx.test.espresso.web.webdriver.DriverAtoms.webClick
-import androidx.test.espresso.web.webdriver.Locator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -58,8 +55,7 @@ class OfflineEditorSmokeTest {
         )
 
         // Tatsächlicher WebView-UI-Befehl statt bloßer Bridge-Mock.
-        onWebView().withElement(findElement(Locator.ID, "recheck-button"))
-            .perform(webClick())
+        tapHtmlButton("recheck-button")
 
         awaitJavaScriptValue(
             "document.getElementById('recheck-button')?.dataset.clicks",
@@ -71,8 +67,7 @@ class OfflineEditorSmokeTest {
             "Android-Verbindung aktiv"
         )
 
-        onWebView().withElement(findElement(Locator.ID, "save-button"))
-            .perform(webClick())
+        tapHtmlButton("save-button")
         awaitJavaScriptValue(
             "document.getElementById('editor-status')?.textContent",
             "Lokal gespeichert"
@@ -94,6 +89,7 @@ class OfflineEditorSmokeTest {
     fun touchingBookPageAndTypingThroughAndroidInputConnectionPersistsUnicode() {
         awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
 
+        ensureEditorWindowFocused()
         val cssX = evaluate(
             "(() => { const r = document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.left + Math.min(52, r.width * 0.2) : -1; })()"
         ).toDouble()
@@ -113,12 +109,22 @@ class OfflineEditorSmokeTest {
             tapY = origin[1] + (cssY * ratio).toInt()
         }
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        assertTrue("Native page tap must succeed", device.click(tapX, tapY))
-        awaitJavaScriptValue(
-            "document.activeElement?.classList?.contains('ce-inputarea')",
-            "true",
-            exact = true
+        assertTrue("Native page tap must succeed at $tapX,$tapY", device.click(tapX, tapY))
+        val focusDiagnostic = evaluate(
+            "JSON.stringify({active:document.activeElement?.className,tag:document.activeElement?.tagName,focused:document.hasFocus(),page:document.querySelector('.ce-page-container canvas')?.getBoundingClientRect()?.toJSON()})"
         )
+        try {
+            awaitJavaScriptValue(
+                "document.activeElement?.classList?.contains('ce-inputarea')",
+                "true",
+                exact = true
+            )
+        } catch (failure: AssertionError) {
+            throw AssertionError(
+                "Touch at $tapX,$tapY did not focus editor; state=$focusDiagnostic; ${failure.message}",
+                failure
+            )
+        }
 
         // Commit a real non-ASCII composition through Android's IME interface.
         sendImeText("Smut Äöüß")
@@ -156,6 +162,60 @@ class OfflineEditorSmokeTest {
         scenarioRule.scenario.recreate()
         awaitJavaScriptValue("window.smutPrototype?.getText()", "Smut Äöüß")
         awaitJavaScriptValue("window.smutPrototype?.getText()", "Zweiter Absat")
+    }
+
+    /**
+     * Emulator setup and the Google keyboard may briefly steal window focus.
+     * Reorder the ActivityScenario-owned task to the front instead of
+     * injecting editor changes or accepting background-window clicks.
+     */
+    private fun ensureEditorWindowFocused() {
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        repeat(4) { attempt ->
+            var focused = false
+            scenarioRule.scenario.onActivity { activity ->
+                focused = activity.hasWindowFocus()
+                if (!focused) {
+                    activity.startActivity(
+                        Intent(activity, MainActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    )
+                }
+            }
+            if (focused) return
+            device.waitForIdle()
+            SystemClock.sleep(600L + attempt * 250L)
+        }
+        var finalFocus = false
+        scenarioRule.scenario.onActivity { finalFocus = it.hasWindowFocus() }
+        assertTrue("Smut must own the emulator window before native touch input", finalFocus)
+    }
+
+    private fun tapHtmlButton(id: String) {
+        ensureEditorWindowFocused()
+        // DOM determines the target coordinate, but the click itself is a
+        // genuine Android touchscreen event (not HTMLElement.click()).
+        evaluate("document.getElementById('$id')?.scrollIntoView({block:'center'})")
+        val cssX = evaluate(
+            "(() => { const r=document.getElementById('$id')?.getBoundingClientRect(); return r ? r.left + r.width/2 : -1; })()"
+        ).toDouble()
+        val cssY = evaluate(
+            "(() => { const r=document.getElementById('$id')?.getBoundingClientRect(); return r ? r.top + r.height/2 : -1; })()"
+        ).toDouble()
+        assertTrue("Button $id must exist", cssX >= 0 && cssY >= 0)
+        val cssViewportWidth = evaluate("window.innerWidth").toDouble()
+        var x = 0
+        var y = 0
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            val origin = IntArray(2)
+            webView.getLocationOnScreen(origin)
+            val ratio = webView.width / cssViewportWidth
+            x = origin[0] + (cssX * ratio).toInt()
+            y = origin[1] + (cssY * ratio).toInt()
+        }
+        assertTrue("Android touch did not click $id at $x,$y",
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).click(x, y))
     }
 
     private fun sendImeText(value: String) {
