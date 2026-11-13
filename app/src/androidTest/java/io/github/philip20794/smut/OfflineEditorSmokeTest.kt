@@ -276,6 +276,75 @@ class OfflineEditorSmokeTest {
         )
     }
 
+    /**
+     * E-03: a real long-press-and-drag gesture should extend the selection.
+     * A plain swipe without a long press must remain available for scrolling.
+     */
+    @Test
+    fun nativeLongPressDragExtendsWordSelectionWithoutChangingBook() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        ensureEditorWindowFocused()
+        val original = evaluate("window.smutPrototype?.getText()")
+        evaluate(
+            """(() => {
+                window.__smutDragEvents = {context:0, move:0};
+                const c = document.querySelector('.ce-page-container canvas');
+                c?.addEventListener('contextmenu', () => window.__smutDragEvents.context++, {capture:true});
+                c?.addEventListener('touchmove', () => window.__smutDragEvents.move++, {capture:true});
+                return !!c;
+            })()"""
+        )
+        val cssX = evaluate(
+            "(() => { const r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.left + Math.min(85, r.width*0.25) : -1; })()"
+        ).toDouble()
+        val cssY = evaluate(
+            "(() => { const r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.top + Math.min(42, r.height*0.1) : -1; })()"
+        ).toDouble()
+        assertTrue("Canvas target must exist", cssX >= 0 && cssY >= 0)
+        val viewportWidth = evaluate("window.innerWidth").toDouble()
+        var startX = -1
+        var startY = -1
+        var endX = -1
+        var endY = -1
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            val origin = IntArray(2)
+            webView.getLocationOnScreen(origin)
+            val ratio = webView.width / viewportWidth
+            startX = origin[0] + (cssX * ratio).toInt()
+            startY = origin[1] + (cssY * ratio).toInt()
+            endX = origin[0] + ((cssX + 90) * ratio).toInt()
+            endY = origin[1] + ((cssY + 65) * ratio).toInt()
+        }
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        assertTrue(
+            "Native press-and-drag did not dispatch",
+            device.drag(startX, startY, endX, endY, 85)
+        )
+        try {
+            awaitJavaScriptValue(
+                "(window.smutPrototype?.getSelection()?.endIndex - window.smutPrototype?.getSelection()?.startIndex) > 12",
+                "true", exact = true
+            )
+        } catch (failure: AssertionError) {
+            val diagnostic = evaluate(
+                """JSON.stringify({
+                    events:window.__smutDragEvents,
+                    selection:window.smutPrototype?.getSelection(),
+                    focused:document.hasFocus()
+                })"""
+            )
+            throw AssertionError(
+                "Native press-and-drag from $startX,$startY to $endX,$endY did not extend selection; $diagnostic; ${failure.message}",
+                failure
+            )
+        }
+        assertEquals(
+            "Touch selection drag must not change book content",
+            original, evaluate("window.smutPrototype?.getText()")
+        )
+    }
+
     private fun selectWordByNativeLongPress() {
         awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
         ensureEditorWindowFocused()
