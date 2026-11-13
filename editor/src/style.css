@@ -39,3 +39,17 @@ h1 { font-size: 22px; margin: 22px 0; }
   color: #555;
   padding-top: 18px;
 }
+
+.controls { text-align: center; padding-top: 16px; }
+#recheck-button {
+  min-height: 48px;
+  padding: 8px 16px;
+  background: #403b37;
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#recheck-button:focus-visible { outline: 3px solid #777; outline-offset: 2px; }
