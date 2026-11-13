@@ -1,28 +1,49 @@
-name: Android F-03 bootstrap
+name: Smut CI
 
 on:
   push:
     branches: [main]
-    paths:
-      - "app/**"
-      - "editor/**"
-      - "gradle/**"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - "gradle.properties"
-      - "gradlew"
-      - "gradlew.bat"
-      - ".node-version"
-      - ".github/workflows/android-bootstrap.yml"
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: smut-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  editor:
+    name: Editor – typecheck, lint, unit tests
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
+      - name: Install locked dependencies
+        working-directory: editor
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Strict TypeScript typecheck
+        working-directory: editor
+        run: npm run typecheck
+      - name: Offline and bridge security lint
+        working-directory: editor
+        run: npm run lint
+      - name: Node unit tests
+        working-directory: editor
+        run: npm test
+
+  android:
+    name: Android – Kotlin tests, lint, debug build
+    needs: editor
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -42,41 +63,28 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.13"
-      - name: Verify official wrapper
+      - name: Verify pinned Gradle wrapper
         run: |
           echo "81a82aaea5abcc8ff68b3dfcb58b3c3c429378efd98e7433460610fecd7ae45f  gradle/wrapper/gradle-wrapper.jar" | sha256sum --check -
           chmod +x gradlew
           ./gradlew --version
-      - name: TypeScript typecheck, security lint and bridge unit tests
-        working-directory: editor
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          npm run typecheck
-          npm run lint
-          npm test
-      - name: Kotlin unit tests, Android lint and offline APK
+      - name: Kotlin unit tests, Android lint and build
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-      - name: Verify local editor resources in the APK
+      - name: Verify offline editor bundled in APK
         run: |
+          set -euo pipefail
           apk="app/build/outputs/apk/debug/app-debug.apk"
           unzip -t "$apk" >/dev/null
           for resource in index.html style.css main.js bridge.js; do
             unzip -Z1 "$apk" | grep -Fx "assets/editor/$resource"
           done
           unzip -p "$apk" assets/editor/index.html | grep -F "connect-src 'none'"
-      - name: Upload test reports
+      - name: Upload test and lint reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smut-f03-test-reports
+          name: smut-android-check-reports-${{ github.run_id }}
           path: |
             app/build/test-results/testDebugUnitTest/
             app/build/reports/lint-results-debug.html
           if-no-files-found: ignore
-      - name: Upload F-03 debug APK
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smut-f03-debug-${{ github.sha }}
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error

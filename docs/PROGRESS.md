@@ -7,8 +7,8 @@
 - **Stand:** 2026-11-13
 - **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 bis F-03 abgeschlossen. Der lokale TypeScript-/WebView-Container ist mit Node-/Kotlin-Tests, Android-Lint und gebündelter Debug-APK im Cloud-Build nachgewiesen.
 - **Meilenstein:** `P0 – Projektgerüst und Cloud-Build`
-- **Aktive Aufgabe:** keine; F-03 erfolgreich abgeschlossen
-- **Nächste ausführbare Aufgabe:** `F-04` – GitHub Actions für vollständige Push-/PR-/manuelle Pflichtchecks
+- **Aktive Aufgabe:** `F-04` – `IN_REVIEW`: Push-/PR-/manuelle CI implementiert, grüner Lauf und Negativprobe ausstehend
+- **Nächste ausführbare Aufgabe:** F-04-CI erfolgreich durchlaufen lassen und isolierten roten PR-Test nachweisen; danach `F-05`
 - **Abgeschlossene Aufgaben:** **3 / 35 (8,6 %)**; ausschließlich Aufgaben mit `DONE` zählen.
 - **Letzter verifizierter grüner CI-Lauf:** [Android F-03 Bootstrap – 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751) – `success` für TypeScript-Typecheck, Sicherheitslint, Node-Bridge-Tests, Android-Unit-Tests/Lint, APK und Asset-Kontrolle. Vollständige CI folgt in F-04.
 - **Letzte geprüfte APK:** `smut-f03-debug-d85503bfa990b31ad8cc6bc63253e680138798d1` (ca. 9,5 MB, Actions-Artefakt im [erfolgreichen Lauf](https://github.com/philip20794/Smut/actions/runs/43445552751)); **nicht auf realem Gerät getestet**.
@@ -34,7 +34,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-01 | DONE | [Baseline-Commit](https://github.com/philip20794/Smut/commit/5801f814e619999645b658fdd9930b02c5fb00c1), [Build-Doku](BUILD.md); alle F-01-Dateien auf `main` geprüft, kein Build erwartet |
 | P0 | F-02 | DONE | [Basiscommit](https://github.com/philip20794/Smut/commit/bd859c9357d24db4ed11a38b0c06407c6f9b6859), [Wrapper-Commit](https://github.com/philip20794/Smut/commit/954d2e89e98117377d09f047f46bbeca3cf073e4), [grüner CI-Lauf mit Unit-Test/Lint/APK](https://github.com/philip20794/Smut/actions/runs/43441065967) |
 | P0 | F-03 | DONE | [Code-Commit d85503b](https://github.com/philip20794/Smut/commit/d85503bfa990b31ad8cc6bc63253e680138798d1), [grüner Workflow 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751): TS-Typecheck/Lint/Tests, Kotlin-Unit/Lint, APK-Assets/Artifact |
-| P0 | F-04 | TODO | – |
+| P0 | F-04 | IN_REVIEW | CI-Workflow für `push`, `pull_request`, `workflow_dispatch` eingereicht; Positiv-/Negativnachweis offen |
 | P0 | F-05 | TODO | – |
 | P0 | F-06 | TODO | – |
 | P1 | E-01 | TODO | – |
