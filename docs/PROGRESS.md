@@ -5,23 +5,23 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-13
-- **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 bis F-03 abgeschlossen. Der lokale TypeScript-/WebView-Container ist mit Node-/Kotlin-Tests, Android-Lint und gebündelter Debug-APK im Cloud-Build nachgewiesen.
+- **Projektstatus:** `IN_PROGRESS` – P0 läuft; F-01 bis F-05 abgeschlossen. TypeScript/Kotlin-Checks und instrumentierter API-35-Offline-WebView-Test sind in GitHub Actions nachgewiesen; das geprüfte APK-Gate folgt F-06.
 - **Meilenstein:** `P0 – Projektgerüst und Cloud-Build`
-- **Aktive Aufgabe:** `F-05` – `IN_REVIEW`: Emulator- und UI-Test-Implementierung eingecheckt, Cloud-Nachweis offen
-- **Nächste ausführbare Aufgabe:** F-05-Emulator-GitHub-Actions auswerten, Fehler beheben; danach `F-06`
-- **Abgeschlossene Aufgaben:** **4 / 35 (11,4 %)**; ausschließlich Aufgaben mit `DONE` zählen.
-- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43447739353](https://github.com/philip20794/Smut/actions/runs/43447739353) – `success` für Editor-Typprüfung/Lint/Unit-Tests und Android-JVM-Tests/Lint/APK. [Negativprobe 43447797215](https://github.com/philip20794/Smut/actions/runs/43447797215) wurde mit absichtlich fehlschlagendem Node-Test rot; Android-Job übersprungen.
+- **Aktive Aufgabe:** `F-06` – `IN_REVIEW`: geprüfte APK-Ausgabe nach allen CI-Gates implementiert, erster Lauf ausstehend
+- **Nächste ausführbare Aufgabe:** F-06-Workflow kontrollieren: intern gebaute APK nur nach Emulator-Erfolg als geprüften Artifact bereitstellen und mit SHA-256 prüfen; danach `E-01`
+- **Abgeschlossene Aufgaben:** **5 / 35 (14,3 %)**; ausschließlich Aufgaben mit `DONE` zählen.
+- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346) – `success` für Editor-Typecheck/Lint/Tests, Android-Unit/Lint/APK sowie instrumentierten API-35-Emulator-Smoke bei deaktiviertem WLAN/Mobilfunk. [F-04-Negativprobe rot 43447797215](https://github.com/philip20794/Smut/actions/runs/43447797215).
 - **Letzte geprüfte APK:** `smut-f03-debug-d85503bfa990b31ad8cc6bc63253e680138798d1` (ca. 9,5 MB, Actions-Artefakt im [erfolgreichen Lauf](https://github.com/philip20794/Smut/actions/runs/43445552751)); **nicht auf realem Gerät getestet**.
 - **Letztes dokumentiertes Release:** keines.
 - **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
 - **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
-- **Unmittelbarer Blocker:** keiner für `F-05`; der Cloud-Emulator-Smoke-Test fehlt.
+- **Unmittelbarer Blocker:** keiner für F-06; die neue geprüfte APK-Ausgabe muss den nächsten grünen Workflow passieren.
 
 ## 2. Verbindlicher nächster Schritt
 
-**F-05 – Implementierung in Prüfung.** Ein Android-UI-Test auf API 35 soll die lokale WebView bei abgeschaltetem WLAN/Mobilfunk starten, den nativen Bridge-Handshake bestätigen, den neuen UI-Button tatsächlich betätigen und die Antwort prüfen.
+**F-06 – Geprüfte Test-APK als Actions-Artefakt.** Nach erfolgreichem F-05-Emulatorlauf [43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346) prüft der neue Workflow die Dev-Paketkennung `io.github.philip20794.smut.dev` und fehlende Internet-Berechtigung. Zunächst wird intern eine **unverifizierte** APK transportiert. Erst der separate `tested-apk`-Job nach `editor`, `android` und `emulator` erstellt `smut-tested-dev-<Commit-ID>` mit SHA-256-Datei; auf PRs erfolgt keine Veröffentlichung.
 
-**Nächster Schritt:** Den neuen Actions-Lauf auf Emulator-Start, Instrumentationstest und Fehler-Reports prüfen. Bei Fehlern ohne Testabschwächung korrigieren; erst bei nachgewiesen grünem Lauf `F-05` auf `DONE` setzen. Danach folgt `F-06`.
+**Weiterarbeit:** Grünen F-06-Lauf und tatsächliches APK-Artefakt für diesen Commit prüfen. Bei Rot oder fehlendem Artifact keine Abnahme fingieren. Nach F-06-DONE das P0-Gate schließen und E-01 starten.
 
 ## 3. Task-Tracker
 
@@ -33,8 +33,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-02 | DONE | [Basiscommit](https://github.com/philip20794/Smut/commit/bd859c9357d24db4ed11a38b0c06407c6f9b6859), [Wrapper-Commit](https://github.com/philip20794/Smut/commit/954d2e89e98117377d09f047f46bbeca3cf073e4), [grüner CI-Lauf mit Unit-Test/Lint/APK](https://github.com/philip20794/Smut/actions/runs/43441065967) |
 | P0 | F-03 | DONE | [Code-Commit d85503b](https://github.com/philip20794/Smut/commit/d85503bfa990b31ad8cc6bc63253e680138798d1), [grüner Workflow 43445552751](https://github.com/philip20794/Smut/actions/runs/43445552751): TS-Typecheck/Lint/Tests, Kotlin-Unit/Lint, APK-Assets/Artifact |
 | P0 | F-04 | DONE | [CI-Commit 8670def](https://github.com/philip20794/Smut/commit/8670def9a98a642d97a1508e006acca6dfd5029f), [grüner Push 43447739353](https://github.com/philip20794/Smut/actions/runs/43447739353), [roter PR 43447797215](https://github.com/philip20794/Smut/actions/runs/43447797215); abhängiger Android-Job korrekt übersprungen; PR #1 geschlossen, nicht gemergt |
-| P0 | F-05 | IN_REVIEW | Instrumentierter Offline-WebView-/Button-/Handshake-Test für Android API 35; erfolgreicher CI-Lauf ausstehend |
-| P0 | F-06 | TODO | – |
+| P0 | F-05 | DONE | [Emulator-Code 4ddc6a3](https://github.com/philip20794/Smut/commit/4ddc6a37911e5b45dd9b4a4e62a448d44bda233a), [sh-Fix d132b72](https://github.com/philip20794/Smut/commit/d132b7279d260f26b9dd375948e958cee9a27e13), [grüner Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346): API-35-Emulator, offline WebView/Handshake und Button-Interaktion bestanden |
+| P0 | F-06 | IN_REVIEW | APK-Ausgabe nach drei Pflichtjobs einschließlich Emulator, Dev-Paketkennung und SHA-256 implementiert; CI/Artifact-Nachweis ausstehend |
 | P1 | E-01 | TODO | – |
 | P1 | E-02 | TODO | – |
 | P1 | E-03 | TODO | – |
@@ -69,7 +69,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 | Phase | Fortschritt | Abschlussbedingung | Gate |
 | --- | --- | --- | --- |
-| P0 | 4/6 | Build, CI, Emulator-Smoke und Test-APK | offen |
+| P0 | 5/6 | Build, CI, Emulator-Smoke und Test-APK | offen |
 | P1 | 0/5 | Machbarkeit/ADR; echter Gerätetest separat | offen |
 | P2 | 0/4 | Modell, Operationen, sichere Persistenz, Backup | offen |
 | P3 | 0/3 | Bücher-/Kapitelverwaltung | offen |
@@ -83,14 +83,12 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 ## 5. Letzte Arbeitssitzung / Handoff
 
 - **Datum:** 2026-11-13
-- **Aktive Task-ID:** keine; F-04 `DONE`.
-- **Erreicht:** CI bei Push auf `main`, Pull Requests und manuellem Start, mit Node-24-/Gradle-/JDK-/Android-Toolchains, npm-/Gradle-Caches, TypeScript-Typprüfung, Sicherheitslint, Node-Tests, Kotlin-Unit-Tests, Android-Lint und Debug-APK.
-- **Letzter Code-Commit:** [8670def](https://github.com/philip20794/Smut/commit/8670def9a98a642d97a1508e006acca6dfd5029f).
-- **Positiver Nachweis:** [Workflow 43447739353](https://github.com/philip20794/Smut/actions/runs/43447739353), `success`.
-- **Kontrollierter negativer Nachweis:** [PR #1](https://github.com/philip20794/Smut/pull/1) mit absichtlich fehlschlagendem Node-Test; [Workflow 43447797215](https://github.com/philip20794/Smut/actions/runs/43447797215) `failure`, abhängiger Android-Job `skipped`; PR ohne Merge geschlossen. Der Negativtest liegt nicht auf `main`.
-- **Funktioniert nachweislich:** F-03-Offline-WebView kompiliert, CI erkennt defekte Tests und stoppt den nachgelagerten Android-Job.
-- **Was fehlt:** F-05 instrumentierter Emulator-Smoke (WebView starten/bedienen, Screenshots/Logcat bei Fehlern), danach F-06 geprüfte APK-Auslieferung.
-- **Nächster kleinster ausführbarer Schritt:** Android-Instrumentationstest und Emulator-Runner in GitHub Actions ergänzen, CI prüfen.
+- **Aktive Task-ID:** F-06 `IN_REVIEW`.
+- **F-05-Nachweis:** [Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346) `success`: Android API 35 startete den lokal gebündelten Editor ohne WLAN und Mobilfunk, bestätigte den Bridge-Handshake und bediente den Recheck-Button. Instrumentierter JUnit-Test und Logcat/Report-Artefakte sind eingerichtet.
+- **Fehler und Behebung:** [erster Lauf 43448562765](https://github.com/philip20794/Smut/actions/runs/43448562765) scheiterte, weil Emulator-Runner `/bin/sh` statt Bash für das Skript nutzt; der `pipefail`-Schalter war nicht erlaubt. [Commit d132b72](https://github.com/philip20794/Smut/commit/d132b7279d260f26b9dd375948e958cee9a27e13) stellte auf POSIX-`set -eu` um. Der nächste Lauf war vollständig grün.
+- **F-06-Ergebnis bisher:** CI-Gate, temporärer interner APK-Transfer und geprüfte Dev-APK mit SHA-256 im Code vorgesehen. Erst nach grünem neuen Lauf und vorhandenem Artifact `DONE`.
+- **Offen:** keine Freigabe der APK aus F-06 vor Ergebnisprüfung; E-01 Technologiematrix wartet auf geschlossenes P0-Gate.
+- **Nächster kleinster Schritt:** F-06-CI-Run auswerten und Artifact prüfen.
 - **Nutzeraktion nötig?:** keine.
 
 ## 6. Aktualisierungsregeln

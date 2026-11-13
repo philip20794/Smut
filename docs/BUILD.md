@@ -122,3 +122,10 @@ Für den Nutzer ist keine lokale Shell und kein Rechner notwendig. Codex/GitHub 
 - [Grüner Push-Workflow 43447739353](https://github.com/philip20794/Smut/actions/runs/43447739353): Editor-Typprüfung/Lint/Node-Tests, Android-Unit-Tests/Lint und Build.
 - [Rote Negativprobe 43447797215](https://github.com/philip20794/Smut/actions/runs/43447797215) in [nicht gemergtem PR #1](https://github.com/philip20794/Smut/pull/1): absichtlich fehlschlagender Node-Test führt zu rotem Editor-Job; Android-Job wird übersprungen.
 - Auslöser: `push` auf `main`, `pull_request` gegen `main`, `workflow_dispatch`; keine auf Dateien beschränkten Filter. Artifacts erst nach erfolgreichen Pflichtprüfungen. Emulator-Smoke und geprüftes APK-Gate folgen in F-05/F-06.
+
+## 11. F-05 – Cloud-Emulator-Abnahme
+
+- [F-05-Emulatorlauf 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346), `success`: API 35 / Google APIs / Pixel 6 / x86_64, USB-KVM-beschleunigt, Android-Instrumentationstest bei ausgeschaltetem WLAN und Datenzugang.
+- Browser lädt lokales A5-HTML, native Kotlin-JS-Bridge bestätigt `ready`, Test klickt Recheck-Button in der WebView und prüft erneuten Handshake.
+- [Fehlgeschlagener erster Lauf 43448562765](https://github.com/philip20794/Smut/actions/runs/43448562765): Runner verwendet POSIX-Shell, nicht Bash; `set -o pipefail` führte zu Fehler vor Teststart. Mit `set -eu` korrigiert.
+- Workflow bewahrt JUnit-/Android-Testberichte und Logcat auf, Fehler-Screenshot per `adb screencap`. **Nicht getestet:** echtes Telefon und reale Touch-IME-Eingabe in Rich-Text-Engine (P1).

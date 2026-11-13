@@ -55,11 +55,11 @@ Die Arbeitsansicht ist **ein editierbares Buchlayout**, keine bereits gerenderte
 
 ## Ohne lokalen Computer entwickeln und testen
 
-Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffähigen Projektgerüst bei jeder Änderung automatisch Codeprüfungen, Unit- und Android-Emulatortests sowie einen APK-Build ausführen. Erfolgreiche Entwicklungs-APKs stehen temporär unter **Actions** bereit; signierte Versionen werden unter **Releases** veröffentlicht. Ein eigener Rechner oder Codemagic sind nicht erforderlich. Signierung und dauerhafte Installierbarkeit von Updates sind in [docs/CI-CD.md](docs/CI-CD.md) spezifiziert. **Die CI/CD-Workflows müssen erst noch implementiert werden.**
+Die Entwicklung läuft direkt im Repository. GitHub Actions prüft bei jeder Änderung TypeScript, Kotlin, Android-Lint und den instrumentierten Emulator-Smoke; nach vollständigem Erfolg wird eine Debug-Test-APK als Artefakt bereitgestellt. Erfolgreiche Entwicklungs-APKs stehen temporär unter **Actions** bereit; signierte Versionen werden unter **Releases** veröffentlicht. Ein eigener Rechner oder Codemagic sind nicht erforderlich. Signierung und dauerhafte Installierbarkeit von Updates sind in [docs/CI-CD.md](docs/CI-CD.md) spezifiziert. **Die CI ist vorhanden; die Signier-/Release-Pipeline folgt später.**
 
 ## Implementierung und Projektstand
 
-**F-01 und F-02 sind abgeschlossen.** Ein Kotlin-/Compose-Startbildschirm ist gebaut und getestet; der eigentliche Bucheditor folgt in späteren Schritten. Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
+**F-01 bis F-05 sind abgeschlossen.** Android-App und offline gebündelter TypeScript-WebView-Container haben automatisierte Tests einschließlich Emulator-Smoke bestanden. F-06 prüft die Test-APK-Auslieferung; Buchbearbeitung und PDF kommen erst in P1/P4/P5. Einstieg für Codex: [Fortschritt und nächste Aufgabe](docs/PROGRESS.md). Der [Implementierungsplan](docs/IMPLEMENTATION_PLAN.md) umfasst 35 einzeln prüfbare Arbeitspakete, beginnend mit `F-01`. Nach jeder Entwicklungsrunde werden Commits, Tests, Blocker und der nächste Schritt im Tracker festgehalten, damit ein neuer Agent die Arbeit fortsetzen kann.
 
 ## Dokumentation
 
@@ -73,9 +73,11 @@ Codex entwickelt direkt im Repository. GitHub Actions soll ab dem ersten lauffä
 - [Entwicklungs- und Wiederaufnahmeprotokoll](docs/DEVELOPMENT_WORKFLOW.md)
 - [Technische Entscheidungen](docs/DECISIONS.md)
 - [Projektstruktur, Toolchains und Buildkonventionen](docs/BUILD.md)
+- [APK-Download und Installation am Android-Smartphone](docs/APK_DOWNLOAD.md)
 
-Der Implementierungsplan ist vorhanden. Unbestätigte technische Annahmen bleiben bis zum P1-Machbarkeitsnachweis als Prüfaufgaben gekennzeichnet. Ein Android-Grundprojekt, der offizielle Gradle Wrapper, ein Unit-Test und ein erster erfolgreicher [GitHub-Actions-Build](https://github.com/philip20794/Smut/actions/runs/43441065967) sind vorhanden. Der lokale TypeScript-Editor, vollständige CI, Emulator-Tests und signierte Releases stehen noch aus.
+Der Implementierungsplan ist vorhanden. Unbestätigte technische Annahmen bleiben bis zum P1-Machbarkeitsnachweis als Prüfaufgaben gekennzeichnet. Ein Android-Grundprojekt, der offizielle Gradle Wrapper, ein Unit-Test und ein erster erfolgreicher [GitHub-Actions-Build](https://github.com/philip20794/Smut/actions/runs/43441065967) sind vorhanden. Der TypeScript-Container, die Pflicht-CI und der Emulator-Smoke sind vorhanden. Der tatsächlich editierbare Buchinhalt, der PDF-Export und die signierten Releases stehen noch aus.
 
-## Erste Android-Testversion (F-02)
+## Android-Test-APK
 
-Unter [GitHub Actions – Build 43441065967](https://github.com/philip20794/Smut/actions/runs/43441065967) liegen die Debug-APK (`smut-f02-debug-...`) und der JUnit-Testbericht als Artefakte. Die APK zeigt nur die erste Startansicht und ist **noch kein funktionierender Bucheditor**. Spätere CI-Schritte werden die Verteilung und Updates vereinheitlichen.
+Nach dem vollständigen Erfolg aller Pflichtchecks erscheint unter [Smut GitHub Actions](https://github.com/philip20794/Smut/actions) ein `smut-tested-dev-<Commit-ID>`-Artefakt. Eine Anleitung für Android ohne lokalen PC steht in [docs/APK_DOWNLOAD.md](docs/APK_DOWNLOAD.md). **Vor F-06-Abnahme ist noch keine durch alle Gates geprüfte APK ausgewiesen.** Die APK zeigt zunächst nur den Offline-Editorcontainer.
+

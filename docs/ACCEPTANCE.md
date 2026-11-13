@@ -51,7 +51,7 @@
 - [ ] Build, alle Pflichtprüfungen und APK-Veröffentlichung sind über GitHub Actions ohne lokalen Entwicklungsrechner ausführbar.
 - [ ] Jeder Push auf `main` und jeder Pull Request (falls verwendet) startet reproduzierbare Checks.
 - [ ] Kotlin-, TypeScript-, Modell- und Integrationstests sind bei relevantem Code verpflichtend; die Testresultate werden in GitHub angezeigt.
-- [ ] Kritische Android-Bedienabläufe werden auf einem GitHub-gehosteten Emulator getestet.
+- [x] Der Basis-Offline-WebView-Handshake und ein UI-Klick werden im GitHub-API-35-Emulator getestet ([Run 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346)); komplexe Textbedienabläufe bleiben offen.
 - [ ] Schlägt ein Pflichtcheck fehl, wird keine APK als erfolgreich geprüfte Version veröffentlicht.
 - [ ] Nach erfolgreichem `main`-Build steht eine installierbare Test-APK mit nachvollziehbarer Commit-ID unter GitHub Actions bereit.
 - [ ] Ein expliziter Versionstag bzw. Release-Auslöser erzeugt nach vollständiger Prüfung eine signierte, dauerhaft in GitHub Releases herunterladbare APK.

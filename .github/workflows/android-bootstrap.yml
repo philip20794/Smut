@@ -79,6 +79,23 @@ jobs:
             unzip -Z1 "$apk" | grep -Fx "assets/editor/$resource"
           done
           unzip -p "$apk" assets/editor/index.html | grep -F "connect-src 'none'"
+      - name: Verify development package ID and no network permission
+        run: |
+          set -euo pipefail
+          apk="app/build/outputs/apk/debug/app-debug.apk"
+          aapt="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          "$aapt" dump badging "$apk" | grep -F "package: name='io.github.philip20794.smut.dev'"
+          if "$aapt" dump permissions "$apk" | grep -F "android.permission.INTERNET"; then
+            echo "Die Offline-App darf kein INTERNET-Recht anfordern." >&2
+            exit 1
+          fi
+      - name: Store internal (unverified) build for downstream gate
+        uses: actions/upload-artifact@v4
+        with:
+          name: smut-internal-apk-${{ github.run_id }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 3
       - name: Upload test and lint reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -146,3 +163,36 @@ jobs:
             app/build/reports/androidTests/connected/
             app/build/reports/emulator/
           if-no-files-found: warn
+
+  tested-apk:
+    name: Publish tested development APK
+    needs: [editor, android, emulator]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Retrieve exact APK from tested commit
+        uses: actions/download-artifact@v4
+        with:
+          name: smut-internal-apk-${{ github.run_id }}
+          path: verified-input
+      - name: Fingerprint and stage APK
+        run: |
+          set -euo pipefail
+          test -s verified-input/app-debug.apk
+          mkdir -p verified-output
+          cp verified-input/app-debug.apk "verified-output/smut-dev-${GITHUB_SHA}.apk"
+          (
+            cd verified-output
+            sha256sum "smut-dev-${GITHUB_SHA}.apk" > SHA256SUMS
+            sha256sum --check SHA256SUMS
+          )
+      - name: Publish APK only after all checks and emulator smoke passed
+        uses: actions/upload-artifact@v4
+        with:
+          name: smut-tested-dev-${{ github.sha }}
+          path: verified-output/
+          if-no-files-found: error
+          retention-days: 30

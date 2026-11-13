@@ -131,3 +131,9 @@ Ein Emulator kann echte Touch-/IME-Probleme des konkreten Telefons nicht vollst�
 ## 8. Definition of Done
 
 Eine Funktion gilt nur als umgesetzt, wenn sie im Code vorhanden ist, passende automatisierte Tests besitzt, die CI gr체n ist, die README/Anforderungsdokumentation angepasst ist und ein installierbarer Build in der definierten Stufe verf체gbar ist. Manuelle Abnahmeschritte am Smartphone sind bei Touch/IME/Layout explizit benannt.
+
+## Aktueller Pr체fpfad F-05/F-06
+
+- [Gr체ner F-05-Emulatorlauf 43449455346](https://github.com/philip20794/Smut/actions/runs/43449455346). Kein manuelles Telefon-Feedback vorliegend.
+- F-06-Actions-Artefakt wird nur im `tested-apk`-Job erzeugt: `needs: [editor, android, emulator]`, nur `main`, SHA-256-Pr체fsumme und vollst채ndige Commit-ID. Die vorgeschaltete interne Build-APK darf nicht als gepr체ft angeboten werden.
+- [Anleitung am Smartphone](APK_DOWNLOAD.md); dauerhafte Release-Signatur bleibt R-01.
