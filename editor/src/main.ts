@@ -290,8 +290,12 @@ container?.addEventListener("touchmove", event => {
     lastCanvasTouch = null;
   }
 }, { passive: false });
-container?.addEventListener("touchend", stopNativeSelectionDrag);
-container?.addEventListener("touchcancel", stopNativeSelectionDrag);
+// A drag may finish over the toolbar or outside the editor container.
+// Listen at window level so a released finger always stops the RAF loop.
+window.addEventListener("touchend", event => {
+  if (event.touches.length === 0) stopNativeSelectionDrag();
+});
+window.addEventListener("touchcancel", stopNativeSelectionDrag);
 // A native selection must never keep scrolling after the Android WebView
 // loses focus (Home/Recents, another app, or a hidden document). Android
 // does not guarantee a touchcancel event in these cases.
