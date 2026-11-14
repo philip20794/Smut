@@ -100,6 +100,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 - **Nächster kleinster Schritt:** GitHub Actions für `1c604ab` und diesen Dokumentationscommit prüfen; bei roten Tests Logs auswerten und beheben. Danach mobile Auswahlgriffe implementieren und instrumentiert testen. E-03 erst nach allen Pflichtnachweisen als DONE markieren.
 - **Nutzeraktion nötig?:** jetzt nein, E-05 später durch manuelle Smartphone-Prüfung.
 
+- **CI-Diagnose 14.11.2026:** [Run 43544310164](https://github.com/philip20794/Smut/actions/runs/43544310164) hat TypeScript und Android-Build grün, aber 10 von 11 Emulatorfällen scheitern bereits am gemeinsamen Fensterfokus-Setup (`Smut must own emulator window; wm=` leer). Dies ist kein isolierter Nachweis eines E-03-Produktfehlers. Testberichte: [Artifact 14095233322](https://github.com/philip20794/Smut/actions/runs/43544310164/artifacts/14095233322). Keine geprüfte APK aus diesem Lauf. [Commit b883bb6](https://github.com/philip20794/Smut/commit/b883bb6ac9593ed1f1f536c33df0595e93e69818) beendet unnötige Auswahl-Autoscroll-RAF-Wiederholungen, wenn der Finger außerhalb der Scroll-Randzone bleibt; dieser neue Code ist noch nicht CI-bestätigt. **Nächster Schritt:** neuen CI-Lauf prüfen; bei erneutem systemischem Fokusfehler Emulator-/Window-Setup diagnostizieren, ohne Tests zu lockern. Danach mobile Auswahlgriffe.
+
 ## 6. Aktualisierungsregeln
 
 1. Vor der Arbeit die aktuelle Version auf `main` und die GitHub-Actions-Läufe prüfen; bei Abweichung zwischen Tracker und Code/CI zuerst **reconciliieren**.
