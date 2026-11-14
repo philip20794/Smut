@@ -15,3 +15,7 @@
 **Qualitätsgrenze:** In F-06 muss für genau diesen Commit TypeScript-Typprüfung, Sicherheitslint, Node-Tests, Android-JVM-Tests, Android-Lint, APK-Assetprüfung und Android-API-35-Emulator-Smoke bestanden sein. Ein fehlgeschlagener oder übersprungener Pflichtcheck darf kein `smut-tested-dev-...` veröffentlichen.
 
 Die APK enthält bereits einen editierbaren A5-Canvas-Prototyp mit Android-Tastatureingabe, Zoom, Langdruck-Textauswahl und mobilen Auswahlgriffen. Eine vollständige Buch-/Kapitelverwaltung sowie der PDF-Export fehlen weiterhin. Der letzte vollständig geprüfte Stand ist [CI 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605); er wurde nur im Emulator, nicht auf einem echten Smartphone getestet.
+
+## Aktueller E-04-Prüfstand
+
+Die jüngste geprüfte APK und eine **separate A5-PDF-Testdatei** stehen im erfolgreichen [GitHub-Actions-Lauf 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300). Die PDF befindet sich im ZIP-Artefakt `smut-e04-a5-pdf-probe-dc47fd4c75df96a6dd93304c7f67edf90e4a1bc5`, die APK im Artefakt `smut-tested-dev-dc47fd4c75df96a6dd93304c7f67edf90e4a1bc5`. Diese Dateien sind nur temporär verfügbar; für gewöhnliche Buchdokumente besitzt die App noch **keine PDF-Export-Schaltfläche**. Der PDF-Prototyp ist ausschließlich für den instrumentierten Offline-Machbarkeitstest zugänglich. Die PDF enthält Testprosa, keine Nutzerdaten. Sie zeigt technische Suchbarkeit und A5-Geometrie, aber noch keine fertige Buchtypografie.

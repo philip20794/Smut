@@ -53,3 +53,9 @@
 | Realer Android-Gerätetest | Ausdrückliches Feedback des Nutzers, nie automatisch | Offen E-05 |
 
 Die Versionen sind Bewertungsstände, **noch keine hinzugefügten Abhängigkeiten**. Vor E-02 werden npm-Lockfile, Paketgröße und Browser-Kompatibilität durch CI verifiziert.
+
+## E-04-Befund 14.11.2026
+
+[CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300) bestätigt für den geprüften, vollständig offline gebündelten Prototyp den PDF-Export: drei echte A5-Seiten mit Textobjekten und Suchbegriffen in Deutsch, PDF-MediaBox 419,25 × 595,50 pt und gleiche Anzahl gerenderter Editor- und PDF-Seiten. Die Browser-Version muss `jspdf.umd.min.js` und `canvas-editor-pdf.umd.js` lokal aus der APK laden; das ESM-Modul enthält einen nicht im WebView auflösbaren externen `jspdf`-Importspezifizierer.
+
+Es bleiben dokumentierte Risiken: fehlende Schrift-Einbettung, unnatürlicher Blocksatz, Worttrennung ohne Trennzeichen sowie kein genauer Zeilen-/Pixelvergleich. [ADR-009](DECISIONS.md) erteilt daher ein GO für das Datenmodell/den Technologieprototyp, **nicht** für den druckfertigen Endkunden-PDF-Export. E-05 auf echtem Android-Gerät ist offen.
