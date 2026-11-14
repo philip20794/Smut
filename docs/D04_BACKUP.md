@@ -1,6 +1,6 @@
 # D-04 – Portables Buch-Backup und sicherer Import
 
-Stand: 14.11.2026 – Implementierung, CI-Prüfung ausstehend.
+Status: DONE, 14.11.2026. [Code 1386ce4](https://github.com/philip20794/Smut/commit/1386ce4a9fa676bad8b533d28ad6d1d5c48d9811); vollständiger [Smut-CI-Lauf 43592192732](https://github.com/philip20794/Smut/actions/runs/43592192732) erfolgreich: TypeScript, Kotlin-Unit/Lint/APK, Emulator mit Backup-Rundreise, SAF-ContentResolver, parallelen Import-/Speichervorgängen, Altdatei-Schutz und PDF-Regression. Die geprüfte Debug-APK ist im Lauf als Artefakt verfügbar.
 
 ## Austauschformat
 
@@ -28,11 +28,11 @@ Im vorhandenen A5-Prototyp führt die Schaltfläche **„Buch-Backup“** zu ein
 
 **Abgrenzung:** Bis B-01/W-01 arbeitet die sichtbare Canvas-Buchseite weiterhin auf `prototype-editor-v1.json`. Sie kann über diese D-04-Funktion **noch nicht** als strukturiertes Buch exportiert werden. Die D-01-Konvertierung existiert als isolierter, sicherer Migrationsbaustein, wird aber erst bei W-01 nach Backup des unveränderten Legacy-Snapshots in den Nutzerfluss eingebunden. D-04 verändert die Legacy-Datei nicht.
 
-## Tests
+## Tests – vollständig bestanden
 
 - Kotlin-JVM: UTF-8-/Unicode-Rundreise, alle Buch- und Positionsfelder erhalten, falsche Prüfsummen, andere Versionsnummern, angehängte Daten, übergroße Dateien und fehlerhafte Strukturen abweisen.
 - Emulator API 35: echtes D-03-Buch speichern → exportieren → ausschließlich einzigartige Testkopie löschen → importieren → identisches Dokument samt Position und Revision, bestehende IDs und selbst korrupte Daten nie überschreiben.
 - Emulator: ContentResolver-/MediaStore-URI statt gewöhnlicher Dateipfade für Export/Import; Legacy-Datei vor und nach der Rundreise identisch; Android-Oberfläche über lokale WebView erreichbar.
-- Pflicht-Gate: TypeScript, Android Unit/Lint/APK, Offline-Emulator und bestehende PDF-Probe vollständig grün. Erst dann D-04 `DONE`.
+- Pflicht-Gate: TypeScript, Android Unit/Lint/APK, Offline-Emulator und bestehende PDF-Probe vollständig grün. D-04 ist erst nach diesem vollständigen grünen Lauf als `DONE` markiert.
 
-Nächster Meilenstein nach erfolgreicher D-04-Abnahme: P3 / B-01 – sichtbare Bücherliste, Erstellen, Öffnen, Umbenennen, Duplizieren und sicheres Löschen.
+Nächster Meilenstein: P3 / B-01 – sichtbare Bücherliste, Erstellen, Öffnen, Umbenennen, Duplizieren und sicheres Löschen.
