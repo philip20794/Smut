@@ -105,6 +105,9 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 - **CI-Fokus-Recovery 14.11.2026:** [Commit 61bd9c7](https://github.com/philip20794/Smut/commit/61bd9c745a86298de24cb69e473db30914283e49) ergänzt im instrumentierten Android-Test nach zwei erfolglosen Fokusversuchen eine einmalige Home-Rückkehr und anschließenden Neustart der bestehenden Activity (ohne Test-Gate zu lockern). Bei weiterem Fehlschlag wird zusätzlich der Activity-Resumed-Zustand protokolliert. **CI-Nachweis für diesen Commit noch offen**; E-03 bleibt `IN_PROGRESS` (8/35). Nächster Schritt: CI prüfen, gegebenenfalls Fokusproblem weiter eingrenzen, anschließend Auswahlgriffe.
 
+
+- **Rand-Autoscroll am Dokumentende (14.11.2026):** [Commit 9925897](https://github.com/philip20794/Smut/commit/99258977c39125d2e849ac8dc834c0a293cbbd18) stoppt die requestAnimationFrame-Schleife zusätzlich dann, wenn `window.scrollBy` wegen oberer/unterer Dokumentgrenze keine Scrollposition mehr verändert. Ein späteres `touchmove` kann sie erneut starten. **CI für diesen Commit noch nicht bestätigt.** E-03 bleibt `IN_PROGRESS` (8/35); als Nächstes CI einschließlich Emulator-Fokus-Recovery prüfen und anschließend mobile Auswahlgriffe implementieren.
+
 ## 6. Aktualisierungsregeln
 
 1. Vor der Arbeit die aktuelle Version auf `main` und die GitHub-Actions-Läufe prüfen; bei Abweichung zwischen Tracker und Code/CI zuerst **reconciliieren**.
