@@ -148,7 +148,9 @@ class BookPositionNavigationInstrumentedTest {
             // Invalid hash is corruption, NOT a recoverable old caret.
             envelope.put("sha256", "0".repeat(64))
             primary.writeText(envelope.toString())
-            assertFalse(store.load(id) is BookLoad.Found)
+            val fallback = store.load(id) as BookLoad.Found
+            assertTrue(fallback.recovered)
+            assertEquals(1L, fallback.revision)
         } finally {
             store.deleteBook(id)
         }
