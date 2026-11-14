@@ -38,6 +38,7 @@ declare global {
       getZoom(): number;
       getPageCount(): number;
       getSelection(): { startIndex: number; endIndex: number; hasSelection: boolean; text: string } | null;
+      isSelectionDragActive(): boolean;
       selectAllTestFixture(): boolean;
       setPageTestFixture(enabled: boolean): void;
     };
@@ -402,6 +403,8 @@ window.smutPrototype = {
       text: typeof selectedText === "string" ? selectedText : JSON.stringify(selectedText ?? null),
     };
   },
+  // Read-only lifecycle diagnostic for native gesture regression tests.
+  isSelectionDragActive: () => isNativeSelectionDrag || selectionScrollFrame !== 0,
   // Test-only proof that the editor can select a range spanning A5 pages.
   // Never expose this operation for a real saved manuscript.
   selectAllTestFixture: () => {
