@@ -49,6 +49,19 @@ internal sealed interface BookLibraryResult {
     data object Error : BookLibraryResult
 }
 
+/** P3 chapter changes are always optimistic, revision-checked transactions. */
+internal sealed interface ChapterActionResult {
+    data class Updated(val revision: Long) : ChapterActionResult
+    data object Missing : ChapterActionResult
+    data object NotFound : ChapterActionResult
+    data object InvalidTitle : ChapterActionResult
+    data object TooManyChapters : ChapterActionResult
+    data object LastChapter : ChapterActionResult
+    data object Boundary : ChapterActionResult
+    data object Conflict : ChapterActionResult
+    data object Error : ChapterActionResult
+}
+
 /**
  * A book's checksummed AtomicFile is authoritative. Room is a reparable index.
  * A second atomic file retains the last valid revision across disk corruption.
@@ -432,6 +445,130 @@ internal class BookStore(
     } catch (_: Exception) {
         BookImport.Error
     }
+
+    /** B-02: every chapter action reads and saves under the same process-wide lock. */
+    private sealed interface ChapterEdit {
+        data class Apply(val position: BookPosition) : ChapterEdit
+        data object NotFound : ChapterEdit
+        data object TooMany : ChapterEdit
+        data object Last : ChapterEdit
+        data object Boundary : ChapterEdit
+    }
+
+    private fun editChapters(
+        bookId: String,
+        expectedRevision: Long,
+        change: (org.json.JSONArray, BookPosition) -> ChapterEdit
+    ): ChapterActionResult = synchronized(BOOK_DISK_LOCK) {
+        if (expectedRevision < 1 || runCatching {
+                BookDocumentValidator.safeId(bookId)
+            }.isFailure) return@synchronized ChapterActionResult.Error
+        when (val found = loadUnderLock(bookId)) {
+            BookLoad.Missing -> ChapterActionResult.Missing
+            is BookLoad.Found -> {
+                if (found.revision != expectedRevision) return@synchronized ChapterActionResult.Conflict
+                try {
+                    val document = JSONObject(found.document.toString())
+                    val chapters = document.getJSONArray("chapters")
+                    when (val outcome = change(chapters, found.position)) {
+                        ChapterEdit.NotFound -> ChapterActionResult.NotFound
+                        ChapterEdit.TooMany -> ChapterActionResult.TooManyChapters
+                        ChapterEdit.Last -> ChapterActionResult.LastChapter
+                        ChapterEdit.Boundary -> ChapterActionResult.Boundary
+                        is ChapterEdit.Apply -> when (val saved =
+                            saveUnderLock(document, expectedRevision, outcome.position)) {
+                            is BookSave.Saved -> ChapterActionResult.Updated(saved.revision)
+                            is BookSave.Conflict -> ChapterActionResult.Conflict
+                            BookSave.Error -> ChapterActionResult.Error
+                        }
+                    }
+                } catch (_: Exception) {
+                    ChapterActionResult.Error
+                }
+            }
+            else -> ChapterActionResult.Error
+        }
+    }
+
+    private fun chapterIndex(chapters: org.json.JSONArray, chapterId: String): Int {
+        if (runCatching { BookDocumentValidator.safeId(chapterId) }.isFailure) return -1
+        for (index in 0 until chapters.length()) {
+            if (chapters.getJSONObject(index).getString("id") == chapterId) return index
+        }
+        return -1
+    }
+
+    /** New chapter becomes active; it begins with an empty valid cursor anchor. */
+    fun createChapter(bookId: String, revision: Long, rawTitle: String): ChapterActionResult {
+        val title = rawTitle.trim()
+        if (!validTitle(title)) return ChapterActionResult.InvalidTitle
+        return editChapters(bookId, revision) { chapters, _ ->
+            if (chapters.length() >= 1_000) ChapterEdit.TooMany
+            else {
+                val id = newId("c")
+                chapters.put(JSONObject().put("id", id).put("title", title)
+                    .put("blocks", org.json.JSONArray()))
+                ChapterEdit.Apply(BookPosition(id, null, 0, 0))
+            }
+        }
+    }
+
+    /** Names are metadata only: leave blocks and the current cursor untouched. */
+    fun renameChapter(bookId: String, revision: Long, chapterId: String, rawTitle: String): ChapterActionResult {
+        val title = rawTitle.trim()
+        if (!validTitle(title)) return ChapterActionResult.InvalidTitle
+        return editChapters(bookId, revision) { chapters, position ->
+            val index = chapterIndex(chapters, chapterId)
+            if (index < 0) ChapterEdit.NotFound
+            else {
+                chapters.getJSONObject(index).put("title", title)
+                ChapterEdit.Apply(position)
+            }
+        }
+    }
+
+    /** Reordering swaps entire chapter objects. IDs, text and cursor stay stable. */
+    fun moveChapter(bookId: String, revision: Long, chapterId: String, direction: Int): ChapterActionResult =
+        editChapters(bookId, revision) { chapters, position ->
+            val index = chapterIndex(chapters, chapterId)
+            val target = index + direction
+            when {
+                index < 0 -> ChapterEdit.NotFound
+                direction !in setOf(-1, 1) || target !in 0 until chapters.length() ->
+                    ChapterEdit.Boundary
+                else -> {
+                    val current = chapters.getJSONObject(index)
+                    val other = chapters.getJSONObject(target)
+                    chapters.put(index, other)
+                    chapters.put(target, current)
+                    ChapterEdit.Apply(position)
+                }
+            }
+        }
+
+    /** Never silently delete the last chapter of a structured manuscript. */
+    fun deleteChapter(bookId: String, revision: Long, chapterId: String): ChapterActionResult =
+        editChapters(bookId, revision) { chapters, position ->
+            val index = chapterIndex(chapters, chapterId)
+            when {
+                index < 0 -> ChapterEdit.NotFound
+                chapters.length() == 1 -> ChapterEdit.Last
+                else -> {
+                    chapters.remove(index)
+                    val updatedPosition = if (position.chapterId != chapterId) position else
+                        BookPosition(chapters.getJSONObject(minOf(index, chapters.length() - 1))
+                            .getString("id"), null, 0, 0)
+                    ChapterEdit.Apply(updatedPosition)
+                }
+            }
+        }
+
+    /** Explicitly navigate to a chapter without reading or changing the old E-02 document. */
+    fun openChapter(bookId: String, revision: Long, chapterId: String): ChapterActionResult =
+        editChapters(bookId, revision) { chapters, _ ->
+            if (chapterIndex(chapters, chapterId) < 0) ChapterEdit.NotFound
+            else ChapterEdit.Apply(BookPosition(chapterId, null, 0, 0))
+        }
 
     /** Non-destructive, bounded test hook. The E-02 file is never touched. */
     internal fun primaryFileForTest(id: String): File = primary(BookDocumentValidator.safeId(id))
