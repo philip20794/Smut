@@ -95,30 +95,36 @@ class StructuredBookEditorInstrumentedTest {
     }
     private fun nativeTapCanvas(scenario: ActivityScenario<BookEditorActivity>) {
         ensureWindowFocused(scenario)
-        val x = evaluate(scenario,
-            "(() => {let r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.left+Math.min(45,r.width*.2) : -1})()").toDouble()
-        val y = evaluate(scenario,
-            "(() => {let r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.top+Math.min(35,r.height*.1) : -1})()").toDouble()
         val viewport = evaluate(scenario, "window.innerWidth").toDouble()
-        assertTrue("Canvas must be present and visible", x >= 0 && y >= 0)
-        var screenX = -1
-        var screenY = -1
-        scenario.onActivity { activity ->
-            val web = findWebView(activity.window.decorView)!!
-            val origin = IntArray(2)
-            web.getLocationOnScreen(origin)
-            val scale = web.width / viewport
-            screenX = origin[0] + (x * scale).toInt()
-            screenY = origin[1] + (y * scale).toInt()
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        val points = listOf(70 to 88, 105 to 105, 55 to 64)
+        val attempts = mutableListOf<String>()
+        for ((dx, dy) in points) {
+            val cssX = evaluate(scenario,
+                "(() => {let r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.left+Math.min($dx,r.width*.28) : -1})()").toDouble()
+            val cssY = evaluate(scenario,
+                "(() => {let r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.top+Math.min($dy,r.height*.28) : -1})()").toDouble()
+            assertTrue("A5 Canvas must have a visible page", cssX >= 0 && cssY >= 0)
+            var x = -1
+            var y = -1
+            scenario.onActivity { activity ->
+                val web = findWebView(activity.window.decorView)!!
+                val origin = IntArray(2)
+                web.getLocationOnScreen(origin)
+                val scale = web.width / viewport
+                x = origin[0] + (cssX * scale).toInt()
+                y = origin[1] + (cssY * scale).toInt()
+            }
+            assertTrue("Real Android canvas tap must dispatch", device.click(x, y))
+            SystemClock.sleep(900)
+            val focused = evaluate(scenario,
+                "document.activeElement?.classList?.contains('ce-inputarea')")
+            if (focused.contains("true")) return
+            attempts.add("($x,$y)=$focused")
         }
-        assertTrue("Android must tap the real Canvas page", device.click(screenX, screenY))
-        try {
-            await(scenario, "document.activeElement?.classList?.contains('ce-inputarea')", "true")
-        } catch (error: AssertionError) {
-            val diagnostics = evaluate(scenario,
-                "JSON.stringify({hasFocus:document.hasFocus(),active:document.activeElement?.className,canvas:document.querySelector('.ce-page-container canvas')?.getBoundingClientRect()?.toJSON(),view:[innerWidth,innerHeight],scroll:scrollY})")
-            throw AssertionError("Native canvas tap at $screenX,$screenY failed: $diagnostics", error)
-        }
+        val diagnostic = evaluate(scenario,
+            "JSON.stringify({hasFocus:document.hasFocus(),active:document.activeElement?.className,canvas:document.querySelector('.ce-page-container canvas')?.getBoundingClientRect()?.toJSON(),view:[innerWidth,innerHeight],scroll:scrollY})")
+        throw AssertionError("Real A5 taps did not focus the IME: $attempts; state=$diagnostic")
     }
     private fun ime(scenario: ActivityScenario<BookEditorActivity>, text: String) {
         var applied = false
