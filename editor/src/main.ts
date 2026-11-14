@@ -197,6 +197,36 @@ let lastCanvasTouch: { x: number; y: number; time: number } | null = null;
 let isNativeSelectionDrag = false;
 let selectionDragPoint: { x: number; y: number } | null = null;
 let selectionScrollFrame = 0;
+let selectionReleaseFrame = 0;
+
+/**
+ * Android WebView may continue a compositor-driven fling after the final
+ * touchend even though our selection RAF is cancelled. Hold the release
+ * position briefly for *selection drags only*, never for ordinary swipes.
+ * A new touch immediately cancels this guard so normal scrolling is usable.
+ */
+function cancelSelectionReleaseGuard(): void {
+  if (selectionReleaseFrame) cancelAnimationFrame(selectionReleaseFrame);
+  selectionReleaseFrame = 0;
+}
+
+function settleSelectionAtRelease(): void {
+  cancelSelectionReleaseGuard();
+  const releaseY = window.scrollY;
+  const releaseUntil = performance.now() + 600;
+  const hold = (): void => {
+    selectionReleaseFrame = 0;
+    if (window.scrollY !== releaseY) window.scrollTo(window.scrollX, releaseY);
+    if (performance.now() < releaseUntil) {
+      selectionReleaseFrame = requestAnimationFrame(hold);
+    }
+  };
+  selectionReleaseFrame = requestAnimationFrame(hold);
+}
+
+window.addEventListener("touchstart", cancelSelectionReleaseGuard, { passive: true });
+window.addEventListener("blur", cancelSelectionReleaseGuard);
+window.addEventListener("pagehide", cancelSelectionReleaseGuard);
 
 /**
  * A Canvas Editor page is a separate canvas. During an Android selection drag,
@@ -292,10 +322,15 @@ container?.addEventListener("touchmove", event => {
 }, { passive: false });
 // A drag may finish over the toolbar or outside the editor container.
 // Listen at window level so a released finger always stops the RAF loop.
+function finishNativeSelectionTouch(): void {
+  const wasSelecting = isNativeSelectionDrag;
+  stopNativeSelectionDrag();
+  if (wasSelecting) settleSelectionAtRelease();
+}
 window.addEventListener("touchend", event => {
-  if (event.touches.length === 0) stopNativeSelectionDrag();
+  if (event.touches.length === 0) finishNativeSelectionTouch();
 });
-window.addEventListener("touchcancel", stopNativeSelectionDrag);
+window.addEventListener("touchcancel", finishNativeSelectionTouch);
 // A native selection must never keep scrolling after the Android WebView
 // loses focus (Home/Recents, another app, or a hidden document). Android
 // does not guarantee a touchcancel event in these cases.
