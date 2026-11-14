@@ -72,7 +72,7 @@ let caretVisibilityFrame = 0;
  * an input is committed, or Canvas Editor updates its caret position.
  */
 function keepCaretVisible(): void {
-  if (!container || !editor || isNativeSelectionDrag || document.hidden || !document.hasFocus()) return;
+  if (!container || !editor || isNativeSelectionDrag || document.hidden) return;
   const input = container.querySelector<HTMLTextAreaElement>(".ce-inputarea");
   const caret = container.querySelector<HTMLElement>(".ce-cursor");
   if (!input || document.activeElement !== input || !caret
@@ -89,7 +89,7 @@ function keepCaretVisible(): void {
 }
 
 function scheduleCaretVisibility(): void {
-  if (document.hidden || !document.hasFocus()) return;
+  if (document.hidden) return;
   if (caretVisibilityFrame) cancelAnimationFrame(caretVisibilityFrame);
   caretVisibilityFrame = requestAnimationFrame(() => {
     // Canvas Editor updates its canvas/caret after its own IME event handler.
