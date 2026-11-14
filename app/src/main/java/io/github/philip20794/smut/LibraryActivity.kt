@@ -131,6 +131,21 @@ class LibraryActivity : ComponentActivity() {
                 }
             }
         }
+        savedInstanceState?.getString("openedBookId")?.let { id ->
+            perform("Buch wird wieder geöffnet …") {
+                when (val found = store.load(id)) {
+                    is BookLoad.Found -> WorkResult("Buch wieder geöffnet.", summary(found))
+                    BookLoad.Missing -> WorkResult("Das Buch ist nicht mehr vorhanden.")
+                    BookLoad.Corrupt -> WorkResult("Buchdatei beschädigt. Bitte die Sicherung prüfen.")
+                    BookLoad.Error -> WorkResult("Buch konnte nicht geöffnet werden.")
+                }
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        selected?.id?.let { outState.putString("openedBookId", it) }
+        super.onSaveInstanceState(outState)
     }
 
     override fun onResume() {
