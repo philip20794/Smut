@@ -35,6 +35,9 @@ internal interface BookEntryDao {
 
     @Query("SELECT * FROM book_entries ORDER BY updatedAt DESC")
     fun all(): List<BookEntry>
+
+    @Query("DELETE FROM book_entries WHERE id = :id")
+    fun delete(id: String)
 }
 
 @Database(entities = [BookEntry::class], version = 1, exportSchema = false)

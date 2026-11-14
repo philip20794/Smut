@@ -8,7 +8,7 @@
 - **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04 und P2 D-01 bis D-03 abgeschlossen; Canvas Editor 1.1.0 + lokaler PDF-Prototyp 0.8.0 bestätigt. Buchverwaltung, portables Backup und druckreifer PDF-Export folgen in P2–P5.
 - **Meilenstein:** `P2 – Dokumentmodell und Datensicherheit` (technische Arbeit freigegeben).
 - **Letzte abgeschlossene Aufgabe:** `D-03 DONE`: versionierte und prüfsummengesicherte AtomicFile-Buchdaten, Room-Index, Autosave-Warteschlange und Crash-/Korruptions-Recovery. Native Speicherung und Emulator-/TypeScript-Tests geprüft. Siehe [D03_PERSISTENCE.md](D03_PERSISTENCE.md).
-- **Nächste ausführbare Aufgabe:** `D-04 TODO` – portables Buch-Backup, Integritätsprüfung und sicherer Import. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
+- **Aktive Aufgabe:** `D-04 IN_PROGRESS` – portables Buch-Backup über Android-Dateiauswahl mit SHA-256, Importkollisionsschutz und Emulator-Rundreise in CI-Prüfung. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
 - **Abgeschlossene Aufgaben:** **13 / 35 (37,1 %)**; nur `DONE` zählt.
 - **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623), Commit [bfd2c82](https://github.com/philip20794/Smut/commit/bfd2c82e085844930bd5490924186c5f287bc8c0): TypeScript-Typecheck/Lint/Unit inklusive Autosave, Kotlin-Unit/Android-Lint/APK, API-35-Emulator inklusive D-03-Wiederherstellung und E-04-PDF-Probe vollständig erfolgreich.
 - **Letzte geprüfte APK:** `smut-tested-dev-bfd2c82e085844930bd5490924186c5f287bc8c0` aus [CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623), bis 14.12.2026 verfügbar. PDF-Probe `smut-e04-a5-pdf-probe-bfd2c82e085844930bd5490924186c5f287bc8c0`. **Kein echter Smartphone-Test.**
@@ -47,7 +47,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P2 | D-01 | DONE | [Code 512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38), [vollständige CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353) grün (TS/Lint/Unit, Kotlin/Lint/APK, Emulator/PDF), [Modell-/Migrationsvertrag](D01_DOCUMENT_MODEL.md) |
 | P2 | D-02 | DONE | [Code a7df11d](https://github.com/philip20794/Smut/commit/a7df11d282226e82cbda4336086ff9a7ee383aef), [CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130) vollständig grün (Editor-Typecheck, Node-Unit, Kotlin/Lint/APK, Emulator und PDF-Probe); [Abnahmevertrag](D02_EDIT_OPERATIONS.md) |
 | P2 | D-03 | DONE | [Code bfd2c82](https://github.com/philip20794/Smut/commit/bfd2c82e085844930bd5490924186c5f287bc8c0), [CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623) vollständig grün (Room, AtomicFile, Revisionsschutz, Emulator-Crash-/Recovery-Tests und Autosave-Node-Tests); [D03-Vertrag](D03_PERSISTENCE.md) |
-| P2 | D-04 | TODO | – |
+| P2 | D-04 | IN_PROGRESS | [Backup-/Importvertrag](D04_BACKUP.md); CI-Abnahme ausstehend |
 | P3 | B-01 | TODO | – |
 | P3 | B-02 | TODO | – |
 | P3 | B-03 | TODO | – |
@@ -85,6 +85,15 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### D-04 – Umsetzung zur CI-Prüfung (14.11.2026)
+
+- Portables `.smut.json` für strukturierte Bücher, Formatversion 1 und SHA-256, definierte Speicher-/Importgrenzen. Unbekannte Versionen und defekte Archive werden abgewiesen.
+- Neue native BackupActivity mit Android-Dateiauswahl (CreateDocument/OpenDocument), Buchliste, exportierendem Hintergrundprozess und kollisionssicherem Import in BookStore. Zugriff aus der lokalen WebView-Schaltfläche „Buch-Backup“.
+- Tests: Kotlin-Codec-Tamper-/Rundreise, Emulator-Speichern–Export–Testkopie löschen–Import, MediaStore-ContentResolver, Schutz vor Überschreiben und Legacy-Unversehrtheit. **Bis zur vollständigen CI kein DONE.**
+- Die aktuelle E-02-Buchseite ist weiterhin Legacy-Canvas und noch nicht im D-01-Datenmodell; direkte Prototypmigration folgt nach sicherem Integrationsgate in W-01. Keine E-02-Datei wird verändert.
+
+
 
 ### Aktuelle Übergabe – D-03 DONE / D-04 als nächstes (14.11.2026)
 

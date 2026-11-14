@@ -31,6 +31,12 @@ internal sealed interface BookSave {
     data object Error : BookSave
 }
 
+internal sealed interface BookImport {
+    data object Imported : BookImport
+    data object AlreadyExists : BookImport
+    data object Error : BookImport
+}
+
 /**
  * A book's checksummed AtomicFile is authoritative. Room is a reparable index.
  * A second atomic file retains the last valid revision across disk corruption.
@@ -220,6 +226,38 @@ internal class BookStore(
         } catch (_: Exception) {
             BookSave.Error
         }
+    }
+
+    /** The Room index is never trusted as a substitute for the authoritative book file. */
+    @Synchronized
+    fun listEntries(): List<BookEntry> = dao.all()
+
+    /**
+     * D-04: restore a validated portable backup as a NEW book only.
+     * A matching ID, even when its local files are damaged, is never overwritten.
+     * Original timestamps, chapter IDs and layout are preserved, unlike normal saves.
+     */
+    @Synchronized
+    fun importNew(source: BookBackupCodec.Payload): BookImport = try {
+        val book = JSONObject(source.document.toString())
+        val info = BookDocumentValidator.inspect(book)
+        BookDocumentValidator.validatePosition(book, source.position)
+        require(source.revision in 1..9_007_199_254_740_991L)
+        val a = primary(info.id)
+        val b = previous(info.id)
+        fun anyArtifact(file: File): Boolean =
+            exists(file) || File(file.path + ".new").exists()
+        if (dao.find(info.id) != null || anyArtifact(a) || anyArtifact(b)) {
+            BookImport.AlreadyExists
+        } else {
+            val bytes = bytesFor(book, source.revision, source.position)
+            writeAtomic(a, bytes)
+            // If indexing fails, keep the valid book file; the next load repairs Room.
+            syncIndex(decode(bytes, info.id))
+            BookImport.Imported
+        }
+    } catch (_: Exception) {
+        BookImport.Error
     }
 
     /** Non-destructive, bounded test hook. The E-02 file is never touched. */

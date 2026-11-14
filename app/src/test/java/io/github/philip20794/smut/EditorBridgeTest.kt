@@ -12,6 +12,11 @@ class EditorBridgeTest {
     fun validHandshakeIsAcceptedAndAcknowledged() {
         val input = """{"version":1,"type":"ready","requestId":"startup"}"""
         assertEquals("startup", BridgeProtocol.parseReady(input))
+        assertEquals(
+            BridgeRequest.OpenBackup("backup-open"),
+            BridgeProtocol.parseRequest("""{"version":1,"type":"open-backup","requestId":"backup-open"}""")
+        )
+        assertNull(BridgeProtocol.parseRequest("""{"version":1,"type":"open-backup","requestId":"backup-open","extra":1}"""))
         val ack = JSONObject(BridgeProtocol.ack("startup"))
         assertEquals(1, ack.getInt("version"))
         assertEquals("ready-ack", ack.getString("type"))

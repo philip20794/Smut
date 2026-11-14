@@ -14,6 +14,8 @@ import android.webkit.WebView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -81,6 +83,21 @@ class OfflineEditorSmokeTest {
         )
     }
 
+
+    @Test
+    fun d04BackupEntryOpensNativeActivityAndReturnsToEditor() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            webView.evaluateJavascript("document.getElementById('backup-button')?.click()", null)
+        }
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        assertTrue("Native backup screen must open from the offline editor",
+            device.wait(Until.hasObject(By.text("Buch-Backup")), 12_000))
+        assertTrue(device.hasObject(By.text("Buch aus Datei importieren")))
+        device.pressBack()
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+    }
 
     /**
      * E-02: Native touch + Android InputConnection, not a JS-injected

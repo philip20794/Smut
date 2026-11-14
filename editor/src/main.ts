@@ -58,6 +58,7 @@ const status = document.getElementById("bridge-status");
 const editorStatus = document.getElementById("editor-status");
 const retryButton = document.getElementById("recheck-button");
 const saveButton = document.getElementById("save-button");
+const backupButton = document.getElementById("backup-button");
 const container = document.getElementById("canvas-editor");
 const zoomOutButton = document.getElementById("zoom-out");
 const zoomInButton = document.getElementById("zoom-in");
@@ -694,6 +695,13 @@ retryButton?.addEventListener("click", () => {
 });
 zoomOutButton?.addEventListener("click", () => adjustZoom(-1));
 zoomInButton?.addEventListener("click", () => adjustZoom(1));
+backupButton?.addEventListener("click", () => {
+  if (!window.SmutAndroid) {
+    report("Buch-Backup steht nur in der Android-App zur Verfügung");
+    return;
+  }
+  postRequest(JSON.stringify({ version: 1, type: "open-backup", requestId: "backup-open" }));
+});
 saveButton?.addEventListener("click", () => {
   pendingSave = true;
   void saveCurrentDocument();

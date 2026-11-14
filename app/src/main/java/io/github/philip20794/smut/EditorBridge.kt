@@ -1,5 +1,7 @@
 package io.github.philip20794.smut
 
+import android.app.Activity
+import android.content.Intent
 import android.content.Context
 import android.util.AtomicFile
 import android.util.Base64
@@ -39,6 +41,15 @@ internal class EditorBridge(private val webView: WebView) {
         val request = BridgeProtocol.parseRequest(payload) ?: return
         val response = when (request) {
             is BridgeRequest.Ready -> BridgeProtocol.ack(request.requestId)
+            is BridgeRequest.OpenBackup -> {
+                webView.post {
+                    val activity = webView.context as? Activity
+                    if (activity != null && webView.url == EDITOR_URL) {
+                        activity.startActivity(Intent(activity, BackupActivity::class.java))
+                    }
+                }
+                BridgeProtocol.ack(request.requestId)
+            }
             is BridgeRequest.Load -> {
                 val content = try {
                     val bytes = prototypeFile.openRead().use { it.readBytes() }
@@ -98,6 +109,7 @@ internal class EditorBridge(private val webView: WebView) {
 
 internal sealed class BridgeRequest(open val requestId: String) {
     data class Ready(override val requestId: String) : BridgeRequest(requestId)
+    data class OpenBackup(override val requestId: String) : BridgeRequest(requestId)
     data class Load(override val requestId: String) : BridgeRequest(requestId)
     data class Save(override val requestId: String, val document: JSONObject) : BridgeRequest(requestId)
     data class PdfProbe(override val requestId: String, val base64: String) : BridgeRequest(requestId)
@@ -120,6 +132,7 @@ internal object BridgeProtocol {
         if (requestId !is String || !idPattern.matches(requestId)) return null
         return when (json.optString("type")) {
             "ready" -> if (json.length() == 3) BridgeRequest.Ready(requestId) else null
+            "open-backup" -> if (json.length() == 3) BridgeRequest.OpenBackup(requestId) else null
             "load" -> if (json.length() == 3) BridgeRequest.Load(requestId) else null
             "save-pdf-probe" -> {
                 if (json.length() != 6) return null
