@@ -785,14 +785,25 @@ class OfflineEditorSmokeTest {
             scenarioRule.scenario.onActivity { focused = it.hasWindowFocus() }
             if (focused) return
             device.waitForIdle()
+            if (it == 1) {
+                // Some headless emulator boots leave a system surface above
+                // the Activity despite am start reporting a successful launch.
+                // Return to Home once, then bring the existing activity forward.
+                device.pressHome()
+                device.waitForIdle()
+            }
         }
         val focusReport = device.executeShellCommand("dumpsys window windows")
             .lineSequence()
             .filter { it.contains("mCurrentFocus") || it.contains("mFocusedApp") || it.contains("mInputMethodTarget") }
             .take(6)
             .joinToString(" | ")
+        val activityReport = device.executeShellCommand("dumpsys activity activities")
+            .lineSequence()
+            .filter { it.contains("topResumedActivity") || it.contains("mResumedActivity") || it.contains("ResumedActivity") }
+            .take(5).joinToString(" | ")
         assertTrue(
-            "Smut must own emulator window; wm=$focusReport; launch=$launch",
+            "Smut must own emulator window; wm=$focusReport; activity=$activityReport; launch=$launch",
             false
         )
     }
