@@ -8,7 +8,7 @@
 - **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04, P2 sowie P3 B-01/B-02/B-03 abgeschlossen; W-01 (produktive Editorintegration) als Nächstes. Der A5-Prototyp nutzt bis W-01 weiterhin sein separates Legacy-Format.
 - **Meilenstein:** `P4 – Alltagstauglicher Editor`, durch den vollständig grünen P3-Gate freigegeben.
 - **Letzte abgeschlossene Aufgabe:** `B-03 DONE` – Wiederaufnahme des gespeicherten Kapitel-/Cursor-/Scrollankers, sicherer Fallback bei veraltetem Block/Kapitel, System-Zurück-Navigation und reduziertes Buchmenü; [B03_READING_POSITION.md](B03_READING_POSITION.md), [vollständige CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487) grün.
-- **Nächste ausführbare Aufgabe:** `W-01 TODO` – strukturiertes D-01/D-03-Buchmodell mit editierbarem A5-Canvas verbinden, Migration ohne Datenverlust, echte Eingabe-/Autosave-/Emulator-Tests. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
+- **Nächste ausführbare Aufgabe:** `W-01 IN_PROGRESS` – strukturiertes D-01/D-03-Buchmodell mit editierbarem A5-Canvas verbinden, Migration ohne Datenverlust, echte Eingabe-/Autosave-/Emulator-Tests. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
 - **Abgeschlossene Aufgaben:** **17 / 35 (48,6 %)**; nur `DONE` zählt.
 - **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487), Commit [5e89c93](https://github.com/philip20794/Smut/commit/5e89c932846a096b5b238008fc477ccb933e46f2): TypeScript, Kotlin-Unit/Lint/APK, Offline-Emulator inklusive B-03-Positions-/Navigations-Regression sowie aller bisherigen B-02/B-01/D-04/Editor- und PDF-Tests erfolgreich.
 - **Letzte geprüfte APK:** `smut-tested-dev-5e89c932846a096b5b238008fc477ccb933e46f2` aus [CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487), verfügbar bis 14.12.2026; PDF-Probe `smut-e04-a5-pdf-probe-5e89c932846a096b5b238008fc477ccb933e46f2`. **Kein echter Smartphone-Test.**
@@ -51,7 +51,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P3 | B-01 | DONE | [Code/Tests fcf7642](https://github.com/philip20794/Smut/commit/fcf7642272d0ec716b57bd83dce67c2916377359), [vollständige CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969) grün: native Buchliste, CRUD, Bestätigungsabbruch, eindeutige IDs, Room-/Datei-Neustart, Lösch-Recovery; [B-01-Doku](B01_BOOK_LIBRARY.md) |
 | P3 | B-02 | DONE | [Code/Test-Fix da2678b](https://github.com/philip20794/Smut/commit/da2678bbf93aa43196e5a5bc350f258cec17616c), [vollständige CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709) grün: Kapitel CRUD, Reorder, Navigation, Emoji-Cursoranker, Revisionskonflikte, lange Kapitel, UI-Abbruch/Bestätigung, Neustart; [B-02-Doku](B02_CHAPTER_MANAGEMENT.md) |
 | P3 | B-03 | DONE | [Code/Test 5e89c93](https://github.com/philip20794/Smut/commit/5e89c932846a096b5b238008fc477ccb933e46f2), [vollständige CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487) grün: echte Android-Navigation/Activity-Recreation, Kapitel-/Cursor-/Scrollposition, sichere Fallbacks für veraltete Anker, Prüfsummen-Schutz; [B-03-Doku](B03_READING_POSITION.md) |
-| P4 | W-01 | TODO | als nächstes – Verbindung von D-01/D-03 und A5-Editor ohne Legacy-Datenverlust |
+| P4 | W-01 | IN_PROGRESS | Strukturierte Bücher an den Canvas-Editor anbinden; Unicode, Autosave, Recovery, Android-IME und Legacy-Isolation testen. CI ausstehend. |
 | P4 | W-02 | TODO | – |
 | P4 | W-03 | TODO | – |
 | P4 | W-04 | TODO | – |
@@ -85,6 +85,13 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### W-01 IN_PROGRESS – strukturierter A5-Editor
+
+- Aktive Aufgabe: gespeicherte Bücher und Kapitel im lokalen A5-Canvas editierbar machen; transportiert werden nur D-01-Buchdaten über die bereits vorhandene, revisionsgeprüfte D-03-Bridge.
+- Schutz: Legacy-Datei `prototype-editor-v1.json` bleibt unverändert; unbekannte Struktur-/Formatinformationen dürfen beim Schreiben nicht stillschweigend verworfen werden; bei Speicherfehlern oder Konflikten keine Erfolgsmeldung.
+- Als nächstes: Android-Entry aus der Bücherliste, Buch-Canvas-Adapter und neue Node-/Android-Tests. `DONE` erst nach vollständiger grüner GitHub-CI und geprüfter APK.
+
 
 ### Aktuelle Übergabe – B-03 DONE / W-01 als nächstes (14.11.2026)
 
