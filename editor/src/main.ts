@@ -202,8 +202,9 @@ let selectionReleaseFrame = 0;
 /**
  * Android WebView may continue a compositor-driven fling after the final
  * touchend even though our selection RAF is cancelled. Hold the release
- * position briefly for *selection drags only*, never for ordinary swipes.
- * A new touch immediately cancels this guard so normal scrolling is usable.
+ * position while that fling decays, for *selection drags only* and never
+ * for ordinary swipes. New gestures, keyboard input and IME composition
+ * immediately cancel the guard so normal editing and scrolling remain usable.
  */
 function cancelSelectionReleaseGuard(): void {
   if (selectionReleaseFrame) cancelAnimationFrame(selectionReleaseFrame);
@@ -213,7 +214,7 @@ function cancelSelectionReleaseGuard(): void {
 function settleSelectionAtRelease(): void {
   cancelSelectionReleaseGuard();
   const releaseY = window.scrollY;
-  const releaseUntil = performance.now() + 600;
+  const releaseUntil = performance.now() + 1800;
   const hold = (): void => {
     selectionReleaseFrame = 0;
     if (window.scrollY !== releaseY) window.scrollTo(window.scrollX, releaseY);
@@ -225,6 +226,10 @@ function settleSelectionAtRelease(): void {
 }
 
 window.addEventListener("touchstart", cancelSelectionReleaseGuard, { passive: true });
+window.addEventListener("wheel", cancelSelectionReleaseGuard, { passive: true });
+window.addEventListener("keydown", cancelSelectionReleaseGuard, true);
+container?.addEventListener("beforeinput", cancelSelectionReleaseGuard, true);
+container?.addEventListener("compositionstart", cancelSelectionReleaseGuard, true);
 window.addEventListener("blur", cancelSelectionReleaseGuard);
 window.addEventListener("pagehide", cancelSelectionReleaseGuard);
 
