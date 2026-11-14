@@ -243,7 +243,7 @@ function refreshSelectionHandles(): void {
   const range = editor.command.getRange();
   const context = editor.command.getRangeContext();
   const rects = context?.rangeRects;
-  if (!context || !rects?.length || range.startIndex < 0 ||
+  if (!context || !rects?.length || !range || range.startIndex < 0 ||
       range.endIndex <= range.startIndex) {
     hideSelectionHandles();
     return;
@@ -315,9 +315,10 @@ function beginGripDrag(event: TouchEvent, side: SelectionEdge): void {
   if (!target) return;
   event.preventDefault();
   event.stopPropagation();
+  const original = editor.command.getRange();
+  if (!original) return;
   cancelSelectionReleaseGuard();
   stopNativeSelectionDrag();
-  const original = editor.command.getRange();
   const fixedIndex = side === "start" ? original.endIndex : original.startIndex;
   activeGrip = {
     side,
