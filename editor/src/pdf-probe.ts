@@ -45,10 +45,48 @@ export function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+declare global {
+  interface Window {
+    jspdf?: { jsPDF: unknown };
+    jsPDF?: unknown;
+    CanvasEditorPDF?: PdfEngineModule;
+  }
+}
+
+let loadedEngine: Promise<PdfEngineModule> | null = null;
+function loadLocalScript(file: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = new URL(file, import.meta.url).href;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Offline-PDF-Modul fehlt: ${file}`));
+    document.head.append(script);
+  });
+}
+
+function getLocalPdfEngine(): Promise<PdfEngineModule> {
+  if (!loadedEngine) {
+    loadedEngine = (async () => {
+      // The published ESM bundle externalizes the bare specifier 'jspdf'.
+      // UMD builds run entirely from local, pinned APK assets instead.
+      await loadLocalScript("./vendor/jspdf.umd.min.js");
+      window.jsPDF = window.jspdf?.jsPDF;
+      if (!window.jsPDF) throw new Error("jsPDF fehlt in der lokalen WebView");
+      await loadLocalScript("./vendor/canvas-editor-pdf.umd.js");
+      if (!window.CanvasEditorPDF?.DrawPdf) {
+        throw new Error("Canvas-PDF-Exporter fehlt in der lokalen WebView");
+      }
+      return window.CanvasEditorPDF;
+    })().catch(error => {
+      loadedEngine = null;
+      throw error;
+    });
+  }
+  return loadedEngine;
+}
+
 export async function generatePdfProbe(source: PdfSource): Promise<{ bytes: Uint8Array; pageCount: number }> {
-  // This module lives inside assets/editor/vendor, never fetched from the web.
-  const url = new URL("./vendor/canvas-editor-pdf.es.js", import.meta.url);
-  const { DrawPdf } = await import(url.href) as PdfEngineModule;
+  const { DrawPdf } = await getLocalPdfEngine();
   const renderer = new DrawPdf(getPdfProbeOptions(source.options), source.data, {
     loadDefaultFonts: false,
   });

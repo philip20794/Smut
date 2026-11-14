@@ -14,3 +14,16 @@ test("A5 is exported at print scale independent of editable zoom", () => {
 test("PDF bridge base64 preserves arbitrary binary bytes", () => {
   assert.equal(bytesToBase64(new Uint8Array([37,80,68,70,0,255])), "JVBERgD/");
 });
+
+test("PDF vendor loading uses only locally copied UMD bundles", async () => {
+  const { readFile, stat } = await import("node:fs/promises");
+  const { resolve } = await import("node:path");
+  const root = resolve(import.meta.dirname, "..");
+  for (const file of ["jspdf.umd.min.js", "canvas-editor-pdf.umd.js"]) {
+    assert.ok((await stat(resolve(root, "dist", "vendor", file))).size > 1000);
+  }
+  const source = await readFile(resolve(root, "src", "pdf-probe.ts"), "utf8");
+  assert.match(source, /loadLocalScript\("\.\/vendor\/jspdf\.umd\.min\.js"\)/);
+  assert.match(source, /loadLocalScript\("\.\/vendor\/canvas-editor-pdf\.umd\.js"\)/);
+  assert.doesNotMatch(source, /https?:\/\//);
+});

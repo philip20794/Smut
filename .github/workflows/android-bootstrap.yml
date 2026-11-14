@@ -75,7 +75,7 @@ jobs:
           set -euo pipefail
           apk="app/build/outputs/apk/debug/app-debug.apk"
           unzip -t "$apk" >/dev/null
-          for resource in index.html style.css main.js bridge.js vendor/canvas-editor-pdf.es.js; do
+          for resource in index.html style.css main.js bridge.js vendor/canvas-editor-pdf.umd.js vendor/jspdf.umd.min.js; do
             unzip -Z1 "$apk" | grep -Fx "assets/editor/$resource"
           done
           unzip -p "$apk" assets/editor/index.html | grep -F "connect-src 'none'"
