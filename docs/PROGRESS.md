@@ -5,27 +5,27 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-14.
-- **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04 und P2 D-01 bis D-04 abgeschlossen; Backup/Import der strukturierten Bücher sicher, nächste Phase P3 Buchverwaltung. Der A5-Prototyp nutzt bis W-01 weiterhin sein separates Legacy-Format.
+- **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04, P2 und P3 B-01 abgeschlossen; neue native Bücherliste auf D-03/04-Speicherung, B-02 Kapitelverwaltung als Nächstes. Der A5-Prototyp nutzt bis W-01 weiterhin sein separates Legacy-Format.
 - **Meilenstein:** `P3 – Bücher und Kapitel` (durch vollständiges P2-Gate freigegeben).
-- **Letzte abgeschlossene Aufgabe:** `D-04 DONE` – portables JSON-Buch-Backup, geprüfter SAF-Dateiimport/-export, Kollisionsschutz, verlustfreie Rundreise und Legacy-Bestandsschutz. Siehe [D04_BACKUP.md](D04_BACKUP.md), [CI 43592192732](https://github.com/philip20794/Smut/actions/runs/43592192732).
-- **Nächste ausführbare Aufgabe:** `B-01 TODO` – einfache Bücherliste mit Anlegen, Öffnen, Umbenennen, Duplizieren und Löschen mit Bestätigung. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
-- **Abgeschlossene Aufgaben:** **14 / 35 (40,0 %)**; nur `DONE` zählt.
-- **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43592192732](https://github.com/philip20794/Smut/actions/runs/43592192732), Commit [1386ce4](https://github.com/philip20794/Smut/commit/1386ce4a9fa676bad8b533d28ad6d1d5c48d9811): TypeScript, Kotlin-Unit/Lint/APK sowie Offline-Emulator mit D-04-Backup-Rundreise, Android-ContentResolver, parallelen Schreibzugriffen und E-04-PDF-Probe vollständig erfolgreich.
-- **Letzte geprüfte APK:** `smut-tested-dev-1386ce4a9fa676bad8b533d28ad6d1d5c48d9811` aus [CI 43592192732](https://github.com/philip20794/Smut/actions/runs/43592192732), verfügbar bis 14.12.2026; PDF-Probe `smut-e04-a5-pdf-probe-1386ce4a9fa676bad8b533d28ad6d1d5c48d9811`. **Kein echter Smartphone-Test.**
+- **Letzte abgeschlossene Aufgabe:** `B-01 DONE` – Compose-Bücherliste mit Anlegen/Öffnen/Umbenennen/Duplizieren und bestätigtem, crashsicherem Löschen; dokumentiert in [B01_BOOK_LIBRARY.md](B01_BOOK_LIBRARY.md), vollständige [CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969) grün.
+- **Nächste ausführbare Aufgabe:** `B-02 TODO` – Kapitel erstellen, umbenennen, umsortieren, gezielt anspringen und mit Bestätigung löschen; UI-/Datenmodell-/Neustarttests. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
+- **Abgeschlossene Aufgaben:** **15 / 35 (42,9 %)**; nur `DONE` zählt.
+- **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969), Commit [fcf7642](https://github.com/philip20794/Smut/commit/fcf7642272d0ec716b57bd83dce67c2916377359): TypeScript, Kotlin-Unit/Lint/APK, Offline-Emulator einschließlich B-01-Library-UI und BookStore-CRUD, D-04-Backups sowie E-04-PDF-Probe vollständig erfolgreich.
+- **Letzte geprüfte APK:** `smut-tested-dev-fcf7642272d0ec716b57bd83dce67c2916377359` aus [CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969), verfügbar bis 14.12.2026; PDF-Probe `smut-e04-a5-pdf-probe-fcf7642272d0ec716b57bd83dce67c2916377359`. **Kein echter Smartphone-Test.**
 - **Letztes Release:** keines; signierte Releases stehen aus.
 - **Technische Entscheidung:** **GO** für die offlinefähige Prototyp-Architektur; **kein druckfertiges Benutzer-PDF**: problematische Worttrennungen/Blocksatz, nur PDF-Standardfonts ohne eingebettete lokale Buchschrift, fehlender Zeilen-Goldenvergleich und noch keine anwenderseitige Export-UI. Das sind Pflichtpunkte für P5 L-01 bis L-04, ggf. Engine-Fallback bei Nichterfüllung.
-- **Nutzeraktion:** E-05 auf echtem Smartphone (später); B-01 kann ohne Nutzerhardware umgesetzt werden.
+- **Nutzeraktion:** E-05 auf echtem Smartphone (später); B-02 kann ohne Nutzerhardware umgesetzt werden.
 
 ## 2. Verbindlicher nächster Schritt
 
-**B-01 – Schlichte Bücherliste** nach vollständig grünem P2-Gate.
+**B-02 – Kapitelverwaltung und Navigation** nach vollständig grünem B-01-Gate.
 
-1. Neue strukturierte Bücher mit stabilen IDs und korrekter initialer Cursorposition erstellen, in einer reduzierten Compose-Übersicht auflisten und gezielt öffnen.
-2. Bücher umbenennen, duplizieren und mit ausdrücklicher Bestätigung löschen; keine stillen Überschreibungen und keine Änderung der separaten E-02-Prototypdatei.
-3. Android-Emulatorfälle für Erstellen, Öffnen, Umbenennen, Duplizieren, Bestätigungsabbruch/Löschen und persistente Wiederöffnung anlegen. Bei SQLite-/Dateifehlern keine irreführenden Erfolgsmeldungen.
-4. Vollständige Pflicht-CI inklusive Offline-Emulator vor B-01-DONE; E-05 (echtes Smartphone) bleibt gesondert offen.
+1. Kapitel im strukturierten Buchformat anlegen, umbenennen, innerhalb eines Buches verschieben und mit ausdrücklicher Bestätigung löschen. Die Position muss auf einen gültigen Kapitel-/Blockanker zurückfallen; das letzte Kapitel darf nicht versehentlich ein unbrauchbares Dokument erzeugen.
+2. Vom geöffneten Buch aus Kapitelübersicht und gezieltes Anspringen anbieten. Die noch nicht angebundene A5-Canvas-Prototypdatei weder überschreiben noch mit einem strukturierten Buch verwechseln.
+3. Revisionssichere Android-/Datenmodelltests für leere/lange Kapitel, Konkurrenzänderungen und Neustart. Keine Erfolgsmeldung bei Speicherkonflikten.
+4. Vollständige Pflicht-CI samt Offline-Emulator vor B-02-DONE; E-05 bleibt gesonderte manuelle Geräteabnahme.
 
-**Letzte vollständige grüne Codeprüfung:** [CI 43592192732](https://github.com/philip20794/Smut/actions/runs/43592192732) für D-04, [Commit 1386ce4](https://github.com/philip20794/Smut/commit/1386ce4a9fa676bad8b533d28ad6d1d5c48d9811). Backup gilt für das versionierte D-01/D-03-Buchformat, **nicht** automatisch für die bestehende E-02-Canvas-Seite (W-01-Migration später).
+**Letzte grüne Codeprüfung:** [CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969) für [B-01-Tests und Datenoperationen](https://github.com/philip20794/Smut/commit/fcf7642272d0ec716b57bd83dce67c2916377359). Die Bücher öffnen sich bis W-01 als native Leseansicht; der editierbare A5-Prototyp ist separat erreichbar.
 
 ## 3. Task-Tracker
 
@@ -48,7 +48,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P2 | D-02 | DONE | [Code a7df11d](https://github.com/philip20794/Smut/commit/a7df11d282226e82cbda4336086ff9a7ee383aef), [CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130) vollständig grün (Editor-Typecheck, Node-Unit, Kotlin/Lint/APK, Emulator und PDF-Probe); [Abnahmevertrag](D02_EDIT_OPERATIONS.md) |
 | P2 | D-03 | DONE | [Code bfd2c82](https://github.com/philip20794/Smut/commit/bfd2c82e085844930bd5490924186c5f287bc8c0), [CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623) vollständig grün (Room, AtomicFile, Revisionsschutz, Emulator-Crash-/Recovery-Tests und Autosave-Node-Tests); [D03-Vertrag](D03_PERSISTENCE.md) |
 | P2 | D-04 | DONE | [Code 1386ce4](https://github.com/philip20794/Smut/commit/1386ce4a9fa676bad8b533d28ad6d1d5c48d9811), [CI 43592192732](https://github.com/philip20794/Smut/actions/runs/43592192732) grün (SAF-ContentResolver, SHA-256, Export–Löschen–Import, Konflikte, parallele Zugriffe, bestehende Editor-/PDF-Tests); [D04-Vertrag](D04_BACKUP.md) |
-| P3 | B-01 | TODO | – |
+| P3 | B-01 | DONE | [Code/Tests fcf7642](https://github.com/philip20794/Smut/commit/fcf7642272d0ec716b57bd83dce67c2916377359), [vollständige CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969) grün: native Buchliste, CRUD, Bestätigungsabbruch, eindeutige IDs, Room-/Datei-Neustart, Lösch-Recovery; [B-01-Doku](B01_BOOK_LIBRARY.md) |
 | P3 | B-02 | TODO | – |
 | P3 | B-03 | TODO | – |
 | P4 | W-01 | TODO | – |
@@ -76,7 +76,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | 6/6 | Build, CI, Emulator-Smoke und Test-APK | **erfüllt** |
 | P1 | 4/5 | E-01…E-04 GO, echter Gerätetest E-05 separat | **GO für D-01; E-05 offen** |
 | P2 | 4/4 | Modell, Operationen, sichere Persistenz, Backup | **erfüllt – P3 freigegeben** |
-| P3 | 0/3 | Bücher-/Kapitelverwaltung | offen |
+| P3 | 1/3 | Bücherliste fertig; Kapitelverwaltung und letzte Position offen | B-01 erfüllt, B-02 offen |
 | P4 | 0/5 | Direktbearbeitung und Textfunktionen | offen |
 | P5 | 0/4 | A5-Satz und textbasierter PDF-Export | offen |
 | P6 | 0/4 | Offline, Performance, Zuverlässigkeit, Gerätetest | offen |
@@ -85,6 +85,14 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### Aktuelle Übergabe – B-01 DONE / B-02 als nächstes (14.11.2026)
+
+- **B-01 DONE:** [Code-Commit 8bf2f71](https://github.com/philip20794/Smut/commit/8bf2f711c93409405b9eb58c6a458149dd017141), [Compose-Launcher 2ef40ea](https://github.com/philip20794/Smut/commit/2ef40eadb63a8a5a3ca1292f10e52b16ee0f5eeb), [Test-Commit fcf7642](https://github.com/philip20794/Smut/commit/fcf7642272d0ec716b57bd83dce67c2916377359); [CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969) vollständig grün und geprüfte Test-APK erzeugt.
+- Neues `LibraryActivity` als Launcher mit Bücherliste, Titelvalidierung, Anlegen, Umbenennen, Duplizieren und bestätigtem Löschen; `BookStore` verwaltet ID-unabhängige Kopien, Buch-/Kapitel-/Block-IDs und gültige Cursoranker. Öffnen zeigt derzeit die native Kapitel-Leseansicht (noch nicht den editierbaren A5-Canvas).
+- Persistenter Löschmarker vor Datei-/Indexbereinigung verhindert die Wiederkehr gelöschter Bücher nach Absturz. Android-Emulator prüft CRUD, Löschabbruch, App-/DB-Neustart, Deep Copy, Reparatur des Löschmarkers, Altformat-Abgrenzung, bestehende Backup-/PDF-Fälle.
+- Der separat zugängliche `MainActivity`-Editor benutzt weiterhin `prototype-editor-v1.json`; bestehende Benutzerprototypen werden nicht in strukturierten Bücher-Backups gespeichert. Die editorseitige Migration erfolgt erst in W-01.
+- **Nächster Schritt B-02:** Kapitelliste und Kapitel-CRUD mit Reorder und Navigation; B-03 danach. E-05 (echtes Smartphone) weiterhin `BLOCKED`.
 
 ### Aktuelle Übergabe – D-04 DONE / B-01 als nächstes (14.11.2026)
 
