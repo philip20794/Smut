@@ -4,29 +4,29 @@
 
 ## 1. Aktueller Stand
 
-- **Stand:** 2026-11-13
-- **Projektstatus:** `IN_PROGRESS` – P0 und P1 E-01/E-02 vollständig abgeschlossen. E-03: native Finger-Auswahl über zwei A5-Seiten, Schreiben/IME, Zoom, A5-Seitenfluss und Cursor-Sichtbarkeit beim Schreiben mit geöffneter Android-Tastatur im API-35-Emulator nachgewiesen. Rand-Autoscroll der Auswahl mit eigener, begrenzter und Visual-Viewport-bewusster Berechnung sowie Unit-Tests ergänzt; instrumentierter Rand-Autoscroll-Gestentest und kombinierter IME-/Zoom-/Cursor-Test sind in CI 43530940612 erfolgreich; mobile Auswahlgriffe bleiben offen.
-- **Meilenstein:** `P1 – Machbarkeitsnachweis und Technologieentscheidung`
-- **Aktive Aufgabe:** `E-03` – `IN_PROGRESS`: zehn API-35-Emulatortests grün, darunter native Seitengrenzen-Drag-Auswahl und Sichtbarkeit des Cursors beim Tippen auf Seite 2 mit tatsächlich eingeblendeter Android-IME. Auswahlgriffe und Rand-Autoscroll-Gestenprüfung fehlen.
-- **Nächste ausführbare Aufgabe:** E-03: Der frühere CI-Lauf 43538131635 wurde abgebrochen (cancelled), nicht als grün bewerten. Aktuellen CI-Lauf für 1c604ab prüfen; bei Erfolg mobile Auswahlgriffe implementieren und instrumentiert abnehmen.
-- **Abgeschlossene Aufgaben:** **8 / 35 (22,9 %)**; ausschließlich Aufgaben mit `DONE` zählen.
-- **Letzter verifizierter grüner CI-Lauf:** [Smut CI – 43530940612](https://github.com/philip20794/Smut/actions/runs/43530940612), `success`: TypeScript, Kotlin, Android-Lint, API-35-Emulatortests und geprüfte APK einschließlich Rand-Autoscroll-Geste und Zoom-/IME-Test. Neue native IME-Sichtbarkeitsprüfung verwendet echten Android-Touch auf A5-Seite 2, öffnet die Tastatur, schreibt über `InputConnection` und prüft den sichtbaren Canvas-Cursor. Versuch 1 hatte einen Emulator-/ADB-Fokusfehler über fast alle Tests; beim erneuten Lauf alle Tests grün.
-- **Letzte geprüfte APK:** zum grünen Lauf 43530940612 ([GitHub Actions 43530940612](https://github.com/philip20794/Smut/actions/runs/43497267481), ZIP mit SHA256SUMS, 30-Tage-Artifact). **Nicht auf realem Smartphone getestet.**
-- **Letztes dokumentiertes Release:** keines.
-- **Offene technische Entscheidungen:** Editorbibliothek und PDF-Pipeline bleiben bis `E-04` vorläufig.
-- **Abhängigkeit vom Nutzer:** echte Smartphone-Abnahmen `E-05`/`Q-04` und spätere sichere Bereitstellung von Release-Signatur-Geheimnissen; jetzt noch nicht erforderlich.
-- **Unmittelbarer Blocker:** kein defekter Pflichtcheck. Native Seitengrenzen-Textauswahl und Cursor-Sichtbarkeit mit geöffneter IME sind im Emulator grün; Auswahlgriffe offen; Rand-Autoscroll und Zoom-/IME sind in CI 43530940612 grün; der Touchend-Regressionsnachweis hat im abgefragten Lauf 43538131635 keinen gültigen Abschluss (cancelled). Ein zusätzlicher Fix bricht ausstehende Cursor-Sichtbarkeits-Animationen beim Hintergrundwechsel ab; CI für 1c604ab offen.
+- **Stand:** 2026-11-14.
+- **Projektstatus:** `IN_PROGRESS` – P0 abgeschlossen; P1: E-01, E-02 und **E-03 abgeschlossen**. Alle E-03-Pflichtchecks inklusive echter Android-Gestentests bestanden. PDF-Probe und Technologie-GO stehen mit E-04 noch aus.
+- **Meilenstein:** `P1 – Machbarkeitsnachweis und Technologieentscheidung`.
+- **Letzte abgeschlossene Aufgabe:** `E-03 DONE` – Langdruck-Wortauswahl, echter Zwei-Seiten-Drag, Rand-Autoscroll, IME/Cursor/Zoom-Kombinationen und verschiebbare mobile Auswahlgriffe sind im API-35-Emulator getestet. Kein echter Smartphone-Test (E-05).
+- **Nächste ausführbare Aufgabe:** `E-04 TODO` – A5-PDF-Probe mit durchsuchbarem Text, Seitengröße/Geometrie prüfen, PDF-Engine vergleichen, ADR mit GO/NO-GO in `docs/DECISIONS.md` dokumentieren.
+- **Abgeschlossene Aufgaben:** **9 / 35 (25,7 %)**; nur `DONE` zählt.
+- **Letzter verifizierter grüner CI-Lauf:** [Smut CI 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605), Commit [1ef6753](https://github.com/philip20794/Smut/commit/1ef67535d34217d74a1e3ff060ed2ecfa5e447cf): TypeScript, Unit-Tests, Kotlin, Android-Lint, API-35-Emulatortests einschließlich realem Touch am Auswahlgriff, geprüfte APK.
+- **Letzte geprüfte APK:** `smut-tested-dev-1ef67535d34217d74a1e3ff060ed2ecfa5e447cf` aus [Run 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605) (ZIP mit SHA256SUMS, zeitlich befristet). Nicht auf einem realen Telefon getestet.
+- **Letztes Release:** keines; signierte Releases stehen noch aus.
+- **Offene technische Entscheidung:** Editorbibliothek und endgültige PDF-Pipeline bis E-04 vorläufig.
+- **Nutzeraktion nötig:** jetzt nein; E-05 und Q-04 sind echte Geräteprüfungen, Signierung erfordert später geheime Schlüssel.
+- **Blocker:** keiner für E-04. P1-GO noch nicht erteilt, daher P2–P7 weiterhin `TODO`.
 
 ## 2. Verbindlicher nächster Schritt
 
-**E-03 – Markieren, Zoom und dynamischer Seitenwechsel.**
+**E-04 – A5-PDF-Probe und Architekturentscheidung.**
 
-1. E-02-Gate erfüllt: [Smut CI 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666) grün, einschließlich echter Android-Touches, `InputConnection.commitText`, Komposition, Enter, Backspace und erneuter Speicherung. [IME-Testprotokoll](E02_ANDROID_IME_TEST.md).
-2. Zoomsteuerung, isolierte Mehrseiten-Testpassage, native Touch-Ereignisprüfung und Android-Systemleisten-/IME-Inset-Fix implementiert; [vollständige grüne CI 43480206233](https://github.com/philip20794/Smut/actions/runs/43480206233), geprüfte APK vorhanden. [E-03-Testmatrix](E03_PAGE_FLOW.md).
-3. Nachgewiesen: echtes Android-Longpress markiert Wörter; Android-IME ersetzt ausgewählte Wörter; ein isoliertes 75-Absatz-Manuskript lässt sich programmatisch über mehrere A5-Seiten auswählen, per IME ersetzen und rücksichern ([CI 43487669567](https://github.com/philip20794/Smut/actions/runs/43487669567)). Zusätzlich bestätigt ein echter Android-Drag von Canvas-Seite 1 auf Canvas-Seite 2 die Seitengrenzen-Auswahl ([CI 43493716491](https://github.com/philip20794/Smut/actions/runs/43493716491)).
-4. Nachgewiesen: Der Canvas-Cursor wird anhand der realen `.ce-cursor`-Position und des sichtbaren Viewports nach Eingabe, Cursor-Reflow und IME-Resize gezielt ins Blickfeld gescrollt; echter Android-Tap auf Seite 2, `InputMethodManager.showSoftInput`, sichtbare IME, Unicode-IME-Eingabe und sichtbarer Cursor sind im Emulator grün ([CI 43497267481](https://github.com/philip20794/Smut/actions/runs/43497267481), zweiter Versuch). Nächster Teilschritt: Rand-Autoscroll während nativer Auswahlgeste und anschließend Auswahlgriffe/Zoom-Wechselwirkungen prüfen. `E-03` erst nach vollständigem Nachweis als `DONE` markieren.
+1. Aktuellen `main` und den vollständigen erfolgreichen E-03-Lauf [43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605) kontrollieren; keine bestehende Editorfunktion zurückbauen.
+2. Einen mehrseitigen A5-Probetext mit Umlauten und typischen Buchabsätzen als PDF exportieren. Der Inhalt muss echter markierbarer/suchbarer Text sein, kein Canvas-Screenshot.
+3. Seite 148×210 mm, Sonderzeichen, Seitenzahl/Geometrie und Abweichungen zur Editoransicht automatisch prüfen; anschließend den begründeten GO/NO-GO-Entscheid zu Editor und PDF-Export in `DECISIONS.md` dokumentieren.
+4. E-04 erst nach verifiziert grünem Pflichtcheck als `DONE` setzen; E-05 (echter Smartphone-Test) bleibt separat verpflichtend.
 
-**P0-Abnahme:** [grüner Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955) mit [APK-Artefakt](https://github.com/philip20794/Smut/actions/runs/43451063955); [absichtlich roter PR #2](https://github.com/philip20794/Smut/pull/2) zeigte [korrekt übersprungenes APK-Publishing und null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861). Anleitung: [APK_DOWNLOAD.md](APK_DOWNLOAD.md).
+**P0-Beleg:** [Run 43451063955](https://github.com/philip20794/Smut/actions/runs/43451063955); der absichtlich rote [PR #2](https://github.com/philip20794/Smut/pull/2) belegte korrektes Unterdrücken eines ungeprüften APK-Artefakts.
 
 ## 3. Task-Tracker
 
@@ -42,7 +42,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | F-06 | DONE | [CI-/APK-Commit bbafe4f](https://github.com/philip20794/Smut/commit/bbafe4f01e3b02b7dc3df8e9bb2594f4edf18bc0), [Run 43451063955 grün](https://github.com/philip20794/Smut/actions/runs/43451063955), `smut-tested-dev-bbafe4f...` inkl. SHA256SUMS; [roter PR #2, null Artifacts](https://github.com/philip20794/Smut/actions/runs/43451561861) |
 | P1 | E-01 | DONE | [Datierte MIT-/Offline-/IME-/A5-/PDF-Entscheidungsmatrix](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor 1.1.0 zuerst als **Testkandidat**, keine vorzeitige E-04-GO-Freigabe |
 | P1 | E-02 | DONE | Android-API-35-Emulator: echter Touch, Fokus des Canvas-Editors, Eingabe über Android-IME einschließlich Unicode und Wortkomposition/Autokorrektur, Enter/Backspace, atomarer Save/Reload; vollständiger [grüner CI-Lauf 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666); [Testprotokoll](E02_ANDROID_IME_TEST.md). Kein Echtgerätetest (E-05) |
-| P1 | E-03 | IN_PROGRESS | Zehn Emulator-Tests + geprüfte APK grün: [CI 43497267481](https://github.com/philip20794/Smut/actions/runs/43497267481); nativer Longpress/Drag über zwei A5-Seiten, Wortersetzung, Zoom, mehrseitiger Satz, programmatische Range-Ersetzung und sichtbarer Cursor beim Schreiben unter eingeblendeter Android-IME. Rand-Autoscroll-Gestentest und mobile Auswahlgriffe noch offen |
+| P1 | E-03 | DONE | [CI 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605) vollständig grün: native Auswahlgriffe mit echter Android-Endgriff-Geste, frühere Zwei-Seiten-Auswahl, Rand-Autoscroll, Zoom/IME und Cursor-Sichtbarkeit; [Code 1ef6753](https://github.com/philip20794/Smut/commit/1ef67535d34217d74a1e3ff060ed2ecfa5e447cf). E-05 bleibt gesonderter echter Gerätetest. |
 | P1 | E-04 | TODO | – |
 | P1 | E-05 | TODO | – |
 | P2 | D-01 | TODO | – |
@@ -75,7 +75,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | Phase | Fortschritt | Abschlussbedingung | Gate |
 | --- | --- | --- | --- |
 | P0 | 6/6 | Build, CI, Emulator-Smoke und Test-APK | **erfüllt** |
-| P1 | 2/5 | Machbarkeit/ADR; echter Gerätetest separat | offen |
+| P1 | 3/5 | Machbarkeit/ADR; echter Gerätetest separat | offen |
 | P2 | 0/4 | Modell, Operationen, sichere Persistenz, Backup | offen |
 | P3 | 0/3 | Bücher-/Kapitelverwaltung | offen |
 | P4 | 0/5 | Direktbearbeitung und Textfunktionen | offen |
@@ -86,6 +86,16 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### Aktuelle Übergabe – 14.11.2026
+
+- **E-03 DONE (9/35):** Neue mobile Auswahlgriffe inklusive Positionsberechnung, Drag-Anker, Scrolling-/Fokusbereinigung und Unit-Tests; Android-Instrumentierung prüft einen realen Finger-Drag am Endgriff und unveränderte Buchdaten.
+- **Nachweis:** [vollständiger grüner Run 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605), geprüfte APK `smut-tested-dev-1ef67535d34217d74a1e3ff060ed2ecfa5e447cf`. Der erste neue Commit scheiterte nur an Nullable-TypeScript-Prüfungen, die [1ef6753](https://github.com/philip20794/Smut/commit/1ef67535d34217d74a1e3ff060ed2ecfa5e447cf) korrigierte; danach alle Pflichtchecks grün.
+- **Nächster Schritt E-04:** textbasierten A5-PDF-Prototyp erstellen und automatisiert prüfen, Bibliotheksentscheidung dokumentieren.
+- **Nutzeraktion:** jetzt keine; reales Smartphone bleibt E-05/Q-04.
+
+### Historische Zwischenstände (ältere TODO-Angaben unten sind durch E-03-DONE überholt)
+
 
 - **Datum:** 2026-11-13
 - **Aktive Task-ID:** E-03 `IN_PROGRESS` – native Seitengrenzen-Auswahl und IME-Cursor-Autoscroll im Emulator grün; Rand-Autoscroll-Auswahlgeste, mobile Auswahlgriffe und Wechselwirkungen fehlen.

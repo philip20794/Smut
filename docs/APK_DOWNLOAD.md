@@ -14,4 +14,4 @@
 
 **Qualitätsgrenze:** In F-06 muss für genau diesen Commit TypeScript-Typprüfung, Sicherheitslint, Node-Tests, Android-JVM-Tests, Android-Lint, APK-Assetprüfung und Android-API-35-Emulator-Smoke bestanden sein. Ein fehlgeschlagener oder übersprungener Pflichtcheck darf kein `smut-tested-dev-...` veröffentlichen.
 
-Die APK zeigt momentan lediglich den Offline-Container. Sie erlaubt noch keine vollständige Buchbearbeitung oder PDF-Ausgabe.
+Die APK enthält bereits einen editierbaren A5-Canvas-Prototyp mit Android-Tastatureingabe, Zoom, Langdruck-Textauswahl und mobilen Auswahlgriffen. Eine vollständige Buch-/Kapitelverwaltung sowie der PDF-Export fehlen weiterhin. Der letzte vollständig geprüfte Stand ist [CI 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605); er wurde nur im Emulator, nicht auf einem echten Smartphone getestet.

@@ -1,6 +1,6 @@
 # E-03 – Seitenfluss, Zoom und Auswahl im Android-Prototyp
 
-Stand: 13.11.2026. Status: **IN_PROGRESS**, keinesfalls bereits vollständiges E-03-Gate.
+Stand: 14.11.2026. Status: **DONE** nach vollständigem grünem [CI-Lauf 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605). Dies ist der automatisierte Emulator-Nachweis, kein echter Smartphone-Test.
 
 ## Umgesetzt und in der Cloud bestätigt
 
@@ -16,7 +16,7 @@ Stand: 13.11.2026. Status: **IN_PROGRESS**, keinesfalls bereits vollständiges E
 - Der tatsächliche Canvas-Cursor (`.ce-cursor`) wird nach Android-IME-Eingaben, Seitenumbruch und Viewport-Resize in den sichtbaren Bereich gescrollt. Die Scrollmenge wird durch eine reine, getestete Funktion berechnet; `visualViewport`-Inset und Android-`imePadding` begrenzen den Sichtbereich. Der instrumentierte Test tippt auf A5-Seite 2, öffnet wirklich die Android-Tastatur, fügt Unicode über `InputConnection` ein und kontrolliert den sichtbaren Cursor; [Smut CI 43497267481, Versuch 2](https://github.com/philip20794/Smut/actions/runs/43497267481) grün mit zehn Instrumentierungstests. Versuch 1 scheiterte an einem übergreifenden Emulator-Fokusproblem (ADB) und wurde ohne Testlockerung erfolgreich wiederholt.
 - Das vorbestehende Dokument wird dabei vorab gesichert und im `finally`-Block wiederhergestellt. Der spezielle Testmodus unterdrückt die automatische Speicherung dieser Testdaten. Dies ist keine Funktion der Nutzeroberfläche.
 
-## Noch offen bis E-03 DONE
+## Historische offene Punkte vor der E-03-Abnahme
 
 - **Wortauswahl und Verlängern per echter Android-Fingergeste über zwei Seiten sind nachgewiesen.** Visuelle mobile Auswahlgriffe fehlen noch.
 - **Programmatische** Auswahl/Ersetzung über den ganzen mehrseitigen Testtext und **native** Auswahl von Seite 1 nach Seite 2 sind nachgewiesen. Eine separate Prüfung längerer Drag-Strecken mit Rand-Autoscroll und Textänderungen nach nativer Mehrseitenauswahl fehlt.
@@ -28,3 +28,9 @@ Prüfbeleg: [Smut CI 43497267481, Versuch 2](https://github.com/philip20794/Smut
 ## Entwicklung 14.11.2026 – mobile Auswahlgriffe
 
 Die Auswahl wird mit zwei separaten 44-Pixel-Touchzielen am realen Anfang/Ende der Textmarkierung ausgestattet. Positionen kommen aus der Engine (`getRangeContext`), werden anhand tatsächlich gezeichneter Seiten gegen den aktuellen Zoom abgeglichen und bei Scrollen/IME/Zoom aktualisiert. Beim Ziehen bleibt jeweils die Gegenseite verankert; die Editorbibliothek selbst übernimmt Trefferposition und Erweiterung der Range. Ein neuer Android-Instrumentierungstest prüft den echten Fingerzug am Endgriff. **Noch keine Freigabe ohne neuen grünen CI-Nachweis und echten Smartphone-Test.**
+
+## E-03-Abnahme am 14.11.2026
+
+Der [CI-Lauf 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605) ist vollständig grün: TypeScript-Prüfung, Node-Unit-Tests, Android-Build/Lint, instrumentierter API-35-Emulator und Freigabe der geprüften Test-APK. Er enthält einen echten Android-Fingerzug auf dem Auswahl-Endgriff, der eine zuvor per Langdruck erstellte Wortauswahl verlängert und den Buchtext unverändert lässt. Die geometrische Platzierung der beiden Auswahlgriffe wird zudem per Unit-Tests auf der ersten und einer folgenden A5-Seite geprüft. Vorausgehende Läufe belegen native Auswahl über A5-Seiten hinweg, Rand-Autoscroll und Zoom/IME/Cursor-Regressionen.
+
+Der frühere Abschnitt „Historische offene Punkte“ dokumentiert den Zwischenstand vor diesem Nachweis und ist nicht mehr die operative Aufgabenliste. E-03 kann als `DONE` geführt werden. Die erste praktische Prüfung auf einem echten Smartphone gehört ausdrücklich zu E-05; das A5-PDF-Gate und die abschließende Technologieentscheidung folgen in E-04.
