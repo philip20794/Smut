@@ -808,10 +808,17 @@ class OfflineEditorSmokeTest {
             evaluate("window.smutPrototype?.setPdfTestFixture(true)")
             awaitJavaScriptValue("window.smutPrototype?.getPageCount() >= 2", "true", exact = true)
             evaluate("window.smutPrototype?.generatePdfProbe()")
-            awaitJavaScriptValue(
-                "window.smutPrototype?.getPdfProbeStatus()?.state",
-                "saved", exact = false
-            )
+            try {
+                awaitJavaScriptValue(
+                    "window.smutPrototype?.getPdfProbeStatus()?.state",
+                    "saved", exact = false
+                )
+            } catch (failure: AssertionError) {
+                val diagnosis = evaluate(
+                    "JSON.stringify(window.smutPrototype?.getPdfProbeStatus())"
+                )
+                throw AssertionError("E-04 PDF probe failed: $diagnosis; ${failure.message}", failure)
+            }
             val pages = evaluate("window.smutPrototype?.getPdfProbeStatus()?.pdfPages").toInt()
             assertTrue("Exporter must create more than one PDF page", pages >= 2)
             scenarioRule.scenario.onActivity { activity ->
