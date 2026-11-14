@@ -28,6 +28,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
 import java.util.concurrent.Executors
@@ -46,8 +48,8 @@ class LibraryActivity : ComponentActivity() {
 
     private data class WorkResult(val message: String, val opened: OpenedBook? = null)
     private data class OpenedBook(
-        val id: String, val title: String, val chapters: List<String>,
-        val position: BookPosition, val recovered: Boolean
+        val id: String, val title: String, val chapters: List<ChapterSummary>,
+        val position: BookPosition, val revision: Long, val recovered: Boolean
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +61,7 @@ class LibraryActivity : ComponentActivity() {
                         books = books,
                         opened = selected?.let { book ->
                             BookSummary(book.id, book.title, book.chapters,
-                                book.position.chapterId, book.recovered)
+                                book.position.chapterId, book.revision, book.recovered)
                         },
                         status = status,
                         busy = busy,
@@ -98,6 +100,31 @@ class LibraryActivity : ComponentActivity() {
                                 WorkResult(message(store.deleteBook(id), "Buch gelöscht."))
                             }
                         },
+                        onCreateChapter = { id, revision, title ->
+                            changeChapter(id, "Kapitel wird angelegt …", "Kapitel angelegt.") {
+                                store.createChapter(id, revision, title)
+                            }
+                        },
+                        onRenameChapter = { id, revision, chapterId, title ->
+                            changeChapter(id, "Kapitel wird umbenannt …", "Kapitel umbenannt.") {
+                                store.renameChapter(id, revision, chapterId, title)
+                            }
+                        },
+                        onMoveChapter = { id, revision, chapterId, direction ->
+                            changeChapter(id, "Kapitel wird verschoben …", "Reihenfolge gespeichert.") {
+                                store.moveChapter(id, revision, chapterId, direction)
+                            }
+                        },
+                        onDeleteChapter = { id, revision, chapterId ->
+                            changeChapter(id, "Kapitel wird gelöscht …", "Kapitel gelöscht.") {
+                                store.deleteChapter(id, revision, chapterId)
+                            }
+                        },
+                        onOpenChapter = { id, revision, chapterId ->
+                            changeChapter(id, "Kapitel wird geöffnet …", "Kapitel geöffnet.") {
+                                store.openChapter(id, revision, chapterId)
+                            }
+                        },
                         onBackup = { startActivity(Intent(this, BackupActivity::class.java)) },
                         onPrototype = { startActivity(Intent(this, MainActivity::class.java)) }
                     )
@@ -116,8 +143,23 @@ class LibraryActivity : ComponentActivity() {
         val chapters = json.getJSONArray("chapters")
         return OpenedBook(
             json.getString("id"), json.getString("title"),
-            (0 until chapters.length()).map { chapters.getJSONObject(it).getString("title") },
-            book.position, book.recovered
+            (0 until chapters.length()).map { index ->
+                val chapter = chapters.getJSONObject(index)
+                val blocks = chapter.getJSONArray("blocks")
+                val preview = buildString {
+                    for (i in 0 until blocks.length()) {
+                        if (length >= 400) break
+                        val runs = blocks.getJSONObject(i).optJSONArray("runs") ?: continue
+                        if (isNotEmpty()) append("\n")
+                        for (j in 0 until runs.length()) {
+                            if (length >= 400) break
+                            append(runs.getJSONObject(j).getString("text").take(400 - length))
+                        }
+                    }
+                }
+                ChapterSummary(chapter.getString("id"), chapter.getString("title"), blocks.length(), preview)
+            },
+            book.position, book.revision, book.recovered
         )
     }
 
@@ -126,6 +168,28 @@ class LibraryActivity : ComponentActivity() {
         BookLibraryResult.InvalidTitle -> "Bitte einen Titel mit 1 bis 240 Zeichen eingeben."
         BookLibraryResult.Missing -> "Das Buch ist nicht mehr vorhanden."
         BookLibraryResult.Error -> "Vorgang fehlgeschlagen. Gespeicherte Daten wurden nicht als geändert bestätigt."
+    }
+
+    private fun chapterMessage(result: ChapterActionResult, success: String): String = when (result) {
+        is ChapterActionResult.Updated -> success
+        ChapterActionResult.InvalidTitle -> "Bitte einen Kapiteltitel mit 1 bis 240 Zeichen eingeben."
+        ChapterActionResult.NotFound -> "Dieses Kapitel ist nicht mehr vorhanden."
+        ChapterActionResult.Missing -> "Das Buch existiert nicht mehr."
+        ChapterActionResult.Conflict -> "Buch wurde zwischenzeitlich geändert. Ansicht aktualisiert; bitte erneut versuchen."
+        ChapterActionResult.LastChapter -> "Das letzte Kapitel kann nicht gelöscht werden."
+        ChapterActionResult.TooManyChapters -> "Maximal 1.000 Kapitel pro Buch."
+        ChapterActionResult.Boundary -> "Kapitel steht bereits am Anfang oder Ende."
+        ChapterActionResult.Error -> "Kapiteländerung fehlgeschlagen. Bitte die Speicherung prüfen."
+    }
+
+    private fun changeChapter(
+        id: String, progress: String, success: String, action: () -> ChapterActionResult
+    ) {
+        perform(progress) {
+            val result = action()
+            val fresh = (store.load(id) as? BookLoad.Found)?.let(::summary)
+            WorkResult(chapterMessage(result, success), fresh)
+        }
     }
 
     private fun refresh() {
@@ -168,9 +232,12 @@ class LibraryActivity : ComponentActivity() {
     }
 }
 
+internal data class ChapterSummary(
+    val id: String, val title: String, val blockCount: Int, val preview: String
+)
 internal data class BookSummary(
-    val id: String, val title: String, val chapterTitles: List<String>,
-    val lastChapterId: String, val recovered: Boolean
+    val id: String, val title: String, val chapters: List<ChapterSummary>,
+    val lastChapterId: String, val revision: Long, val recovered: Boolean
 )
 
 @Composable
@@ -185,6 +252,11 @@ internal fun LibraryScreen(
     onRename: (String, String) -> Unit,
     onDuplicate: (String) -> Unit,
     onDelete: (String) -> Unit,
+    onCreateChapter: (String, Long, String) -> Unit,
+    onRenameChapter: (String, Long, String, String) -> Unit,
+    onMoveChapter: (String, Long, String, Int) -> Unit,
+    onDeleteChapter: (String, Long, String) -> Unit,
+    onOpenChapter: (String, Long, String) -> Unit,
     onBackup: () -> Unit,
     onPrototype: () -> Unit
 ) {
@@ -192,6 +264,9 @@ internal fun LibraryScreen(
     var renameEntry by remember { mutableStateOf<BookEntry?>(null) }
     var deleteEntry by remember { mutableStateOf<BookEntry?>(null) }
     var inputTitle by remember { mutableStateOf("") }
+    var newChapterDialog by remember { mutableStateOf(false) }
+    var renameChapter by remember { mutableStateOf<ChapterSummary?>(null) }
+    var deleteChapter by remember { mutableStateOf<ChapterSummary?>(null) }
 
     val editing = createDialog || renameEntry != null
     if (editing) {
@@ -243,6 +318,57 @@ internal fun LibraryScreen(
         )
     }
 
+    if (opened != null && (newChapterDialog || renameChapter != null)) {
+        val target = renameChapter
+        AlertDialog(
+            onDismissRequest = { if (!busy) { newChapterDialog = false; renameChapter = null } },
+            title = { Text(if (newChapterDialog) "Neues Kapitel" else "Kapitel umbenennen") },
+            text = {
+                OutlinedTextField(
+                    value = inputTitle, onValueChange = { inputTitle = it },
+                    label = { Text("Kapiteltitel") }, singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !busy && inputTitle.trim().isNotEmpty() && inputTitle.trim().length <= 240,
+                    onClick = {
+                        val title = inputTitle
+                        newChapterDialog = false
+                        renameChapter = null
+                        if (target == null) onCreateChapter(opened.id, opened.revision, title)
+                        else onRenameChapter(opened.id, opened.revision, target.id, title)
+                    }
+                ) { Text(if (target == null) "Anlegen" else "Speichern") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { newChapterDialog = false; renameChapter = null }, enabled = !busy
+                ) { Text("Abbrechen") }
+            }
+        )
+    }
+    if (opened != null) {
+        deleteChapter?.let { target ->
+            AlertDialog(
+                onDismissRequest = { if (!busy) deleteChapter = null },
+                title = { Text("Kapitel löschen?") },
+                text = { Text("„" + target.title + "“ mit allen Textblöcken dauerhaft löschen?") },
+                confirmButton = {
+                    TextButton(enabled = !busy, onClick = {
+                        deleteChapter = null
+                        onDeleteChapter(opened.id, opened.revision, target.id)
+                    }) { Text("Kapitel endgültig löschen") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { deleteChapter = null }, enabled = !busy) {
+                        Text("Abbrechen")
+                    }
+                }
+            )
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().safeDrawingPadding()
             .verticalScroll(rememberScrollState()).padding(16.dp),
@@ -254,10 +380,76 @@ internal fun LibraryScreen(
             Text(opened.title, style = MaterialTheme.typography.headlineSmall)
             Text("Die direkte Bearbeitung dieses Buchformats folgt in W-01.",
                 style = MaterialTheme.typography.bodyMedium)
+            Text(status, style = MaterialTheme.typography.bodySmall)
             Text("Kapitel", style = MaterialTheme.typography.titleMedium)
-            if (opened.chapterTitles.isEmpty()) Text("Keine Kapitel.")
-            opened.chapterTitles.forEachIndexed { index, title ->
-                Text((index + 1).toString() + ". " + title)
+            Button(
+                onClick = { inputTitle = ""; newChapterDialog = true },
+                enabled = !busy, modifier = Modifier.fillMaxWidth()
+            ) { Text("Neues Kapitel") }
+            opened.chapters.forEachIndexed { index, chapter ->
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text((index + 1).toString() + ". " + chapter.title,
+                            style = MaterialTheme.typography.titleSmall)
+                        if (chapter.id == opened.lastChapterId) {
+                            Text("Aktuelles Kapitel", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { onOpenChapter(opened.id, opened.revision, chapter.id) },
+                                enabled = !busy,
+                                modifier = Modifier.weight(1f).semantics {
+                                    contentDescription = "Kapitel " + chapter.title + " öffnen"
+                                }
+                            ) { Text("Kapitel öffnen") }
+                            OutlinedButton(
+                                onClick = { inputTitle = chapter.title; renameChapter = chapter },
+                                enabled = !busy,
+                                modifier = Modifier.weight(1f).semantics {
+                                    contentDescription = "Kapitel " + chapter.title + " umbenennen"
+                                }
+                            ) { Text("Umbenennen") }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = {
+                                    onMoveChapter(opened.id, opened.revision, chapter.id, -1)
+                                },
+                                enabled = !busy && index > 0,
+                                modifier = Modifier.weight(1f).semantics {
+                                    contentDescription = "Kapitel " + chapter.title + " nach oben"
+                                }
+                            ) { Text("Hoch") }
+                            OutlinedButton(
+                                onClick = {
+                                    onMoveChapter(opened.id, opened.revision, chapter.id, 1)
+                                },
+                                enabled = !busy && index < opened.chapters.lastIndex,
+                                modifier = Modifier.weight(1f).semantics {
+                                    contentDescription = "Kapitel " + chapter.title + " nach unten"
+                                }
+                            ) { Text("Runter") }
+                            OutlinedButton(
+                                onClick = { deleteChapter = chapter },
+                                enabled = !busy && opened.chapters.size > 1,
+                                modifier = Modifier.weight(1f).semantics {
+                                    contentDescription = "Kapitel " + chapter.title + " löschen"
+                                }
+                            ) { Text("Löschen") }
+                        }
+                    }
+                }
+            }
+            opened.chapters.firstOrNull { it.id == opened.lastChapterId }?.let { chapter ->
+                Text("Aktuelles Kapitel: " + chapter.title,
+                    style = MaterialTheme.typography.titleMedium)
+                Text(chapter.blockCount.toString() + " Textblöcke · Nur Lesevorschau",
+                    style = MaterialTheme.typography.bodySmall)
+                if (chapter.preview.isNotEmpty()) Text(chapter.preview)
+                else Text("Dieses Kapitel enthält noch keinen Text.")
             }
             if (opened.recovered) Text("Buch wurde aus einer gültigen Vorversion wiederhergestellt.")
             Button(onClick = onBack, enabled = !busy) { Text("Zur Bücherliste") }
