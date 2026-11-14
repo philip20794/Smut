@@ -8,7 +8,7 @@
 - **Projektstatus:** `IN_PROGRESS` – P0 und P1 E-01 bis E-04 abgeschlossen; **P1-GO für Canvas Editor 1.1.0 + lokal gebündelten PDF-Exporter 0.8.0** dokumentiert. Die vollständige Buchverwaltung, professionelle Typografie und der Endnutzer-PDF-Export gehören später zu P2–P5.
 - **Meilenstein:** `P2 – Dokumentmodell und Datensicherheit` (technische Arbeit freigegeben).
 - **Letzte abgeschlossene Aufgabe:** `E-04 DONE`: echte mehrseitige A5-PDF aus der Offline-WebView, suchbare Umlaute, korrektes PDF-Seitenmaß, kein Bild-PDF und gleiche Seitenanzahl in Editor und PDF. Siehe [E04_PDF_PROBE.md](E04_PDF_PROBE.md) und ADR-009 in [DECISIONS.md](DECISIONS.md).
-- **Nächste ausführbare Aufgabe:** `D-01 TODO` – versioniertes Buch-/Kapitel-/Blockmodell inklusive Migrationseinstieg, Validierung und Unit-Tests. Der separate echte Gerätetest `E-05` ist `BLOCKED` bis ein Nutzer den aktuellen Prototyp auf seinem Telefon geprüft hat; P2 darf unabhängig fortgesetzt werden.
+- **Aktive Aufgabe:** `D-01 IN_PROGRESS` – Buch-/Kapitel-/Blockmodell und Legacy-Übernahme sind implementiert; GitHub-CI-Nachweis steht noch aus. Der echte Gerätetest `E-05` bleibt `BLOCKED` und kann unabhängig erfolgen.
 - **Abgeschlossene Aufgaben:** **10 / 35 (28,6 %)**; nur `DONE` zählt.
 - **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300), Commit [dc47fd4](https://github.com/philip20794/Smut/commit/dc47fd4c75df96a6dd93304c7f67edf90e4a1bc5): TypeScript, Node-Tests, Kotlin/Lint/Build, 13 API-35-Emulatortests einschließlich übereinstimmender PDF-/Editor-Seitenanzahl, pypdf-Seitenmaß-/Unicode-/Textprüfung und geprüfte APK.
 - **Letzte geprüfte APK:** `smut-tested-dev-dc47fd4c75df96a6dd93304c7f67edf90e4a1bc5` aus [CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300); PDF-Testartefakt `smut-e04-a5-pdf-probe-dc47fd4c75df96a6dd93304c7f67edf90e4a1bc5`. Beide zeitlich befristet. **Kein echter Smartphone-Test.**
@@ -44,7 +44,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P1 | E-03 | DONE | [CI 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605) vollständig grün: native Auswahlgriffe mit echter Android-Endgriff-Geste, frühere Zwei-Seiten-Auswahl, Rand-Autoscroll, Zoom/IME und Cursor-Sichtbarkeit; [Code 1ef6753](https://github.com/philip20794/Smut/commit/1ef67535d34217d74a1e3ff060ed2ecfa5e447cf). E-05 bleibt gesonderter echter Gerätetest. |
 | P1 | E-04 | DONE | [CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300) vollständig grün: drei Seiten Editor/PDF, 419,25×595,50 pt, durchsuchbares Deutsch/Unicode, keine Rasterbilder, 13 Android-Emulatortests, geprüfte Test-APK. [Messbericht](E04_PDF_PROBE.md), [ADR-009](DECISIONS.md) (GO nur für Prototyp, druckreifer Satz später P5). |
 | P1 | E-05 | BLOCKED | MANUAL: tatsächliche Bedienungs- und PDF-Sichtprüfung auf einem Android-Smartphone benötigt. Keine Emulator-Simulation als Freigabe. D-01 parallel möglich. |
-| P2 | D-01 | TODO | – |
+| P2 | D-01 | IN_PROGRESS | [D-01-Schema und Migration](D01_DOCUMENT_MODEL.md), TypeScript- und Node-Tests ergänzt; CI ausstehend |
 | P2 | D-02 | TODO | – |
 | P2 | D-03 | TODO | – |
 | P2 | D-04 | TODO | – |
@@ -85,6 +85,15 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### D-01 in Prüfung – 14.11.2026
+
+- Neue reine TypeScript-Module `editor/src/book-model.ts` und `editor/src/legacy-migration.ts`: versionierte Buchdaten, A5-Layoutparameter, Textmarkierungen, Strict-Validator, Serialisierungs-Rundreise und nicht schreibender Canvas-Migrationsadapter.
+- `editor/tests/book-model.test.mjs`: neue Tests für Reihenfolge, Unicode, Blockarten, fehlerhafte Eingaben und verlustbewusste Legacy-Übernahme. Lokal mit TypeScript 5.8.3 und Node 22 bestanden; verbindlicher Node-24-CI-Lauf steht aus.
+- Bestehendes E-02-Laufzeitverhalten und Android-Brücke bleiben unverändert. Keine automatische Migration produktiver Nutzerdaten.
+- Bei grüner vollständiger CI D-01 auf `DONE` setzen, `10 / 35` auf `11 / 35` aktualisieren und D-02 als nächsten Schritt eintragen. Bei Rot Fehler korrigieren, Status nicht vorzeitig erhöhen.
+
+
 
 ### Aktuelle Übergabe – E-04 DONE / D-01 als nächstes (14.11.2026)
 
