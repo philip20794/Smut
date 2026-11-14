@@ -81,11 +81,11 @@ class ChapterStoreInstrumentedTest {
             .put("runs", JSONArray().put(JSONObject().put("text", veryLongText)
                 .put("marks", JSONObject().put("bold", true)))))
         assertEquals(BookSave.Saved(6), store.save(document, 5,
-            BookPosition(secondId, "longParagraph", 7, 254)))
+            BookPosition(secondId, "longParagraph", 8, 254)))
         assertEquals(7L, updated(store.moveChapter(id, 6, secondId, -1)))
         assertEquals(secondId, read(id).position.chapterId)
         assertEquals("longParagraph", read(id).position.blockId)
-        assertEquals(7, read(id).position.offset)
+        assertEquals(8, read(id).position.offset)
         assertEquals(254, read(id).position.scrollY)
         assertEquals(8L, updated(store.openChapter(id, 7, firstId)))
         assertEquals(BookPosition(firstId, null, 0, 0), read(id).position)

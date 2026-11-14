@@ -57,6 +57,7 @@ class ChapterLibraryUiInstrumentedTest {
                 assertEquals(2, (store.load(id) as BookLoad.Found).document
                     .getJSONArray("chapters").length())
                 device.findObject(By.desc("Kapitel Kapitel 1 löschen")).click()
+                assertTrue(device.wait(Until.hasObject(By.text("Kapitel endgültig löschen")), 5_000))
                 device.findObject(By.text("Kapitel endgültig löschen")).click()
                 assertTrue(device.wait(Until.hasObject(By.text("Kapitel gelöscht.")), 12_000))
                 assertTrue(device.wait(Until.hasObject(By.text("Aktuelles Kapitel: Neue Szene")), 12_000))
