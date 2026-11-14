@@ -14,6 +14,9 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/** All BookStore instances in this app process share the same atomic file namespace. */
+private val BOOK_DISK_LOCK = Any()
+
 internal sealed interface BookLoad {
     data object Missing : BookLoad
     data object Corrupt : BookLoad
@@ -174,7 +177,9 @@ internal class BookStore(
     }
 
     @Synchronized
-    fun load(id: String): BookLoad {
+    fun load(id: String): BookLoad = synchronized(BOOK_DISK_LOCK) { loadUnderLock(id) }
+
+    private fun loadUnderLock(id: String): BookLoad {
         if (runCatching { BookDocumentValidator.safeId(id) }.isFailure) return BookLoad.Error
         return try {
             when (val state = readDisk(id)) {
@@ -192,7 +197,10 @@ internal class BookStore(
     }
 
     @Synchronized
-    fun save(document: JSONObject, expectedRevision: Long, position: BookPosition): BookSave {
+    fun save(document: JSONObject, expectedRevision: Long, position: BookPosition): BookSave =
+        synchronized(BOOK_DISK_LOCK) { saveUnderLock(document, expectedRevision, position) }
+
+    private fun saveUnderLock(document: JSONObject, expectedRevision: Long, position: BookPosition): BookSave {
         if (expectedRevision < 0 || expectedRevision == Long.MAX_VALUE) return BookSave.Error
         return try {
             // Copy the untrusted input before any disk write; reject malformed data atomically.
@@ -238,7 +246,10 @@ internal class BookStore(
      * Original timestamps, chapter IDs and layout are preserved, unlike normal saves.
      */
     @Synchronized
-    fun importNew(source: BookBackupCodec.Payload): BookImport = try {
+    fun importNew(source: BookBackupCodec.Payload): BookImport =
+        synchronized(BOOK_DISK_LOCK) { importNewUnderLock(source) }
+
+    private fun importNewUnderLock(source: BookBackupCodec.Payload): BookImport = try {
         val book = JSONObject(source.document.toString())
         val info = BookDocumentValidator.inspect(book)
         BookDocumentValidator.validatePosition(book, source.position)

@@ -25,7 +25,7 @@ internal object BookBackupCodec {
     }
 
     private fun checkedRevision(value: Any?): Long {
-        require(value is Number && value.toString().matches(Regex("[1-9][0-9]{0,14}")))
+        require(value is Number && value.toString().matches(Regex("[1-9][0-9]{0,15}")))
         val revision = value.toLong()
         require(revision in 1..9_007_199_254_740_991L)
         return revision
