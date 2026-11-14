@@ -33,6 +33,21 @@ class EditorBridgeTest {
     }
 
     @Test
+    fun pdfProbeBridgeAcceptsOnlyBoundedBase64WithKnownMetadata() {
+        val valid = """{"version":1,"type":"save-pdf-probe","requestId":"e04-pdf","base64":"JVBERg==","editorPages":3,"pdfPages":3}"""
+        assertTrue(BridgeProtocol.parseRequest(valid) is BridgeRequest.PdfProbe)
+        val wrong = listOf(
+            valid.replace("JVBERg==", "%%%!!!"),
+            valid.replace("\"pdfPages\":3", "\"pdfPages\":0"),
+            valid.replace("\"editorPages\":3", "\"editorPages\":\"3\""),
+            valid.replace("JVBERg==", "A".repeat(2_400_001)),
+            valid.replace("\"pdfPages\":3", "\"pdfPages\":3,\"extra\":true"),
+        )
+        wrong.forEach { assertNull(BridgeProtocol.parseRequest(it)) }
+        assertEquals(true, JSONObject(BridgeProtocol.pdfProbeResult("e04-pdf", true)).getBoolean("saved"))
+    }
+
+    @Test
     fun onlyApkEditorAssetsAreTrusted() {
         assertTrue(isTrustedEditorAssetUrl(EDITOR_URL))
         assertTrue(isTrustedEditorAssetUrl("https://appassets.androidplatform.net/assets/editor/main.js"))

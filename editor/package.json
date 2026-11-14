@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs"
   },
   "dependencies": {
-    "@hufe921/canvas-editor": "1.1.0"
+    "@hufe921/canvas-editor": "1.1.0",
+    "canvas-editor-pdf": "0.8.0"
   },
   "devDependencies": {
     "typescript": "5.9.3"

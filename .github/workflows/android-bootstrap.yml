@@ -75,7 +75,7 @@ jobs:
           set -euo pipefail
           apk="app/build/outputs/apk/debug/app-debug.apk"
           unzip -t "$apk" >/dev/null
-          for resource in index.html style.css main.js bridge.js; do
+          for resource in index.html style.css main.js bridge.js vendor/canvas-editor-pdf.es.js; do
             unzip -Z1 "$apk" | grep -Fx "assets/editor/$resource"
           done
           unzip -p "$apk" assets/editor/index.html | grep -F "connect-src 'none'"
@@ -153,6 +153,12 @@ jobs:
             adb shell svc data disable
             trap 'status=$?; adb logcat -d -v time > app/build/reports/emulator/logcat.txt || true; if [ "$status" -ne 0 ]; then adb shell screencap -p /sdcard/smut-f05-error.png || true; adb pull /sdcard/smut-f05-error.png app/build/reports/emulator/ || true; fi' EXIT
             ./gradlew --no-daemon :app:connectedDebugAndroidTest
+            adb exec-out run-as io.github.philip20794.smut.dev cat files/e04-a5-probe.pdf > app/build/reports/emulator/e04-a5-probe.pdf
+            test -s app/build/reports/emulator/e04-a5-probe.pdf
+      - name: Validate PDF text, page geometry and Unicode independently
+        run: |
+          python3 -m pip install --user --disable-pip-version-check "pypdf==6.0.0"
+          python3 editor/scripts/verify-pdf-probe.py app/build/reports/emulator/e04-a5-probe.pdf
       - name: Preserve instrumented test results and debug logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -163,6 +169,13 @@ jobs:
             app/build/reports/androidTests/connected/
             app/build/reports/emulator/
           if-no-files-found: warn
+      - name: Publish E-04 PDF probe after successful parser validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: smut-e04-a5-pdf-probe-${{ github.sha }}
+          path: app/build/reports/emulator/e04-a5-probe.pdf
+          if-no-files-found: error
+          retention-days: 30
 
   tested-apk:
     name: Publish tested development APK

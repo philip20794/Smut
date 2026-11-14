@@ -46,7 +46,8 @@ export function createDocumentRequest(
 
 export type DocumentResponse =
   | { readonly version: 1; readonly type: "load-result"; readonly requestId: string; readonly document: PrototypeData | null }
-  | { readonly version: 1; readonly type: "save-result"; readonly requestId: string; readonly saved: boolean };
+  | { readonly version: 1; readonly type: "save-result"; readonly requestId: string; readonly saved: boolean }
+  | { readonly version: 1; readonly type: "pdf-probe-result"; readonly requestId: string; readonly saved: boolean };
 
 export function parseDocumentResponse(value: unknown): DocumentResponse | null {
   if (typeof value !== "string" || value.length > MAX_DOCUMENT_LENGTH) return null;
@@ -59,7 +60,7 @@ export function parseDocumentResponse(value: unknown): DocumentResponse | null {
     (data.document === null || isPrototypeData(data.document))) {
     return data as DocumentResponse;
   }
-  if (data.type === "save-result" && Object.keys(data).length === 4 && typeof data.saved === "boolean") {
+  if ((data.type === "save-result" || data.type === "pdf-probe-result") && Object.keys(data).length === 4 && typeof data.saved === "boolean") {
     return data as DocumentResponse;
   }
   return null;

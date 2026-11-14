@@ -3,6 +3,7 @@ import { caretScrollDelta } from "./caret-visibility.js";
 import { selectionEdgeScrollDelta } from "./selection-edge-scroll.js";
 import { selectionGripPoint, type GripPoint, type SelectionEdge, type SelectionRect } from "./selection-handles.js";
 import { createReadyMessage, parseReadyAck } from "./bridge.js";
+import { generatePdfProbe, bytesToBase64 } from "./pdf-probe.js";
 import {
   INITIAL_DOCUMENT, createDocumentRequest, isPrototypeData, parseDocumentResponse,
   type PrototypeData,
@@ -13,7 +14,7 @@ interface AndroidBridge {
 }
 interface CanvasEditor {
   command: {
-    getValue(): { data: PrototypeData };
+    getValue(): { data: PrototypeData; options: Record<string, unknown> };
     getRange(): { startIndex: number; endIndex: number } | null;
     getRangeText(): unknown;
     getRangeContext(): { startPageNo: number; endPageNo: number; rangeRects: SelectionRect[] } | null;
@@ -46,6 +47,9 @@ declare global {
       getSelectionHandles(): { start: boolean; end: boolean; dragging: SelectionEdge | null };
       selectAllTestFixture(): boolean;
       setPageTestFixture(enabled: boolean): void;
+      setPdfTestFixture(enabled: boolean): void;
+      generatePdfProbe(): Promise<void>;
+      getPdfProbeStatus(): { state: string; editorPages: number; pdfPages: number; error: string };
     };
   }
 }
@@ -68,6 +72,48 @@ let isSaving = false;
 let currentZoom = DEFAULT_ZOOM;
 let testDocumentBackup: PrototypeData | null = null;
 let suppressTestAutoSave = false;
+let pdfProbeStatus = { state: "idle", editorPages: 0, pdfPages: 0, error: "" };
+
+function setPdfTestFixture(enabled: boolean): void {
+  if (!editor) return;
+  if (enabled) {
+    if (testDocumentBackup) return;
+    testDocumentBackup = editor.command.getValue().data;
+    suppressTestAutoSave = true;
+    const prose = Array.from({ length: 24 }, (_, i) =>
+      `Absatz ${i + 1}: Ein kühler Wind strich über die Straße. Äpfel, Öl und Grüße standen in dem Brief, während der Morgen näher rückte. `
+    ).join("");
+    editor.command.executeSetValue({ main: [{ value: prose }] });
+  } else if (testDocumentBackup) {
+    editor.command.executeSetValue(testDocumentBackup);
+    testDocumentBackup = null;
+    suppressTestAutoSave = false;
+  }
+}
+
+async function generatePdfProbeForTest(): Promise<void> {
+  if (!editor || !testDocumentBackup || !window.SmutAndroid) {
+    pdfProbeStatus = { state: "failed", editorPages: 0, pdfPages: 0, error: "Nur als isolierte Android-Testprobe verfügbar" };
+    return;
+  }
+  const editorPages = container?.querySelectorAll(".ce-page-container canvas").length ?? 0;
+  pdfProbeStatus = { state: "rendering", editorPages, pdfPages: 0, error: "" };
+  try {
+    const { bytes, pageCount } = await generatePdfProbe(editor.command.getValue());
+    pdfProbeStatus.pdfPages = pageCount;
+    pdfProbeStatus.state = "saving";
+    const base64 = bytesToBase64(bytes);
+    if (base64.length > 2_400_000) throw new Error("PDF-Probe überschreitet das Größenlimit");
+    postRequest(JSON.stringify({
+      version: 1, type: "save-pdf-probe", requestId: "e04-pdf",
+      base64, editorPages, pdfPages: pageCount,
+    }));
+  } catch (error) {
+    pdfProbeStatus.state = "failed";
+    pdfProbeStatus.error = String(error);
+  }
+}
+
 let caretVisibilityFrame = 0;
 
 /**
@@ -630,6 +676,10 @@ window.addEventListener("smut:native", (event: Event) => {
   if (response.type === "load-result" && response.requestId === "load-startup") {
     void initializeEditor(response.document ?? INITIAL_DOCUMENT);
   }
+  if (response.type === "pdf-probe-result" && response.requestId === "e04-pdf") {
+    pdfProbeStatus.state = response.saved ? "saved" : "failed";
+    if (!response.saved) pdfProbeStatus.error = "PDF konnte nicht gespeichert werden";
+  }
   if (response.type === "save-result" && response.requestId === `save-${saveNumber}`) {
     report(response.saved ? "Lokal gespeichert" : "Speichern fehlgeschlagen");
     isSaving = false;
@@ -683,6 +733,9 @@ window.smutPrototype = {
     return true;
   },
   setPageTestFixture,
+  setPdfTestFixture,
+  generatePdfProbe: generatePdfProbeForTest,
+  getPdfProbeStatus: () => ({ ...pdfProbeStatus }),
 };
 updateZoomControls();
 requestHandshake("startup");

@@ -8,7 +8,7 @@
 - **Projektstatus:** `IN_PROGRESS` – P0 abgeschlossen; P1: E-01, E-02 und **E-03 abgeschlossen**. Alle E-03-Pflichtchecks inklusive echter Android-Gestentests bestanden. PDF-Probe und Technologie-GO stehen mit E-04 noch aus.
 - **Meilenstein:** `P1 – Machbarkeitsnachweis und Technologieentscheidung`.
 - **Letzte abgeschlossene Aufgabe:** `E-03 DONE` – Langdruck-Wortauswahl, echter Zwei-Seiten-Drag, Rand-Autoscroll, IME/Cursor/Zoom-Kombinationen und verschiebbare mobile Auswahlgriffe sind im API-35-Emulator getestet. Kein echter Smartphone-Test (E-05).
-- **Nächste ausführbare Aufgabe:** `E-04 TODO` – A5-PDF-Probe mit durchsuchbarem Text, Seitengröße/Geometrie prüfen, PDF-Engine vergleichen, ADR mit GO/NO-GO in `docs/DECISIONS.md` dokumentieren.
+- **Nächste ausführbare Aufgabe:** `E-04 IN_PROGRESS` – A5-PDF-Probe mit durchsuchbarem Text, Seitengröße/Geometrie prüfen, PDF-Engine vergleichen, ADR mit GO/NO-GO in `docs/DECISIONS.md` dokumentieren.
 - **Abgeschlossene Aufgaben:** **9 / 35 (25,7 %)**; nur `DONE` zählt.
 - **Letzter verifizierter grüner CI-Lauf:** [Smut CI 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605), Commit [1ef6753](https://github.com/philip20794/Smut/commit/1ef67535d34217d74a1e3ff060ed2ecfa5e447cf): TypeScript, Unit-Tests, Kotlin, Android-Lint, API-35-Emulatortests einschließlich realem Touch am Auswahlgriff, geprüfte APK.
 - **Letzte geprüfte APK:** `smut-tested-dev-1ef67535d34217d74a1e3ff060ed2ecfa5e447cf` aus [Run 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605) (ZIP mit SHA256SUMS, zeitlich befristet). Nicht auf einem realen Telefon getestet.
@@ -43,7 +43,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P1 | E-01 | DONE | [Datierte MIT-/Offline-/IME-/A5-/PDF-Entscheidungsmatrix](EDITOR_EVALUATION.md), [ADR-008](DECISIONS.md): Canvas Editor 1.1.0 zuerst als **Testkandidat**, keine vorzeitige E-04-GO-Freigabe |
 | P1 | E-02 | DONE | Android-API-35-Emulator: echter Touch, Fokus des Canvas-Editors, Eingabe über Android-IME einschließlich Unicode und Wortkomposition/Autokorrektur, Enter/Backspace, atomarer Save/Reload; vollständiger [grüner CI-Lauf 43467760666](https://github.com/philip20794/Smut/actions/runs/43467760666); [Testprotokoll](E02_ANDROID_IME_TEST.md). Kein Echtgerätetest (E-05) |
 | P1 | E-03 | DONE | [CI 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605) vollständig grün: native Auswahlgriffe mit echter Android-Endgriff-Geste, frühere Zwei-Seiten-Auswahl, Rand-Autoscroll, Zoom/IME und Cursor-Sichtbarkeit; [Code 1ef6753](https://github.com/philip20794/Smut/commit/1ef67535d34217d74a1e3ff060ed2ecfa5e447cf). E-05 bleibt gesonderter echter Gerätetest. |
-| P1 | E-04 | TODO | – |
+| P1 | E-04 | IN_PROGRESS | PDF-Engine/Android-Probe und unabhängige Parserprüfung werden implementiert; erst nach grüner CI und dokumentierter A5/Text/Umbruch-Messung entscheiden. |
 | P1 | E-05 | TODO | – |
 | P2 | D-01 | TODO | – |
 | P2 | D-02 | TODO | – |
@@ -86,6 +86,13 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### E-04 – PDF-Machbarkeitsprobe (14.11.2026)
+
+- **Aktiv:** E-04 `IN_PROGRESS`, weiterhin 9/35 `DONE`.
+- Implementiert wird eine eigenständige Android-WebView-Probe mit `canvas-editor-pdf@0.8.0` und `loadDefaultFonts:false`: kein CDN, kein Server und keine beliebigen Benutzerdateien. Der Export greift auf den unveränderten `getValue()`-Snapshot zurück und rendert bei 100% Papiermaß statt 60% Bildschirmzoom.
+- Android-Bridge speichert nur die streng begrenzte PDF-Testdatei `files/e04-a5-probe.pdf`; keine allgemeine Dateifreigabe oder v1-PDF-UI. Emulatorprüfung misst MediaBox; pypdf liest anschließend den tatsächlichen PDF-Text und prüft Umlaute und A5 sowie fehlende Rasterbilder. Das Sample liegt nach komplett grünem CI als Actions-Artefakt.
+- **Noch nicht freigegeben:** Vorliegende CI prüfen, reale Seitengleichheit zur Canvas-Vorschau dokumentieren und Bibliotheksentscheidung begründen. Keine E-04-`DONE`-Markierung ohne Nachweis; E-05 bleibt echter Gerätetest.
 
 ### Aktuelle Übergabe – 14.11.2026
 

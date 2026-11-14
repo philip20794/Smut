@@ -795,6 +795,48 @@ class OfflineEditorSmokeTest {
             original, evaluate("window.smutPrototype?.getText()"))
     }
 
+    /** E-04: render a real PDF from the current, isolated editor document in
+     * offline WebView. PdfRenderer independently checks the PDF header and A5.
+     * Text content and searchable Unicode are inspected later by pypdf in CI.
+     */
+    @Test
+    fun pdfProbeExportsMultipageA5DocumentOfflineWithoutChangingSavedManuscript() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        ensureEditorWindowFocused()
+        val original = evaluate("window.smutPrototype?.getText()")
+        try {
+            evaluate("window.smutPrototype?.setPdfTestFixture(true)")
+            awaitJavaScriptValue("window.smutPrototype?.getPageCount() >= 2", "true", exact = true)
+            evaluate("window.smutPrototype?.generatePdfProbe()")
+            awaitJavaScriptValue(
+                "window.smutPrototype?.getPdfProbeStatus()?.state",
+                "saved", exact = false
+            )
+            val pages = evaluate("window.smutPrototype?.getPdfProbeStatus()?.pdfPages").toInt()
+            assertTrue("Exporter must create more than one PDF page", pages >= 2)
+            scenarioRule.scenario.onActivity { activity ->
+                val pdf = java.io.File(activity.filesDir, "e04-a5-probe.pdf")
+                assertTrue("Locally saved PDF probe is missing", pdf.isFile && pdf.length() > 100)
+                val descriptor = android.os.ParcelFileDescriptor.open(
+                    pdf, android.os.ParcelFileDescriptor.MODE_READ_ONLY
+                )
+                android.graphics.pdf.PdfRenderer(descriptor).use { renderer ->
+                    assertEquals("PDF page count must match the exporter", pages, renderer.pageCount)
+                    renderer.openPage(0).use { page ->
+                        assertTrue("A5 width in PDF points",
+                            kotlin.math.abs(page.width - 419.53) < 1.0)
+                        assertTrue("A5 height in PDF points",
+                            kotlin.math.abs(page.height - 595.28) < 1.0)
+                    }
+                }
+            }
+        } finally {
+            evaluate("window.smutPrototype?.setPdfTestFixture(false)")
+        }
+        assertEquals("PDF export must never overwrite the saved book",
+            original, evaluate("window.smutPrototype?.getText()"))
+    }
+
     @Test
     fun longGermanManuscriptFlowsAcrossA5PagesWithoutChangingSavedBook() {
         awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)

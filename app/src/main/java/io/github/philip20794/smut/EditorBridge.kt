@@ -2,6 +2,7 @@ package io.github.philip20794.smut
 
 import android.content.Context
 import android.util.AtomicFile
+import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import org.json.JSONArray
@@ -17,6 +18,7 @@ import java.nio.charset.StandardCharsets
  */
 internal class EditorBridge(private val webView: WebView) {
     private val prototypeFile = AtomicFile(File(webView.context.filesDir, "prototype-editor-v1.json"))
+    private val pdfProbeFile = AtomicFile(File(webView.context.filesDir, "e04-a5-probe.pdf"))
 
     @JavascriptInterface
     fun postMessage(payload: String) {
@@ -32,6 +34,22 @@ internal class EditorBridge(private val webView: WebView) {
                     null
                 }
                 BridgeProtocol.loadResult(request.requestId, content)
+            }
+            is BridgeRequest.PdfProbe -> {
+                var stream: java.io.FileOutputStream? = null
+                val saved = try {
+                    val bytes = Base64.decode(request.base64, Base64.NO_WRAP)
+                    require(bytes.size in 100..1_800_000)
+                    require(bytes.copyOfRange(0, 4).contentEquals("%PDF".toByteArray(StandardCharsets.US_ASCII)))
+                    stream = pdfProbeFile.startWrite()
+                    stream.write(bytes)
+                    pdfProbeFile.finishWrite(stream)
+                    true
+                } catch (_: Exception) {
+                    if (stream != null) pdfProbeFile.failWrite(stream)
+                    false
+                }
+                BridgeProtocol.pdfProbeResult(request.requestId, saved)
             }
             is BridgeRequest.Save -> {
                 val content = request.document.toString().toByteArray(StandardCharsets.UTF_8)
@@ -64,17 +82,20 @@ internal sealed class BridgeRequest(open val requestId: String) {
     data class Ready(override val requestId: String) : BridgeRequest(requestId)
     data class Load(override val requestId: String) : BridgeRequest(requestId)
     data class Save(override val requestId: String, val document: JSONObject) : BridgeRequest(requestId)
+    data class PdfProbe(override val requestId: String, val base64: String) : BridgeRequest(requestId)
 }
 
 internal object BridgeProtocol {
     const val MAX_DOCUMENT_LENGTH = 750_000
+    const val MAX_PDF_PROBE_LENGTH = 2_500_000
+    private val base64Pattern = Regex("[A-Za-z0-9+/]+={0,2}")
     private val idPattern = Regex("[A-Za-z0-9_-]{1,40}")
 
     fun parseReady(payload: String): String? =
         (parseRequest(payload) as? BridgeRequest.Ready)?.requestId
 
     fun parseRequest(payload: String): BridgeRequest? {
-        if (payload.length > MAX_DOCUMENT_LENGTH) return null
+        if (payload.length > MAX_PDF_PROBE_LENGTH) return null
         val json = try { JSONObject(payload) } catch (_: Exception) { return null }
         if (json.optInt("version", -1) != 1) return null
         val requestId = json.opt("requestId")
@@ -82,6 +103,15 @@ internal object BridgeProtocol {
         return when (json.optString("type")) {
             "ready" -> if (json.length() == 3) BridgeRequest.Ready(requestId) else null
             "load" -> if (json.length() == 3) BridgeRequest.Load(requestId) else null
+            "save-pdf-probe" -> {
+                if (json.length() != 6) return null
+                val base64 = json.opt("base64")
+                val editorPages = json.opt("editorPages")
+                val pdfPages = json.opt("pdfPages")
+                if (base64 !is String || base64.length > 2_400_000 || !base64Pattern.matches(base64)) return null
+                if (editorPages !is Int || pdfPages !is Int || editorPages !in 2..100 || pdfPages !in 2..100) return null
+                BridgeRequest.PdfProbe(requestId, base64)
+            }
             "save" -> {
                 if (json.length() != 4) return null
                 val document = json.optJSONObject("document") ?: return null
@@ -120,6 +150,16 @@ internal object BridgeProtocol {
             .put("type", "load-result")
             .put("requestId", requestId)
             .put("document", document ?: JSONObject.NULL)
+            .toString()
+    }
+
+    fun pdfProbeResult(requestId: String, saved: Boolean): String {
+        require(idPattern.matches(requestId))
+        return JSONObject()
+            .put("version", 1)
+            .put("type", "pdf-probe-result")
+            .put("requestId", requestId)
+            .put("saved", saved)
             .toString()
     }
 
