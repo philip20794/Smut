@@ -133,7 +133,12 @@ async function flushBook(): Promise<boolean> {
   return ok;
 }
 async function closeStructuredBook(): Promise<void> {
-  if (closing || !activeManuscript) return;
+  if (closing) return;
+  if (!activeManuscript) {
+    // A malformed/unavailable book must not trap the user in this Activity.
+    postRequest(JSON.stringify({ version: 1, type: "close-book", requestId: "close-book" }));
+    return;
+  }
   closing = true;
   try {
     // Native Activity is closed only after the on-disk revision is committed.
@@ -191,6 +196,11 @@ async function initializeStructuredBook(reply: Extract<BookLoadReply, { state: "
     activeManuscript = null;
     report("Buch konnte nicht sicher geöffnet werden: " + String(error));
   }
+}
+function textForActiveBook(): string {
+  return activeManuscript?.document.chapters
+    .find(ch => ch.id === activeManuscript!.chapterId)?.blocks
+    .map(b => "runs" in b ? b.runs.map(r => r.text).join("") : "").join("\n") ?? "";
 }
 function onStructuredEdit(): void {
   if (!editor || !activeManuscript) return;
@@ -787,6 +797,19 @@ async function initializeEditor(document: PrototypeData): Promise<void> {
       scheduleSelectionHandles();
     };
     editor.listener.rangeStyleChange = scheduleSelectionHandles;
+    // An empty structured chapter has no selectable glyph. A genuine tap on
+    // its page must still focus Canvas Editor's Android IME input surface.
+    // This is not synthetic text input and does not modify the manuscript.
+    if (activeManuscript && activeManuscript.document.chapters
+        .find(ch => ch.id === activeManuscript!.chapterId)?.blocks.length === 0) {
+      container.addEventListener("pointerup", event => {
+        if (!editor || !(event.target instanceof HTMLCanvasElement) ||
+            !event.target.closest(".ce-page-container")) return;
+        if (textForActiveBook() !== "") return;
+        editor.command.executeSetRange(0, 0);
+        container.querySelector<HTMLTextAreaElement>(".ce-inputarea")?.focus();
+      });
+    }
     // The editor repositions .ce-cursor after key presses and page reflow.
     // Observe only this one node to avoid re-render loops on the canvas.
     const caret = container.querySelector(".ce-cursor");

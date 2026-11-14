@@ -1,5 +1,6 @@
 package io.github.philip20794.smut
 
+import android.content.Intent
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
@@ -61,7 +62,39 @@ class StructuredBookEditorInstrumentedTest {
         val state = evaluate(scenario, "document.getElementById('editor-status')?.textContent")
         throw AssertionError("$script: expected $contains got $last; editor=$state")
     }
+    private fun ensureWindowFocused(scenario: ActivityScenario<BookEditorActivity>) {
+        device.wakeUp()
+        device.executeShellCommand("wm dismiss-keyguard")
+        device.waitForIdle()
+        repeat(4) { attempt ->
+            var focused = false
+            scenario.onActivity { activity ->
+                focused = activity.hasWindowFocus()
+                if (!focused) {
+                    activity.window.decorView.requestFocus()
+                    findWebView(activity.window.decorView)?.requestFocus()
+                }
+            }
+            if (focused) return
+            if (attempt == 1) {
+                // Bring the already-running, non-exported Activity to front
+                // from inside its own UID; no test-only production entrypoint.
+                scenario.onActivity { activity ->
+                    val intent = Intent(activity, BookEditorActivity::class.java)
+                        .putExtras(activity.intent)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    activity.startActivity(intent)
+                }
+            }
+            SystemClock.sleep(900)
+            device.waitForIdle()
+        }
+        var focused = false
+        scenario.onActivity { focused = it.hasWindowFocus() }
+        assertTrue("Editor must own the Android window for a real touch test", focused)
+    }
     private fun nativeTapCanvas(scenario: ActivityScenario<BookEditorActivity>) {
+        ensureWindowFocused(scenario)
         val x = evaluate(scenario,
             "(() => {let r=document.querySelector('.ce-page-container canvas')?.getBoundingClientRect(); return r ? r.left+Math.min(45,r.width*.2) : -1})()").toDouble()
         val y = evaluate(scenario,
@@ -79,7 +112,13 @@ class StructuredBookEditorInstrumentedTest {
             screenY = origin[1] + (y * scale).toInt()
         }
         assertTrue("Android must tap the real Canvas page", device.click(screenX, screenY))
-        await(scenario, "document.activeElement?.classList?.contains('ce-inputarea')", "true")
+        try {
+            await(scenario, "document.activeElement?.classList?.contains('ce-inputarea')", "true")
+        } catch (error: AssertionError) {
+            val diagnostics = evaluate(scenario,
+                "JSON.stringify({hasFocus:document.hasFocus(),active:document.activeElement?.className,canvas:document.querySelector('.ce-page-container canvas')?.getBoundingClientRect()?.toJSON(),view:[innerWidth,innerHeight],scroll:scrollY})")
+            throw AssertionError("Native canvas tap at $screenX,$screenY failed: $diagnostics", error)
+        }
     }
     private fun ime(scenario: ActivityScenario<BookEditorActivity>, text: String) {
         var applied = false
