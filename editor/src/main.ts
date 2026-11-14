@@ -250,14 +250,17 @@ function autoScrollSelection(): void {
   const viewportBottom = Math.min(window.innerHeight,
     (visual?.offsetTop ?? 0) + (visual?.height ?? window.innerHeight));
   const delta = selectionEdgeScrollDelta(y, viewportTop, viewportBottom);
+  let didScroll = false;
   if (delta) {
     const before = window.scrollY;
     window.scrollBy(0, delta);
-    if (window.scrollY !== before) forwardNativeSelectionDrag(x, y);
+    didScroll = window.scrollY !== before;
+    if (didScroll) forwardNativeSelectionDrag(x, y);
   }
-  // A held finger away from the edge needs no animation loop. The next
-  // touchmove will restart it if the finger approaches the viewport edge.
-  if (delta !== 0) selectionScrollFrame = requestAnimationFrame(autoScrollSelection);
+  // Stop at the document boundary as well as outside the edge zone.
+  // Otherwise a held finger at the first/last page schedules RAF forever.
+  // A later touchmove can restart scrolling when the viewport can move again.
+  if (didScroll) selectionScrollFrame = requestAnimationFrame(autoScrollSelection);
 }
 
 container?.addEventListener("touchstart", event => {
