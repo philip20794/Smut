@@ -69,6 +69,12 @@ class BookStoreInstrumentedTest {
         assertFalse(found.recovered)
         assertEquals(1L, db.entries().find(bookId)?.revision)
         assertEquals("Mein Buch", db.entries().find(bookId)?.title)
+        // A crash between AtomicFile commit and Room update is repaired on load.
+        db.entries().upsert(BookEntry(bookId, "Veralteter Index", "2026-11-14T10:00:00.000Z",
+            0, "chap1", "block1", 0, 0))
+        assertTrue(store.load(bookId) is BookLoad.Found)
+        assertEquals(1L, db.entries().find(bookId)?.revision)
+        assertEquals("Mein Buch", db.entries().find(bookId)?.title)
     }
 
     @Test fun interruptedAtomicWriteKeepsLastGoodRevision() {
@@ -101,6 +107,9 @@ class BookStoreInstrumentedTest {
         assertEquals(BookSave.Saved(1), store.save(book(bookId), 0, position()))
         assertEquals(BookSave.Conflict(1), store.save(book(bookId, "veraltet"), 0, position()))
         assertEquals(BookSave.Error, store.save(book(bookId).put("schemaVersion", 7), 1, position()))
+        assertEquals(BookSave.Error, store.save(
+            book(bookId).put("createdAt", "2026-11-13T10:00:00.000Z"), 1, position()
+        ))
         assertEquals(1L, (store.load(bookId) as BookLoad.Found).revision)
         val badId = id()
         store.primaryFileForTest(badId).writeText("""{"broken":true}""")

@@ -28,7 +28,7 @@ function checkRevision(revision: number): void {
 function positionValid(value: unknown): value is BookPosition {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
   const p = value as Record<string, unknown>;
-  return Object.keys(p).length === 4 && BOOK_ID.test(String(p.chapterId)) &&
+  return Object.keys(p).length === 4 && typeof p.chapterId === "string" && BOOK_ID.test(p.chapterId) &&
     (p.blockId === null || (typeof p.blockId === "string" && BOOK_ID.test(p.blockId))) &&
     typeof p.offset === "number" && Number.isInteger(p.offset) && p.offset >= 0 && p.offset <= 1_000_000 &&
     typeof p.scrollY === "number" && Number.isInteger(p.scrollY) && p.scrollY >= 0 && p.scrollY <= 10_000_000;

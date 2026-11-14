@@ -201,8 +201,12 @@ internal class BookStore(
                 DiskState.Corrupt -> error("Already rejected")
             }
             if (revision != expectedRevision) return BookSave.Conflict(revision)
+            if (state is DiskState.Valid) {
+                require(state.snapshot.info.createdAt == info.createdAt) { "Erstellungsdatum darf nicht geändert werden" }
+            }
             val savedAt = iso.format(Instant.ofEpochMilli(System.currentTimeMillis()))
-            working.put("updatedAt", maxOf(info.createdAt, info.updatedAt, savedAt))
+            val previousUpdatedAt = if (state is DiskState.Valid) state.snapshot.info.updatedAt else info.updatedAt
+            working.put("updatedAt", maxOf(info.createdAt, info.updatedAt, previousUpdatedAt, savedAt))
             BookDocumentValidator.inspect(working)
             val next = revision + 1
             val encoded = bytesFor(working, next, position)

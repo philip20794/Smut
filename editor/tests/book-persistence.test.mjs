@@ -29,6 +29,7 @@ test("book bridge keeps revision/position and rejects malformed data", () => {
     version: 1, type: "book-save-result", requestId: "save", state: "saved", revision: 1, extra: true,
   }), "save"), null);
   assert.throws(() => createBookSaveRequest("save", book(), -1, position()));
+  assert.throws(() => createBookSaveRequest("save", book(), 0, { ...position(), chapterId: 123 }));
   assert.throws(() => createBookLoadRequest("load", "../secrets"));
 });
 

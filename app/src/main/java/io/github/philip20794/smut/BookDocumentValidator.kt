@@ -109,6 +109,8 @@ internal object BookDocumentValidator {
         val margins = obj(layout, "marginsMm")
         exactKeys(margins, setOf("top", "bottom", "inside", "outside"))
         for (side in listOf("top", "bottom", "inside", "outside")) number(margins.opt(side), 0.0, 50.0)
+        require(margins.getDouble("inside") + margins.getDouble("outside") < 130.0 &&
+            margins.getDouble("top") + margins.getDouble("bottom") < 190.0) { "Satzfläche zu klein" }
         text(layout.opt("fontFamily"), 80)
         number(layout.opt("fontSizePt"), 6.0, 32.0)
         number(layout.opt("lineSpacing"), 1.0, 3.0)
