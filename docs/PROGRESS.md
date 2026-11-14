@@ -5,27 +5,27 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-14.
-- **Projektstatus:** `IN_PROGRESS` – P0 und P1 E-01 bis E-04 abgeschlossen; **P1-GO für Canvas Editor 1.1.0 + lokal gebündelten PDF-Exporter 0.8.0** dokumentiert. Die vollständige Buchverwaltung, professionelle Typografie und der Endnutzer-PDF-Export gehören später zu P2–P5.
+- **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04 und P2 D-01 abgeschlossen; Canvas Editor 1.1.0 + lokaler PDF-Prototyp 0.8.0 bestätigt. Buchverwaltung, produktive Speicherung und druckreifer PDF-Export folgen in P2–P5.
 - **Meilenstein:** `P2 – Dokumentmodell und Datensicherheit` (technische Arbeit freigegeben).
-- **Letzte abgeschlossene Aufgabe:** `E-04 DONE`: echte mehrseitige A5-PDF aus der Offline-WebView, suchbare Umlaute, korrektes PDF-Seitenmaß, kein Bild-PDF und gleiche Seitenanzahl in Editor und PDF. Siehe [E04_PDF_PROBE.md](E04_PDF_PROBE.md) und ADR-009 in [DECISIONS.md](DECISIONS.md).
-- **Aktive Aufgabe:** `D-01 IN_PROGRESS` – Buch-/Kapitel-/Blockmodell und Legacy-Übernahme sind implementiert; GitHub-CI-Nachweis steht noch aus. Der echte Gerätetest `E-05` bleibt `BLOCKED` und kann unabhängig erfolgen.
-- **Abgeschlossene Aufgaben:** **10 / 35 (28,6 %)**; nur `DONE` zählt.
-- **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300), Commit [dc47fd4](https://github.com/philip20794/Smut/commit/dc47fd4c75df96a6dd93304c7f67edf90e4a1bc5): TypeScript, Node-Tests, Kotlin/Lint/Build, 13 API-35-Emulatortests einschließlich übereinstimmender PDF-/Editor-Seitenanzahl, pypdf-Seitenmaß-/Unicode-/Textprüfung und geprüfte APK.
-- **Letzte geprüfte APK:** `smut-tested-dev-dc47fd4c75df96a6dd93304c7f67edf90e4a1bc5` aus [CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300); PDF-Testartefakt `smut-e04-a5-pdf-probe-dc47fd4c75df96a6dd93304c7f67edf90e4a1bc5`. Beide zeitlich befristet. **Kein echter Smartphone-Test.**
+- **Letzte abgeschlossene Aufgabe:** `D-01 DONE`: versioniertes Buch-/Kapitel-/Blockmodell, strikte Validierung, JSON-Rundreise, nichtdestruktive Canvas-Migrationsprobe und sechs neue Unit-Tests. Siehe [D01_DOCUMENT_MODEL.md](D01_DOCUMENT_MODEL.md).
+- **Nächste ausführbare Aufgabe:** `D-02 TODO` – editierbare Dokumentoperationen (insert/delete/replace/split/merge/format) mit stabilen Cursor-/Auswahlankern und Undo/Redo. `E-05` bleibt `BLOCKED` bis zur echten Smartphone-Abnahme.
+- **Abgeschlossene Aufgaben:** **11 / 35 (31,4 %)**; nur `DONE` zählt.
+- **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353), Commit [512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38): TypeScript, Lint, alle Node-Tests einschließlich sechs D-01-Fälle, Kotlin/Lint/APK, API-35-Offline-Emulator einschließlich E-04-PDF und geprüfte APK.
+- **Letzte geprüfte APK:** `smut-tested-dev-512b0c5d2a422d7ec85ea0890c2fced6a8f66e38` aus [CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353); PDF-Testartefakt `smut-e04-a5-pdf-probe-512b0c5d2a422d7ec85ea0890c2fced6a8f66e38`. Beide zeitlich befristet. **Kein echter Smartphone-Test.**
 - **Letztes Release:** keines; signierte Releases stehen aus.
 - **Technische Entscheidung:** **GO** für die offlinefähige Prototyp-Architektur; **kein druckfertiges Benutzer-PDF**: problematische Worttrennungen/Blocksatz, nur PDF-Standardfonts ohne eingebettete lokale Buchschrift, fehlender Zeilen-Goldenvergleich und noch keine anwenderseitige Export-UI. Das sind Pflichtpunkte für P5 L-01 bis L-04, ggf. Engine-Fallback bei Nichterfüllung.
-- **Nutzeraktion:** E-05 auf realem Smartphone (später); keine Aktion zum Start von D-01 notwendig.
+- **Nutzeraktion:** E-05 auf realem Smartphone (später); keine Aktion für D-02 notwendig.
 
 ## 2. Verbindlicher nächster Schritt
 
-**D-01 – Versioniertes Buch-/Kapitel-/Blockmodell** nach dokumentiertem [P1-GO](DECISIONS.md).
+**D-02 – Editieroperationen und Undo/Redo** nach dem verifizierten [D-01-Abschluss](D01_DOCUMENT_MODEL.md).
 
-1. Dokumentstruktur, Kapitelreihenfolge, semantische Absätze/Überschriften/Szenentrenner und Layoutparameter als versioniertes, editorunabhängiges Modell definieren.
-2. Migration vom jetzigen Canvas-Prototyp, Serialisierung/Validierung und fehlerhafte Daten testbar machen.
-3. Unit-Tests und sämtliche Pflichtchecks grün nachweisen; erst dann `D-01 DONE` markieren.
-4. `E-05` bleibt separat `BLOCKED` bis zur tatsächlichen Geräteprüfung; keine simulierte Nutzerabnahme. `P5` darf die hier dokumentierten Typografie-/Font-/PDF-Grenzen nicht ignorieren.
+1. Insert/Delete/Replace/Split/Merge/Format als deterministische Operationen auf dem kanonischen Buchmodell definieren; stabile Block-IDs und Anker verwenden.
+2. Undo/Redo einschließlich mehrerer Aktionen, Unicode, Kapitel-/Absatzgrenzen und unveränderter Daten bei Fehlern per Unit-Tests belegen.
+3. Die Integration in Android-Persistenz (D-03) und WYSIWYG-Editor (W-01) bleibt getrennt; D-02 darf keine produktiven Legacy-Dokumente stillschweigend überschreiben.
+4. Nach vollständiger grüner CI D-02 als `DONE` markieren. `E-05` bleibt gesonderter echter Smartphone-Test.
 
-**P1-Abnahme:** [CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300) mit überprüfbarer [E-04-PDF-Probe](https://github.com/philip20794/Smut/actions/runs/43578985300), [technischem Testbericht](E04_PDF_PROBE.md) und ADR-009. Der PDF-Exporter ist ein Machbarkeitsprototyp; noch keine v1-Exportfunktion für Benutzer.
+**Letzte vollständig grüne Codeprüfung:** [CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353) für D-01 (Commit [512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38)).
 
 ## 3. Task-Tracker
 
@@ -44,7 +44,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P1 | E-03 | DONE | [CI 43574312605](https://github.com/philip20794/Smut/actions/runs/43574312605) vollständig grün: native Auswahlgriffe mit echter Android-Endgriff-Geste, frühere Zwei-Seiten-Auswahl, Rand-Autoscroll, Zoom/IME und Cursor-Sichtbarkeit; [Code 1ef6753](https://github.com/philip20794/Smut/commit/1ef67535d34217d74a1e3ff060ed2ecfa5e447cf). E-05 bleibt gesonderter echter Gerätetest. |
 | P1 | E-04 | DONE | [CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300) vollständig grün: drei Seiten Editor/PDF, 419,25×595,50 pt, durchsuchbares Deutsch/Unicode, keine Rasterbilder, 13 Android-Emulatortests, geprüfte Test-APK. [Messbericht](E04_PDF_PROBE.md), [ADR-009](DECISIONS.md) (GO nur für Prototyp, druckreifer Satz später P5). |
 | P1 | E-05 | BLOCKED | MANUAL: tatsächliche Bedienungs- und PDF-Sichtprüfung auf einem Android-Smartphone benötigt. Keine Emulator-Simulation als Freigabe. D-01 parallel möglich. |
-| P2 | D-01 | IN_PROGRESS | [D-01-Schema und Migration](D01_DOCUMENT_MODEL.md), TypeScript- und Node-Tests ergänzt; CI ausstehend |
+| P2 | D-01 | DONE | [Code 512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38), [vollständige CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353) grün (TS/Lint/Unit, Kotlin/Lint/APK, Emulator/PDF), [Modell-/Migrationsvertrag](D01_DOCUMENT_MODEL.md) |
 | P2 | D-02 | TODO | – |
 | P2 | D-03 | TODO | – |
 | P2 | D-04 | TODO | – |
@@ -75,7 +75,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | --- | --- | --- | --- |
 | P0 | 6/6 | Build, CI, Emulator-Smoke und Test-APK | **erfüllt** |
 | P1 | 4/5 | E-01…E-04 GO, echter Gerätetest E-05 separat | **GO für D-01; E-05 offen** |
-| P2 | 0/4 | Modell, Operationen, sichere Persistenz, Backup | offen |
+| P2 | 1/4 | Modell, Operationen, sichere Persistenz, Backup | **D-01 erfüllt; D-02 als nächstes** |
 | P3 | 0/3 | Bücher-/Kapitelverwaltung | offen |
 | P4 | 0/5 | Direktbearbeitung und Textfunktionen | offen |
 | P5 | 0/4 | A5-Satz und textbasierter PDF-Export | offen |
@@ -86,16 +86,14 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 ## 5. Letzte Arbeitssitzung / Handoff
 
-### D-01 in Prüfung – 14.11.2026
+### Aktuelle Übergabe – D-01 DONE / D-02 als nächstes (14.11.2026)
 
-- Neue reine TypeScript-Module `editor/src/book-model.ts` und `editor/src/legacy-migration.ts`: versionierte Buchdaten, A5-Layoutparameter, Textmarkierungen, Strict-Validator, Serialisierungs-Rundreise und nicht schreibender Canvas-Migrationsadapter.
-- `editor/tests/book-model.test.mjs`: neue Tests für Reihenfolge, Unicode, Blockarten, fehlerhafte Eingaben und verlustbewusste Legacy-Übernahme. Lokal mit TypeScript 5.8.3 und Node 22 bestanden; verbindlicher Node-24-CI-Lauf steht aus.
-- Bestehendes E-02-Laufzeitverhalten und Android-Brücke bleiben unverändert. Keine automatische Migration produktiver Nutzerdaten.
-- Bei grüner vollständiger CI D-01 auf `DONE` setzen, `10 / 35` auf `11 / 35` aktualisieren und D-02 als nächsten Schritt eintragen. Bei Rot Fehler korrigieren, Status nicht vorzeitig erhöhen.
+- **D-01 DONE:** [Commit 512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38) implementiert reine Module `editor/src/book-model.ts` und `editor/src/legacy-migration.ts` und sechs zusätzliche Unit-Tests.
+- **Nachweis:** [Smut CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353) vollständig `success`: Editor-Typecheck, Lint, Node-Tests, Kotlin-/Android-Build und Offline-Emulator einschließlich A5-PDF-Test bestanden. Geprüfte APK `smut-tested-dev-512b0c5d2a422d7ec85ea0890c2fced6a8f66e38` liegt als befristetes Artifact vor.
+- **Abgrenzung:** Der Migrationseinstieg überschreibt keine Android-Prototypdaten und meldet unbekannte Canvas-Felder. D-03/D-04 müssen den Quellsnapshot bei der späteren produktiven Übernahme sichern. E-05 steht als echter Smartphone-Test weiterhin aus.
+- **Nächstes Arbeitspaket:** D-02 – Editoroperationen, Cursoranker und Undo/Redo auf dem versionierten Modell. Kein Bedarf an lokaler Hardware.
 
-
-
-### Aktuelle Übergabe – E-04 DONE / D-01 als nächstes (14.11.2026)
+### Historische Übergabe – E-04 DONE / D-01 zuvor als nächstes (14.11.2026)
 
 - **E-04 DONE:** [CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300), 13 Emulatorfälle grün. PDF textbasiert/selektierbar, drei A5-Seiten sowohl im Editor als auch im Export. Python-Parser weist A5 MediaBox (419,25 × 595,50 pt), Suchbegriffe Äpfel/Öl/Grüße/Straße und keine Rasterseiten nach. Paginierung gleich; noch kein vollständiger Zeilen-/Pixel-Goldenvergleich.
 - **Sichtprüfung:** PDF renderbar, mit Seitenzahlen; aber ungünstige Blocksatzabstände und Wortumbrüche innerhalb deutscher Wörter ohne Trennstrich. Fonts derzeit Standard-PDF-Type1, noch keine lizenzierten eingebetteten Buchschriften. Diese Defizite sind ausdrücklich für P5 und E-05 dokumentiert.
