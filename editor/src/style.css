@@ -93,3 +93,7 @@ button:focus-visible { outline: 3px solid #777; outline-offset: 2px; }
   box-shadow: 0 1px 3px #0006;
 }
 .smut-selection-handle:focus-visible { outline: 2px solid #3e6083; outline-offset: -3px; }
+
+/* W-01: structured manuscripts share the A5 canvas; the legacy entry stays separate. */
+.book-only { display: none; }
+.book-mode .book-only { display: inline-block; }

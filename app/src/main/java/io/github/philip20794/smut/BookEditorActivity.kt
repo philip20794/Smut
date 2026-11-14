@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
+import android.webkit.WebView
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -15,6 +17,7 @@ import androidx.compose.ui.Modifier
  * Never infer it from a remote URL or the legacy prototype state.
  */
 class BookEditorActivity : ComponentActivity() {
+    private var bookWebView: WebView? = null
     companion object {
         private const val EXTRA_BOOK_ID = "io.github.philip20794.smut.BOOK_ID"
 
@@ -34,10 +37,16 @@ class BookEditorActivity : ComponentActivity() {
             finish()
             return
         }
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // The WebView finishes the Activity only after a successful flush.
+                bookWebView?.evaluateJavascript("window.smutBook?.close()", null)
+            }
+        })
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    SmutStartScreen(bookId)
+                    SmutStartScreen(bookId) { bookWebView = it }
                 }
             }
         }

@@ -4,6 +4,10 @@ import { selectionEdgeScrollDelta } from "./selection-edge-scroll.js";
 import { selectionGripPoint, type GripPoint, type SelectionEdge, type SelectionRect } from "./selection-handles.js";
 import { createReadyMessage, parseReadyAck } from "./bridge.js";
 import { generatePdfProbe, bytesToBase64 } from "./pdf-probe.js";
+import { BookAutosaveQueue, createBookLoadRequest, createBookSaveRequest, parseBookReply,
+  type BookPosition, type BookLoadReply, type BookSaveReply } from "./book-persistence.js";
+import { canvasForChapter, reconcileCanvasChapter, textForChapter } from "./chapter-canvas.js";
+import type { BookDocument } from "./book-model.js";
 import {
   INITIAL_DOCUMENT, createDocumentRequest, isPrototypeData, parseDocumentResponse,
   type PrototypeData,
@@ -11,6 +15,7 @@ import {
 
 interface AndroidBridge {
   postMessage(payload: string): void;
+  activeBookId?(): string;
 }
 interface CanvasEditor {
   command: {
@@ -36,6 +41,17 @@ interface CanvasEditorModule {
 declare global {
   interface Window {
     SmutAndroid?: AndroidBridge;
+    smutBook?: {
+      getMode(): "book" | "prototype";
+      getBookId(): string | null;
+      getChapterId(): string | null;
+      getText(): string;
+      getPosition(): BookPosition | null;
+      getRevision(): number | null;
+      isDirty(): boolean;
+      save(): Promise<boolean>;
+      close(): Promise<void>;
+    };
     smutPrototype?: {
       getText(): string;
       getSavedStatus(): string | null;
@@ -59,6 +75,7 @@ const editorStatus = document.getElementById("editor-status");
 const retryButton = document.getElementById("recheck-button");
 const saveButton = document.getElementById("save-button");
 const backupButton = document.getElementById("backup-button");
+const closeBookButton = document.getElementById("close-book");
 const container = document.getElementById("canvas-editor");
 const zoomOutButton = document.getElementById("zoom-out");
 const zoomInButton = document.getElementById("zoom-in");
@@ -74,9 +91,129 @@ let currentZoom = DEFAULT_ZOOM;
 let testDocumentBackup: PrototypeData | null = null;
 let suppressTestAutoSave = false;
 let pdfProbeStatus = { state: "idle", editorPages: 0, pdfPages: 0, error: "" };
+let selectedBookId: string | null = null;
+type ActiveManuscript = {
+  document: BookDocument;
+  chapterId: string;
+  position: BookPosition;
+  readonly queue: BookAutosaveQueue;
+};
+let activeManuscript: ActiveManuscript | null = null;
+let bookRequestNumber = 0;
+const awaitingBookSaves = new Map<string, (reply: BookSaveReply) => void>();
+let closing = false;
+
+function nextBookRequest(): string { return "b-" + (++bookRequestNumber); }
+
+function saveBookNative(
+  book: BookDocument, position: BookPosition, revision: number
+): Promise<number> {
+  const requestId = nextBookRequest();
+  const request = createBookSaveRequest(requestId, book, revision, position);
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      awaitingBookSaves.delete(requestId);
+      reject(new Error("Android-Speicherung hat nicht geantwortet"));
+    }, 15000);
+    awaitingBookSaves.set(requestId, reply => {
+      window.clearTimeout(timer);
+      if (reply.state === "saved") resolve(reply.revision);
+      else reject(new Error(reply.state === "conflict"
+        ? "Speicherkonflikt: Buch wurde parallel verändert. Bitte neu öffnen."
+        : "Buch konnte nicht gespeichert werden"));
+    });
+    postRequest(request);
+  });
+}
+async function flushBook(): Promise<boolean> {
+  if (!activeManuscript) return false;
+  const ok = await activeManuscript.queue.flush();
+  if (ok) report("Lokal gespeichert");
+  else report("Speichern fehlgeschlagen – Änderungen nicht verwerfen!");
+  return ok;
+}
+async function closeStructuredBook(): Promise<void> {
+  if (closing || !activeManuscript) return;
+  closing = true;
+  try {
+    // Native Activity is closed only after the on-disk revision is committed.
+    if (await flushBook() && !activeManuscript.queue.dirty) {
+      postRequest(JSON.stringify({ version: 1, type: "close-book", requestId: "close-book" }));
+    } else {
+      report("Buch enthält ungespeicherte Änderungen. Schließen abgebrochen.");
+    }
+  } finally {
+    closing = false;
+  }
+}
+function receiveBookSave(payload: unknown): boolean {
+  for (const [id, callback] of awaitingBookSaves) {
+    const reply = parseBookReply(payload, id);
+    if (reply && "state" in reply && !("document" in reply)) {
+      awaitingBookSaves.delete(id);
+      callback(reply as BookSaveReply);
+      return true;
+    }
+  }
+  return false;
+}
+async function initializeStructuredBook(reply: Extract<BookLoadReply, { state: "ok" }>): Promise<void> {
+  try {
+    const chapterId = reply.position.chapterId;
+    const initialCanvas = canvasForChapter(reply.document, chapterId);
+    // Legacy prototype is never read, written, migrated or converted implicitly.
+    const manuscript: ActiveManuscript = {
+      document: reply.document, chapterId, position: reply.position,
+      queue: new BookAutosaveQueue(reply.revision, async (book, position, rev) => {
+        try {
+          const next = await saveBookNative(book, position, rev);
+          report("Lokal gespeichert");
+          return next;
+        } catch (error) {
+          report(String(error));
+          throw error;
+        }
+      }),
+    };
+    activeManuscript = manuscript;
+    document.body.classList.add("book-mode");
+    const label = document.getElementById("book-label");
+    if (label) label.textContent = reply.document.title;
+    await initializeEditor(initialCanvas);
+    if (!editor) throw new Error("A5-Canvas konnte nicht geladen werden");
+    report(reply.recovered
+      ? "Buch aus einer gültigen Vorversion geladen"
+      : "Buch geöffnet · Tippen direkt in die A5-Seiten");
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      window.scrollTo(0, reply.position.scrollY);
+    }));
+  } catch (error) {
+    activeManuscript = null;
+    report("Buch konnte nicht sicher geöffnet werden: " + String(error));
+  }
+}
+function onStructuredEdit(): void {
+  if (!editor || !activeManuscript) return;
+  try {
+    const next = reconcileCanvasChapter(
+      activeManuscript.document, activeManuscript.chapterId,
+      editor.command.getValue().data,
+      () => "p" + crypto.randomUUID().replaceAll("-", ""),
+      window.scrollY
+    );
+    if (next.changed) {
+      activeManuscript.document = next.document;
+      activeManuscript.position = next.position;
+      activeManuscript.queue.changed(next.document, next.position);
+      report("Änderungen werden lokal gespeichert …");
+    }
+  } catch (error) {
+    report("Eingabe konnte nicht sicher übernommen werden: " + String(error));
+  }
+}
 
 function setPdfTestFixture(enabled: boolean): void {
-  if (!editor) return;
+  if (!editor || activeManuscript) return;
   if (enabled) {
     if (testDocumentBackup) return;
     testDocumentBackup = editor.command.getValue().data;
@@ -200,6 +337,10 @@ function postRequest(payload: string): void {
 
 function scheduleSave(): void {
   if (!editor || isLoading || suppressTestAutoSave) return;
+  if (activeManuscript) {
+    onStructuredEdit();
+    return;
+  }
   pendingSave = true;
   if (!isSaving) void saveCurrentDocument();
 }
@@ -224,7 +365,7 @@ async function saveCurrentDocument(): Promise<void> {
  * exact original editor document. It is only used by the emulator test.
  */
 function setPageTestFixture(enabled: boolean): void {
-  if (!editor) return;
+  if (!editor || activeManuscript) return;
   if (enabled) {
     if (testDocumentBackup) return;
     testDocumentBackup = editor.command.getValue().data;
@@ -669,7 +810,27 @@ window.addEventListener("smut:native", (event: Event) => {
   const ack = parseReadyAck(payload);
   if (ack?.requestId === pendingRequestId && status) {
     status.textContent = "Android-Verbindung aktiv · vollständig offline";
-    if (!editor && !isLoading) postRequest(createDocumentRequest("load", "load-startup"));
+    if (!editor && !isLoading) {
+      const nativeId = window.SmutAndroid?.activeBookId?.() ?? "";
+      if (nativeId) {
+        selectedBookId = nativeId;
+        postRequest(createBookLoadRequest("book-startup", nativeId));
+      } else {
+        postRequest(createDocumentRequest("load", "load-startup"));
+      }
+    }
+    return;
+  }
+  if (selectedBookId) {
+    if (receiveBookSave(payload)) return;
+    const loaded = parseBookReply(payload, "book-startup");
+    if (loaded) {
+      if (loaded.state === "ok" && "document" in loaded) {
+        void initializeStructuredBook(loaded);
+      } else {
+        report("Buch konnte nicht geladen werden: " + loaded.state);
+      }
+    }
     return;
   }
   const response = parseDocumentResponse(payload);
@@ -703,9 +864,26 @@ backupButton?.addEventListener("click", () => {
   postRequest(JSON.stringify({ version: 1, type: "open-backup", requestId: "backup-open" }));
 });
 saveButton?.addEventListener("click", () => {
+  if (activeManuscript) { void flushBook(); return; }
   pendingSave = true;
   void saveCurrentDocument();
 });
+closeBookButton?.addEventListener("click", () => { void closeStructuredBook(); });
+window.addEventListener("pagehide", () => {
+  if (activeManuscript?.queue.dirty) void activeManuscript.queue.flush();
+});
+window.smutBook = {
+  getMode: () => selectedBookId ? "book" : "prototype",
+  getBookId: () => selectedBookId,
+  getChapterId: () => activeManuscript?.chapterId ?? null,
+  getText: () => activeManuscript && editor
+    ? editor.command.getValue().data.main.map(x => x.value).join("") : "",
+  getPosition: () => activeManuscript?.position ?? null,
+  getRevision: () => activeManuscript?.queue.currentRevision ?? null,
+  isDirty: () => activeManuscript?.queue.dirty ?? false,
+  save: flushBook,
+  close: closeStructuredBook,
+};
 window.smutPrototype = {
   getText: () => editor?.command.getValue().data.main.map(x => x.value).join("") ?? "",
   getSavedStatus: () => editorStatus?.textContent ?? null,

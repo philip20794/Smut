@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.WebView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,9 +30,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-internal fun SmutStartScreen(bookId: String? = null) {
+internal fun SmutStartScreen(bookId: String? = null, onWebView: (WebView) -> Unit = {}) {
     val context = LocalContext.current
     val webView = remember(context, bookId) { createEditorWebView(context, bookId) }
+    androidx.compose.runtime.SideEffect { onWebView(webView) }
     DisposableEffect(webView) {
         onDispose {
             webView.removeJavascriptInterface("SmutAndroid")

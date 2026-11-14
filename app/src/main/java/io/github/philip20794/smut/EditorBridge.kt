@@ -57,6 +57,14 @@ internal class EditorBridge(private val webView: WebView, private val activeBook
                 request is BridgeRequest.Save)) return
         val response = when (request) {
             is BridgeRequest.Ready -> BridgeProtocol.ack(request.requestId)
+            is BridgeRequest.CloseBook -> {
+                webView.post {
+                    if (activeBook != null && webView.url == EDITOR_URL) {
+                        (webView.context as? Activity)?.finish()
+                    }
+                }
+                BridgeProtocol.ack(request.requestId)
+            }
             is BridgeRequest.OpenBackup -> {
                 webView.post {
                     val activity = webView.context as? Activity
@@ -126,6 +134,7 @@ internal class EditorBridge(private val webView: WebView, private val activeBook
 internal sealed class BridgeRequest(open val requestId: String) {
     data class Ready(override val requestId: String) : BridgeRequest(requestId)
     data class OpenBackup(override val requestId: String) : BridgeRequest(requestId)
+    data class CloseBook(override val requestId: String) : BridgeRequest(requestId)
     data class Load(override val requestId: String) : BridgeRequest(requestId)
     data class Save(override val requestId: String, val document: JSONObject) : BridgeRequest(requestId)
     data class PdfProbe(override val requestId: String, val base64: String) : BridgeRequest(requestId)
@@ -149,6 +158,7 @@ internal object BridgeProtocol {
         return when (json.optString("type")) {
             "ready" -> if (json.length() == 3) BridgeRequest.Ready(requestId) else null
             "open-backup" -> if (json.length() == 3) BridgeRequest.OpenBackup(requestId) else null
+            "close-book" -> if (json.length() == 3) BridgeRequest.CloseBook(requestId) else null
             "load" -> if (json.length() == 3) BridgeRequest.Load(requestId) else null
             "save-pdf-probe" -> {
                 if (json.length() != 6) return null

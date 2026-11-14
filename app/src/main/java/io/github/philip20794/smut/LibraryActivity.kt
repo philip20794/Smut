@@ -248,12 +248,15 @@ class LibraryActivity : ComponentActivity() {
     }
 
     private fun refresh() {
+        val openedId = selected?.id
         worker.execute {
             val result = runCatching { store.listEntries() }
+            val latestOpened = openedId?.let { (store.load(it) as? BookLoad.Found)?.let(::summary) }
             runOnUiThread {
                 if (!isFinishing && !isDestroyed && !busy) {
                     if (result.isSuccess) {
                         books = result.getOrThrow()
+                        if (selected?.id == openedId && latestOpened != null) selected = latestOpened
                         if (status == "Lokale Bücher werden geladen …") status = "Alle Bücher bleiben offline auf diesem Gerät."
                     } else status = "Bücherliste konnte nicht geladen werden."
                 }
