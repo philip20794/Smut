@@ -108,6 +108,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 - **Rand-Autoscroll am Dokumentende (14.11.2026):** [Commit 9925897](https://github.com/philip20794/Smut/commit/99258977c39125d2e849ac8dc834c0a293cbbd18) stoppt die requestAnimationFrame-Schleife zusätzlich dann, wenn `window.scrollBy` wegen oberer/unterer Dokumentgrenze keine Scrollposition mehr verändert. Ein späteres `touchmove` kann sie erneut starten. **CI für diesen Commit noch nicht bestätigt.** E-03 bleibt `IN_PROGRESS` (8/35); als Nächstes CI einschließlich Emulator-Fokus-Recovery prüfen und anschließend mobile Auswahlgriffe implementieren.
 
+- **Touch-Ende außerhalb des Editors (14.11.2026):** [Commit af9c9ff](https://github.com/philip20794/Smut/commit/af9c9ffdcf8f2d662399f49c20d64f65a14bc96c) verlagert die Beendigung der nativen Auswahlgeste auf `window`-weite `touchend`-/`touchcancel`-Listener. Damit wird die Auswahl-RAF-Schleife auch beim Loslassen über der Toolbar oder außerhalb des Editor-Containers beendet; bei `touchend` nur wenn keine Finger mehr aufliegen. **CI noch nicht bestätigt.** E-03 bleibt `IN_PROGRESS` (8/35). Als Nächstes Emulator-Gestentest für das Loslassen außerhalb des Editors ergänzen und CI prüfen; danach Auswahlgriffe.
+
 ## 6. Aktualisierungsregeln
 
 1. Vor der Arbeit die aktuelle Version auf `main` und die GitHub-Actions-Läufe prüfen; bei Abweichung zwischen Tracker und Code/CI zuerst **reconciliieren**.
