@@ -72,7 +72,7 @@ let caretVisibilityFrame = 0;
  * an input is committed, or Canvas Editor updates its caret position.
  */
 function keepCaretVisible(): void {
-  if (!container || !editor || isNativeSelectionDrag) return;
+  if (!container || !editor || isNativeSelectionDrag || document.hidden || !document.hasFocus()) return;
   const input = container.querySelector<HTMLTextAreaElement>(".ce-inputarea");
   const caret = container.querySelector<HTMLElement>(".ce-cursor");
   if (!input || document.activeElement !== input || !caret
@@ -89,6 +89,7 @@ function keepCaretVisible(): void {
 }
 
 function scheduleCaretVisibility(): void {
+  if (document.hidden || !document.hasFocus()) return;
   if (caretVisibilityFrame) cancelAnimationFrame(caretVisibilityFrame);
   caretVisibilityFrame = requestAnimationFrame(() => {
     // Canvas Editor updates its canvas/caret after its own IME event handler.
@@ -98,6 +99,19 @@ function scheduleCaretVisibility(): void {
     });
   });
 }
+
+function cancelCaretVisibility(): void {
+  if (caretVisibilityFrame) cancelAnimationFrame(caretVisibilityFrame);
+  caretVisibilityFrame = 0;
+}
+
+// Android can suspend the WebView while a delayed caret update is queued.
+// Never let a stale animation frame scroll the document after app switching.
+window.addEventListener("blur", cancelCaretVisibility);
+window.addEventListener("pagehide", cancelCaretVisibility);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) cancelCaretVisibility();
+});
 
 container?.addEventListener("input", scheduleCaretVisibility, true);
 container?.addEventListener("compositionend", scheduleCaretVisibility, true);
