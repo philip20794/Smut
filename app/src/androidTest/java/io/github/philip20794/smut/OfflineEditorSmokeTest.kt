@@ -500,6 +500,19 @@ class OfflineEditorSmokeTest {
                 "Native edge drag must scroll and extend range: scroll=$scrollBefore -> $scrollAfter; range=$selectionLength",
                 scrollAfter > scrollBefore + 8 && selectionLength > 85
             )
+            // Touch release must terminate the requestAnimationFrame loop.
+            // A stray loop would keep moving the page after the finger lifts.
+            awaitJavaScriptValue(
+                "window.smutPrototype?.isSelectionDragActive()",
+                "false", exact = true
+            )
+            val settledScroll = evaluate("window.scrollY").toDouble()
+            SystemClock.sleep(350L)
+            val scrollAfterRelease = evaluate("window.scrollY").toDouble()
+            assertTrue(
+                "Selection autoscroll must stop on native touchend: $settledScroll -> $scrollAfterRelease",
+                kotlin.math.abs(scrollAfterRelease - settledScroll) < 2.0
+            )
             assertEquals("Gesture must not mutate manuscript fixture", "true",
                 evaluate("window.smutPrototype?.getText()?.includes('Absatz 75')"))
         } finally {
