@@ -820,7 +820,10 @@ class OfflineEditorSmokeTest {
                 throw AssertionError("E-04 PDF probe failed: $diagnosis; ${failure.message}", failure)
             }
             val pages = evaluate("window.smutPrototype?.getPdfProbeStatus()?.pdfPages").toInt()
+            val editorPages = evaluate("window.smutPrototype?.getPdfProbeStatus()?.editorPages").toInt()
             assertTrue("Exporter must create more than one PDF page", pages >= 2)
+            assertEquals("PDF and edit view must paginate the same A5 fixture",
+                editorPages, pages)
             scenarioRule.scenario.onActivity { activity ->
                 val pdf = java.io.File(activity.filesDir, "e04-a5-probe.pdf")
                 assertTrue("Locally saved PDF probe is missing", pdf.isFile && pdf.length() > 100)
