@@ -8,7 +8,7 @@
 - **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04, P2 sowie P3 B-01/B-02 abgeschlossen; native Bücher- und Kapitelverwaltung mit revisionssicherer Speicherung, B-03 als Nächstes. Der A5-Prototyp nutzt bis W-01 weiterhin sein separates Legacy-Format.
 - **Meilenstein:** `P3 – Bücher und Kapitel` (durch vollständiges P2-Gate freigegeben).
 - **Letzte abgeschlossene Aufgabe:** `B-02 DONE` – Kapitelverwaltung, Änderung der Reihenfolge, aktive Kapitel-Navigation, Revisionskontrolle und Löschbestätigung; [B02_CHAPTER_MANAGEMENT.md](B02_CHAPTER_MANAGEMENT.md), vollständige [CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709) grün.
-- **Nächste ausführbare Aufgabe:** `B-03 TODO` – letzte Cursor-/Scroll-/Kapitelposition beim Wiederöffnen wiederherstellen, klare Zurück-Navigation und reduziertes Buchmenü; End-to-End-Tests. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
+- **Nächste ausführbare Aufgabe:** `B-03 IN_PROGRESS` – letzte Cursor-/Scroll-/Kapitelposition beim Wiederöffnen wiederherstellen, klare Zurück-Navigation und reduziertes Buchmenü; End-to-End-Tests. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
 - **Abgeschlossene Aufgaben:** **16 / 35 (45,7 %)**; nur `DONE` zählt.
 - **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709), Commit [da2678b](https://github.com/philip20794/Smut/commit/da2678bbf93aa43196e5a5bc350f258cec17616c): TypeScript, Kotlin-Unit/Lint/APK, Offline-Emulator inklusive B-02-Kapiteltests, bestehender B-01/D-04/Editor-Tests sowie E-04-PDF-Probe vollständig erfolgreich.
 - **Letzte geprüfte APK:** `smut-tested-dev-da2678bbf93aa43196e5a5bc350f258cec17616c` aus [CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709), verfügbar bis 14.12.2026; PDF-Probe `smut-e04-a5-pdf-probe-da2678bbf93aa43196e5a5bc350f258cec17616c`. **Kein echter Smartphone-Test.**
@@ -50,7 +50,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P2 | D-04 | DONE | [Code 1386ce4](https://github.com/philip20794/Smut/commit/1386ce4a9fa676bad8b533d28ad6d1d5c48d9811), [CI 43592192732](https://github.com/philip20794/Smut/actions/runs/43592192732) grün (SAF-ContentResolver, SHA-256, Export–Löschen–Import, Konflikte, parallele Zugriffe, bestehende Editor-/PDF-Tests); [D04-Vertrag](D04_BACKUP.md) |
 | P3 | B-01 | DONE | [Code/Tests fcf7642](https://github.com/philip20794/Smut/commit/fcf7642272d0ec716b57bd83dce67c2916377359), [vollständige CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969) grün: native Buchliste, CRUD, Bestätigungsabbruch, eindeutige IDs, Room-/Datei-Neustart, Lösch-Recovery; [B-01-Doku](B01_BOOK_LIBRARY.md) |
 | P3 | B-02 | DONE | [Code/Test-Fix da2678b](https://github.com/philip20794/Smut/commit/da2678bbf93aa43196e5a5bc350f258cec17616c), [vollständige CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709) grün: Kapitel CRUD, Reorder, Navigation, Emoji-Cursoranker, Revisionskonflikte, lange Kapitel, UI-Abbruch/Bestätigung, Neustart; [B-02-Doku](B02_CHAPTER_MANAGEMENT.md) |
-| P3 | B-03 | TODO | – |
+| P3 | B-03 | IN_PROGRESS | Umsetzung: Wiederaufnahme der gespeicherten Position, gültige Anker bei veralteter Position, Zurück-Taste/Buchmenü und Android-End-to-End-Test; CI ausstehend. |
 | P4 | W-01 | TODO | – |
 | P4 | W-02 | TODO | – |
 | P4 | W-03 | TODO | – |
@@ -85,6 +85,12 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### B-03 IN_PROGRESS – 14.11.2026
+
+- Begonnen: Positionsanker bei altem Kapitel/Block robust wiederherstellen, gespeicherte Textstelle in der nativen Leseansicht sichtbar machen, klare System-Zurück-Navigation und schlankes Buchmenü.
+- Nächste Prüfung: instrumentierte Android-Tests für Schließen, erneutes Öffnen, Activity-Neustart, Position/Fallback und Navigation. `DONE` erst nach vollständig grünem Pflicht-CI-Lauf mit APK; `E-05` bleibt echter Smartphone-Test.
+
 
 ### Aktuelle Übergabe – B-02 DONE / B-03 als nächstes (14.11.2026)
 
