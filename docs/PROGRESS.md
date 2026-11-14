@@ -5,27 +5,27 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-14.
-- **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04 und P2 D-01/D-02 abgeschlossen; Canvas Editor 1.1.0 + lokaler PDF-Prototyp 0.8.0 bestätigt. Persistenz, Buchverwaltung und druckreifer PDF-Export folgen in P2–P5.
+- **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04 und P2 D-01 bis D-03 abgeschlossen; Canvas Editor 1.1.0 + lokaler PDF-Prototyp 0.8.0 bestätigt. Buchverwaltung, portables Backup und druckreifer PDF-Export folgen in P2–P5.
 - **Meilenstein:** `P2 – Dokumentmodell und Datensicherheit` (technische Arbeit freigegeben).
-- **Letzte abgeschlossene Aufgabe:** `D-02 DONE`: unveränderliche Insert/Delete/Replace/Split/Merge/Format-Operationen, graphemsichere Textanker, Auswahlabbildung und begrenzte Undo-/Redo-History mit automatisierten Tests. Siehe [D02_EDIT_OPERATIONS.md](D02_EDIT_OPERATIONS.md).
-- **Aktive Aufgabe:** `D-03 IN_PROGRESS` – Room-Index, atomare Buchdateien, Autosave und Crash-Recovery für das versionierte Modell werden über GitHub CI geprüft. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
-- **Abgeschlossene Aufgaben:** **12 / 35 (34,3 %)**; nur `DONE` zählt.
-- **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130), Commit [a7df11d](https://github.com/philip20794/Smut/commit/a7df11d282226e82cbda4336086ff9a7ee383aef): TypeScript-Typecheck, Lint, Node-Tests einschließlich D-02, Kotlin/Lint/APK, API-35-Offline-Emulator einschließlich E-04-PDF und geprüfte APK.
-- **Letzte geprüfte APK:** `smut-tested-dev-a7df11d282226e82cbda4336086ff9a7ee383aef` aus [CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130); PDF-Testartefakt `smut-e04-a5-pdf-probe-a7df11d282226e82cbda4336086ff9a7ee383aef`. Beide bis 14.12.2026 verfügbar. **Kein echter Smartphone-Test.**
+- **Letzte abgeschlossene Aufgabe:** `D-03 DONE`: versionierte und prüfsummengesicherte AtomicFile-Buchdaten, Room-Index, Autosave-Warteschlange und Crash-/Korruptions-Recovery. Native Speicherung und Emulator-/TypeScript-Tests geprüft. Siehe [D03_PERSISTENCE.md](D03_PERSISTENCE.md).
+- **Nächste ausführbare Aufgabe:** `D-04 TODO` – portables Buch-Backup, Integritätsprüfung und sicherer Import. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
+- **Abgeschlossene Aufgaben:** **13 / 35 (37,1 %)**; nur `DONE` zählt.
+- **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623), Commit [bfd2c82](https://github.com/philip20794/Smut/commit/bfd2c82e085844930bd5490924186c5f287bc8c0): TypeScript-Typecheck/Lint/Unit inklusive Autosave, Kotlin-Unit/Android-Lint/APK, API-35-Emulator inklusive D-03-Wiederherstellung und E-04-PDF-Probe vollständig erfolgreich.
+- **Letzte geprüfte APK:** `smut-tested-dev-bfd2c82e085844930bd5490924186c5f287bc8c0` aus [CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623), bis 14.12.2026 verfügbar. PDF-Probe `smut-e04-a5-pdf-probe-bfd2c82e085844930bd5490924186c5f287bc8c0`. **Kein echter Smartphone-Test.**
 - **Letztes Release:** keines; signierte Releases stehen aus.
 - **Technische Entscheidung:** **GO** für die offlinefähige Prototyp-Architektur; **kein druckfertiges Benutzer-PDF**: problematische Worttrennungen/Blocksatz, nur PDF-Standardfonts ohne eingebettete lokale Buchschrift, fehlender Zeilen-Goldenvergleich und noch keine anwenderseitige Export-UI. Das sind Pflichtpunkte für P5 L-01 bis L-04, ggf. Engine-Fallback bei Nichterfüllung.
-- **Nutzeraktion:** E-05 auf realem Smartphone (später); keine Aktion für D-03 notwendig.
+- **Nutzeraktion:** E-05 auf realem Smartphone (später); D-04 kann ohne Nutzerhardware begonnen werden.
 
 ## 2. Verbindlicher nächster Schritt
 
-**D-03 – Lokale Speicherung, Autosave und Recovery** nach D-01 und dem vollständig getesteten D-02.
+**D-04 – Portables Buch-Backup und Migration** nach grün abgenommenem D-03.
 
-1. Room-Metadaten und versionierte Buch-/Kapiteldateien in privatem Android-Speicher mit atomaren Schreibvorgängen entwerfen.
-2. Autosave und Wiederherstellung nach App-/Prozessabbruch sowie Rückkehr zum letzten Buch, Kapitel und der letzten Cursorposition umsetzen.
-3. Unterbrochene Writes, beschädigte Daten und Speicherfehler automatisiert testen. Kein stiller Verlust produktiver E-02-Daten bei der Migration.
-4. Sämtliche Pflichtchecks einschließlich Emulator grün nachweisen; erst dann D-03 auf `DONE` setzen. `E-05` bleibt ein separater echter Gerätetest.
+1. Formatversioniertes Backup/Restore über Android Storage Access Framework, ohne bestehende Buchdateien still zu überschreiben.
+2. SHA-256-Integrität, Grenzen gegen manipulierte oder zu große Archive, eindeutige Buch-/Kapitel-IDs und klare Konfliktbehandlung.
+3. Test Export → Löschen der Testkopie → Import → identischer Inhalt; defekte Backups sicher abweisen.
+4. Vollständige CI einschließlich Emulator grün nachweisen. Die bisherige E-02-Canvas-Datei bei Migration geschützt lassen.
 
-**Letzte vollständige grüne Codeprüfung:** [CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130) für D-02, [Commit a7df11d](https://github.com/philip20794/Smut/commit/a7df11d282226e82cbda4336086ff9a7ee383aef).
+**Letzte vollständige grüne Codeprüfung:** [CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623) für D-03, [Commit bfd2c82](https://github.com/philip20794/Smut/commit/bfd2c82e085844930bd5490924186c5f287bc8c0). D-03-Datenschicht ist implementiert, aber noch nicht in die Benutzeroberfläche integriert (W-01). E-05 bleibt echte Smartphone-Abnahme.
 
 ## 3. Task-Tracker
 
@@ -46,7 +46,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P1 | E-05 | BLOCKED | MANUAL: tatsächliche Bedienungs- und PDF-Sichtprüfung auf einem Android-Smartphone benötigt. Keine Emulator-Simulation als Freigabe. D-01 parallel möglich. |
 | P2 | D-01 | DONE | [Code 512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38), [vollständige CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353) grün (TS/Lint/Unit, Kotlin/Lint/APK, Emulator/PDF), [Modell-/Migrationsvertrag](D01_DOCUMENT_MODEL.md) |
 | P2 | D-02 | DONE | [Code a7df11d](https://github.com/philip20794/Smut/commit/a7df11d282226e82cbda4336086ff9a7ee383aef), [CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130) vollständig grün (Editor-Typecheck, Node-Unit, Kotlin/Lint/APK, Emulator und PDF-Probe); [Abnahmevertrag](D02_EDIT_OPERATIONS.md) |
-| P2 | D-03 | IN_PROGRESS | [Implementierungs- und Testvertrag](D03_PERSISTENCE.md); CI-Prüfung ausstehend |
+| P2 | D-03 | DONE | [Code bfd2c82](https://github.com/philip20794/Smut/commit/bfd2c82e085844930bd5490924186c5f287bc8c0), [CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623) vollständig grün (Room, AtomicFile, Revisionsschutz, Emulator-Crash-/Recovery-Tests und Autosave-Node-Tests); [D03-Vertrag](D03_PERSISTENCE.md) |
 | P2 | D-04 | TODO | – |
 | P3 | B-01 | TODO | – |
 | P3 | B-02 | TODO | – |
@@ -75,7 +75,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | --- | --- | --- | --- |
 | P0 | 6/6 | Build, CI, Emulator-Smoke und Test-APK | **erfüllt** |
 | P1 | 4/5 | E-01…E-04 GO, echter Gerätetest E-05 separat | **GO für D-01; E-05 offen** |
-| P2 | 2/4 | Modell, Operationen, sichere Persistenz, Backup | **D-01 und D-02 erfüllt; D-03 als nächstes** |
+| P2 | 3/4 | Modell, Operationen, sichere Persistenz, Backup | **D-01 bis D-03 erfüllt; D-04 als nächstes** |
 | P3 | 0/3 | Bücher-/Kapitelverwaltung | offen |
 | P4 | 0/5 | Direktbearbeitung und Textfunktionen | offen |
 | P5 | 0/4 | A5-Satz und textbasierter PDF-Export | offen |
@@ -85,6 +85,14 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### Aktuelle Übergabe – D-03 DONE / D-04 als nächstes (14.11.2026)
+
+- **D-03 DONE:** [Code bfd2c82](https://github.com/philip20794/Smut/commit/bfd2c82e085844930bd5490924186c5f287bc8c0), [CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623) vollständig grün. Room-Index ist nach Dateischreibvorgängen rekonstruierbar; Buchdaten werden atomar versioniert mit SHA-256 und letzter gültiger Rückfallkopie gespeichert.
+- **Prüfung:** TypeScript-Autosave-Tests, Kotlin-Bridge-Unit-Tests, Android-Emulatorfälle für Neustart, Dateikorruption, unterbrochenen Write, Revisionskonflikte, Indexreparatur und Legacy-Datenschutz. Die komplette bisherige WebView-/PDF-Regression bleibt grün.
+- **APK:** `smut-tested-dev-bfd2c82e085844930bd5490924186c5f287bc8c0` in [CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623). D-03 ist derzeit eine getrennte Modell-/Speicherschicht. Die sichtbare Android-Oberfläche verwendet weiterhin den Canvas-Prototyp; die produktive Anbindung kommt mit W-01.
+- **Nächster Schritt:** D-04 – versioniertes Buch-Backup mit Android-Dateiauswahl, Importintegrität und Rundreisetests. Die E-02-Prototypdatei bleibt bis zu einer geprüften Migration unverändert. E-05 weiterhin `BLOCKED` bis zur echten Geräteabnahme.
+
 
 ### D-03 – Implementierung in CI-Prüfung (14.11.2026)
 

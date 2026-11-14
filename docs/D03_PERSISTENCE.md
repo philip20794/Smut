@@ -1,6 +1,6 @@
 # D-03 – lokale Buchpersistenz, Autosave und Recovery
 
-Status: IN_PROGRESS, 14.11.2026. D-02 ist die Grundlage. Erst die vollständige Pflicht-CI darf D-03 abschließen.
+Status: DONE, 14.11.2026. [Code bfd2c82](https://github.com/philip20794/Smut/commit/bfd2c82e085844930bd5490924186c5f287bc8c0), vollständige [Smut CI 43589383623](https://github.com/philip20794/Smut/actions/runs/43589383623) erfolgreich (Editor- und Android-Tests, Offline-Emulator und PDF-Regression). D-02 ist die Grundlage; die Oberflächenintegration bleibt W-01.
 
 ## Persistenzvertrag
 
