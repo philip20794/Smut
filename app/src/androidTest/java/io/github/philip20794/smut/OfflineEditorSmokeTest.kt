@@ -741,6 +741,60 @@ class OfflineEditorSmokeTest {
         }
     }
 
+    /**
+     * E-03: the user must be able to drag the visible END selection grip using
+     * a real Android touch. The test neither injects a JS range nor weakens
+     * existing long-press / multi-page coverage.
+     */
+    @Test
+    fun nativeSelectionHandleDragExtendsWordSelectionWithoutModifyingText() {
+        awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)
+        ensureEditorWindowFocused()
+        val original = evaluate("window.smutPrototype?.getText()")
+        selectWordByNativeLongPress()
+        awaitJavaScriptValue(
+            "window.smutPrototype?.getSelectionHandles()?.end",
+            "true", exact = true
+        )
+        val before = evaluate(
+            "window.smutPrototype?.getSelection()?.endIndex - window.smutPrototype?.getSelection()?.startIndex"
+        ).toInt()
+        val x = evaluate(
+            "(() => { const r=document.querySelector('.smut-selection-handle--end')?.getBoundingClientRect(); return r ? r.left + r.width/2 : -1; })()"
+        ).toDouble()
+        val y = evaluate(
+            "(() => { const r=document.querySelector('.smut-selection-handle--end')?.getBoundingClientRect(); return r ? r.top + r.height/2 : -1; })()"
+        ).toDouble()
+        assertTrue("Selection end grip must be on screen", x >= 0 && y >= 0)
+        assertEquals("Grip must own the native finger target", "true", evaluate(
+            "document.elementFromPoint($x,$y)?.classList.contains('smut-selection-handle')"
+        ))
+        val viewportWidth = evaluate("window.innerWidth").toDouble()
+        var startX = -1
+        var startY = -1
+        var endX = -1
+        var endY = -1
+        scenarioRule.scenario.onActivity { activity ->
+            val webView = findWebView(activity.window.decorView)!!
+            val origin = IntArray(2)
+            webView.getLocationOnScreen(origin)
+            val ratio = webView.width / viewportWidth
+            startX = origin[0] + (x * ratio).toInt()
+            startY = origin[1] + (y * ratio).toInt()
+            endX = origin[0] + ((x + 70) * ratio).toInt()
+            endY = origin[1] + ((y + 48) * ratio).toInt()
+        }
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        assertTrue("Native selection grip touch must dispatch",
+            device.drag(startX, startY, endX, endY, 70))
+        val after = evaluate(
+            "window.smutPrototype?.getSelection()?.endIndex - window.smutPrototype?.getSelection()?.startIndex"
+        ).toInt()
+        assertTrue("End grip should extend range: before=$before after=$after", after > before)
+        assertEquals("Dragging a grip must not modify manuscript",
+            original, evaluate("window.smutPrototype?.getText()"))
+    }
+
     @Test
     fun longGermanManuscriptFlowsAcrossA5PagesWithoutChangingSavedBook() {
         awaitJavaScriptValue("window.smutPrototype?.isLoaded()", "true", exact = true)

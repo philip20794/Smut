@@ -24,3 +24,7 @@ Stand: 13.11.2026. Status: **IN_PROGRESS**, keinesfalls bereits vollständiges E
 - Dokumentierte und reproduzierbare Einschränkungen; ggf. begründeter Fallback auf eine andere Editorengine.
 
 Prüfbeleg: [Smut CI 43497267481, Versuch 2](https://github.com/philip20794/Smut/actions/runs/43497267481) vollständig grün: TypeScript, Kotlin, Android-Lint, **zehn** instrumentierte API-35-Emulatortests und geprüfte APK. Native Seiten-Drag-Auswahl und sichtbarer Cursor beim Tippen mit geöffneter Tastatur nachgewiesen; Auswahlgriffe, Rand-Autoscroll-Geste und kombinierte Zoom-/IME-Szenarien noch offen. Echter Smartphone-Test erst E-05.
+
+## Entwicklung 14.11.2026 – mobile Auswahlgriffe
+
+Die Auswahl wird mit zwei separaten 44-Pixel-Touchzielen am realen Anfang/Ende der Textmarkierung ausgestattet. Positionen kommen aus der Engine (`getRangeContext`), werden anhand tatsächlich gezeichneter Seiten gegen den aktuellen Zoom abgeglichen und bei Scrollen/IME/Zoom aktualisiert. Beim Ziehen bleibt jeweils die Gegenseite verankert; die Editorbibliothek selbst übernimmt Trefferposition und Erweiterung der Range. Ein neuer Android-Instrumentierungstest prüft den echten Fingerzug am Endgriff. **Noch keine Freigabe ohne neuen grünen CI-Nachweis und echten Smartphone-Test.**

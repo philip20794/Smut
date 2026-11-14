@@ -1,6 +1,7 @@
 import { DEFAULT_ZOOM, MIN_ZOOM, MAX_ZOOM, nextZoom, formatZoom } from "./zoom.js";
 import { caretScrollDelta } from "./caret-visibility.js";
 import { selectionEdgeScrollDelta } from "./selection-edge-scroll.js";
+import { selectionGripPoint, type GripPoint, type SelectionEdge, type SelectionRect } from "./selection-handles.js";
 import { createReadyMessage, parseReadyAck } from "./bridge.js";
 import {
   INITIAL_DOCUMENT, createDocumentRequest, isPrototypeData, parseDocumentResponse,
@@ -15,11 +16,14 @@ interface CanvasEditor {
     getValue(): { data: PrototypeData };
     getRange(): { startIndex: number; endIndex: number } | null;
     getRangeText(): unknown;
+    getRangeContext(): { startPageNo: number; endPageNo: number; rangeRects: SelectionRect[] } | null;
+    getOptions(): { height: number; pageGap: number };
+    executeSetRange(startIndex: number, endIndex: number): void;
     executeSelectAll(): void;
     executePageScale(scale: number): void;
     executeSetValue(data: Partial<PrototypeData>): void;
   };
-  listener: { contentChange?: () => void };
+  listener: { contentChange?: () => void; rangeStyleChange?: () => void };
 }
 interface CanvasEditorModule {
   default: new (
@@ -39,6 +43,7 @@ declare global {
       getPageCount(): number;
       getSelection(): { startIndex: number; endIndex: number; hasSelection: boolean; text: string } | null;
       isSelectionDragActive(): boolean;
+      getSelectionHandles(): { start: boolean; end: boolean; dragging: SelectionEdge | null };
       selectAllTestFixture(): boolean;
       setPageTestFixture(enabled: boolean): void;
     };
@@ -133,6 +138,7 @@ function adjustZoom(direction: -1 | 1): void {
   editor.command.executePageScale(zoom);
   currentZoom = zoom;
   updateZoomControls();
+  scheduleSelectionHandles();
   scheduleCaretVisibility();
 }
 
@@ -199,6 +205,205 @@ let selectionDragPoint: { x: number; y: number } | null = null;
 let selectionScrollFrame = 0;
 let selectionReleaseFrame = 0;
 
+type GripDrag = {
+  side: SelectionEdge;
+  fixedIndex: number;
+  initialStart: number;
+  initialEnd: number;
+  fingerX: number;
+  fingerY: number;
+  origin: GripPoint;
+  currentX: number;
+  currentY: number;
+  moved: boolean;
+};
+let activeGrip: GripDrag | null = null;
+let selectionHandleFrame = 0;
+const selectionHandles: Partial<Record<SelectionEdge, HTMLButtonElement>> = {};
+const gripPositions: Partial<Record<SelectionEdge, GripPoint>> = {};
+
+function hideSelectionHandles(): void {
+  for (const side of ["start", "end"] as const) {
+    if (selectionHandles[side]) selectionHandles[side]!.hidden = true;
+    delete gripPositions[side];
+  }
+}
+
+/**
+ * Range geometry comes from the editor (not guessed character widths).
+ * Keep the 44 px grip targets fixed in the WebView viewport and hide them
+ * when their actual selected-text endpoint is scrolled off screen.
+ */
+function refreshSelectionHandles(): void {
+  if (activeGrip) return;
+  if (!editor || !window.SmutAndroid || document.hidden) {
+    hideSelectionHandles();
+    return;
+  }
+  const range = editor.command.getRange();
+  const context = editor.command.getRangeContext();
+  const rects = context?.rangeRects;
+  if (!context || !rects?.length || range.startIndex < 0 ||
+      range.endIndex <= range.startIndex) {
+    hideSelectionHandles();
+    return;
+  }
+  ensureSelectionHandles();
+  const pages = Array.from(container?.querySelectorAll<HTMLCanvasElement>(
+    ".ce-page-container canvas") ?? []);
+  const { height, pageGap } = editor.command.getOptions();
+  const visual = window.visualViewport;
+  const top = Math.max(0, visual?.offsetTop ?? 0);
+  const bottom = Math.min(window.innerHeight, top + (visual?.height ?? window.innerHeight));
+  for (const side of ["start", "end"] as const) {
+    const pageNo = side === "start" ? context.startPageNo : context.endPageNo;
+    const rect = side === "start" ? rects[0] : rects[rects.length - 1];
+    const canvas = pages[pageNo];
+    const grip = selectionHandles[side]!;
+    const point = selectionGripPoint(rect, pageNo, side,
+      canvas?.getBoundingClientRect(), height, pageGap);
+    if (!point || point.y < top + 12 || point.y > bottom - 12 ||
+        point.x < 12 || point.x > window.innerWidth - 12) {
+      grip.hidden = true;
+      delete gripPositions[side];
+      continue;
+    }
+    gripPositions[side] = point;
+    grip.style.left = `${point.x - 22}px`;
+    grip.style.top = `${point.y - 22}px`;
+    grip.hidden = false;
+  }
+}
+
+function scheduleSelectionHandles(): void {
+  if (selectionHandleFrame) return;
+  selectionHandleFrame = requestAnimationFrame(() => {
+    selectionHandleFrame = 0;
+    refreshSelectionHandles();
+  });
+}
+
+/** Nearest visible page to the finger; same guard as the native page drag. */
+function nearestCanvas(x: number, y: number): { canvas: HTMLCanvasElement; rect: DOMRect } | null {
+  if (!container) return null;
+  let target: HTMLCanvasElement | null = null;
+  let targetRect: DOMRect | null = null;
+  let distance = Number.POSITIVE_INFINITY;
+  for (const canvas of Array.from(container.querySelectorAll<HTMLCanvasElement>(
+    ".ce-page-container canvas"))) {
+    const r = canvas.getBoundingClientRect();
+    if (!r.width || !r.height || r.bottom < 0 || r.top > window.innerHeight) continue;
+    const dx = Math.max(r.left - x, 0, x - r.right);
+    const dy = Math.max(r.top - y, 0, y - r.bottom);
+    const candidate = Math.hypot(dx, dy);
+    if (candidate < distance) {
+      target = canvas;
+      targetRect = r;
+      distance = candidate;
+    }
+  }
+  return target && targetRect && distance <= 96
+    ? { canvas: target, rect: targetRect } : null;
+}
+
+function beginGripDrag(event: TouchEvent, side: SelectionEdge): void {
+  if (!editor || event.touches.length !== 1 || activeGrip) return;
+  const touch = event.touches.item(0);
+  const point = gripPositions[side];
+  if (!touch || !point) return;
+  const target = nearestCanvas(point.textX, point.textY);
+  if (!target) return;
+  event.preventDefault();
+  event.stopPropagation();
+  cancelSelectionReleaseGuard();
+  stopNativeSelectionDrag();
+  const original = editor.command.getRange();
+  const fixedIndex = side === "start" ? original.endIndex : original.startIndex;
+  activeGrip = {
+    side,
+    fixedIndex,
+    initialStart: original.startIndex,
+    initialEnd: original.endIndex,
+    fingerX: touch.clientX,
+    fingerY: touch.clientY,
+    origin: point,
+    currentX: point.textX,
+    currentY: point.textY,
+    moved: false,
+  };
+  // Collapse the old selection so Canvas Editor doesn't mistake a grip press
+  // for dragging the highlighted text. Shift-mousedown retains the opposite
+  // end as the anchor, then its existing mousemove logic owns all hit-testing.
+  editor.command.executeSetRange(fixedIndex, fixedIndex);
+  target.canvas.dispatchEvent(new MouseEvent("mousedown", {
+    bubbles: true, cancelable: true, view: window, button: 0, buttons: 1,
+    shiftKey: true, clientX: point.textX, clientY: point.textY,
+  }));
+  isNativeSelectionDrag = true;
+}
+
+function moveGripDrag(event: TouchEvent): void {
+  if (!activeGrip) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (event.touches.length !== 1) return;
+  const touch = event.touches.item(0);
+  if (!touch) return;
+  activeGrip.currentX = activeGrip.origin.textX + touch.clientX - activeGrip.fingerX;
+  activeGrip.currentY = activeGrip.origin.textY + touch.clientY - activeGrip.fingerY;
+  activeGrip.moved = activeGrip.moved ||
+    Math.hypot(touch.clientX - activeGrip.fingerX, touch.clientY - activeGrip.fingerY) > 5;
+  selectionDragPoint = { x: activeGrip.currentX, y: activeGrip.currentY };
+  forwardNativeSelectionDrag(activeGrip.currentX, activeGrip.currentY);
+  if (!selectionScrollFrame) selectionScrollFrame = requestAnimationFrame(autoScrollSelection);
+}
+
+function finishGripDrag(event?: TouchEvent): void {
+  if (!activeGrip) return;
+  event?.preventDefault();
+  event?.stopPropagation();
+  const grip = activeGrip;
+  activeGrip = null;
+  const target = nearestCanvas(grip.currentX, grip.currentY);
+  target?.canvas.dispatchEvent(new MouseEvent("mouseup", {
+    bubbles: true, cancelable: true, view: window, button: 0,
+    clientX: grip.currentX, clientY: grip.currentY,
+  }));
+  stopNativeSelectionDrag();
+  if (!grip.moved) editor?.command.executeSetRange(grip.initialStart, grip.initialEnd);
+  else settleSelectionAtRelease();
+  scheduleSelectionHandles();
+}
+
+function ensureSelectionHandles(): void {
+  for (const side of ["start", "end"] as const) {
+    if (selectionHandles[side]) continue;
+    const grip = document.createElement("button");
+    grip.type = "button";
+    grip.className = `smut-selection-handle smut-selection-handle--${side}`;
+    grip.setAttribute("aria-label",
+      side === "start" ? "Beginn der Textauswahl verschieben" : "Ende der Textauswahl verschieben");
+    grip.hidden = true;
+    grip.addEventListener("touchstart", event => beginGripDrag(event, side), { passive: false });
+    grip.addEventListener("touchmove", moveGripDrag, { passive: false });
+    grip.addEventListener("touchend", finishGripDrag, { passive: false });
+    grip.addEventListener("touchcancel", finishGripDrag, { passive: false });
+    grip.addEventListener("click", event => event.preventDefault());
+    document.body.append(grip);
+    selectionHandles[side] = grip;
+  }
+}
+window.addEventListener("scroll", scheduleSelectionHandles, { passive: true });
+window.addEventListener("resize", scheduleSelectionHandles);
+window.visualViewport?.addEventListener("resize", scheduleSelectionHandles);
+window.visualViewport?.addEventListener("scroll", scheduleSelectionHandles);
+window.addEventListener("blur", () => { activeGrip = null; hideSelectionHandles(); });
+window.addEventListener("pagehide", () => { activeGrip = null; hideSelectionHandles(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { activeGrip = null; hideSelectionHandles(); }
+});
+
+
 /**
  * Android WebView may continue a compositor-driven fling after the final
  * touchend even though our selection RAF is cancelled. Hold the release
@@ -240,24 +445,11 @@ window.addEventListener("pagehide", cancelSelectionReleaseGuard);
  * This path is never used for ordinary swipes or multi-touch gestures.
  */
 function forwardNativeSelectionDrag(x: number, y: number): void {
-  if (!container || !isNativeSelectionDrag) return;
-  let target: HTMLCanvasElement | null = null;
-  let distance = Number.POSITIVE_INFINITY;
-  for (const canvas of Array.from(container.querySelectorAll<HTMLCanvasElement>(".ce-page-container canvas"))) {
-    const r = canvas.getBoundingClientRect();
-    if (!r.width || !r.height || r.bottom < 0 || r.top > window.innerHeight) continue;
-    const dx = Math.max(r.left - x, 0, x - r.right);
-    const dy = Math.max(r.top - y, 0, y - r.bottom);
-    const candidateDistance = Math.hypot(dx, dy);
-    if (candidateDistance < distance) {
-      target = canvas;
-      distance = candidateDistance;
-    }
-  }
-  // Avoid accidentally selecting pages while dragging over the app toolbar.
-  if (!target || distance > 96) return;
-  const r = target.getBoundingClientRect();
-  target.dispatchEvent(new MouseEvent("mousemove", {
+  if (!isNativeSelectionDrag) return;
+  const target = nearestCanvas(x, y);
+  if (!target) return;
+  const { rect: r } = target;
+  target.canvas.dispatchEvent(new MouseEvent("mousemove", {
     bubbles: true,
     cancelable: true,
     view: window,
@@ -331,6 +523,7 @@ function finishNativeSelectionTouch(): void {
   const wasSelecting = isNativeSelectionDrag;
   stopNativeSelectionDrag();
   if (wasSelecting) settleSelectionAtRelease();
+  scheduleSelectionHandles();
 }
 window.addEventListener("touchend", event => {
   if (event.touches.length === 0) finishNativeSelectionTouch();
@@ -351,7 +544,10 @@ container?.addEventListener("contextmenu", event => {
   if (!(target instanceof HTMLCanvasElement) || !target.closest(".ce-page-container")) return;
   event.preventDefault();
   const range = editor.command.getRange();
-  if (range && range.endIndex > range.startIndex) return;
+  if (range && range.endIndex > range.startIndex) {
+    scheduleSelectionHandles();
+    return;
+  }
   const { x, y } = lastCanvasTouch;
   for (const type of ["mousedown", "dblclick"] as const) {
     target.dispatchEvent(new MouseEvent(type, {
@@ -366,6 +562,7 @@ container?.addEventListener("contextmenu", event => {
   }
   const selection = editor.command.getRange();
   isNativeSelectionDrag = Boolean(selection && selection.endIndex > selection.startIndex);
+  scheduleSelectionHandles();
 });
 
 function requestHandshake(requestId: string): void {
@@ -398,7 +595,9 @@ async function initializeEditor(document: PrototypeData): Promise<void> {
     editor.listener.contentChange = () => {
       scheduleSave();
       scheduleCaretVisibility();
+      scheduleSelectionHandles();
     };
+    editor.listener.rangeStyleChange = scheduleSelectionHandles;
     // The editor repositions .ce-cursor after key presses and page reflow.
     // Observe only this one node to avoid re-render loops on the canvas.
     const caret = container.querySelector(".ce-cursor");
@@ -408,6 +607,7 @@ async function initializeEditor(document: PrototypeData): Promise<void> {
       });
     }
     updateZoomControls();
+    scheduleSelectionHandles();
     report("A5-Buchseite · Tippen direkt im Text");
   } catch (error) {
     report(`Editor konnte nicht gestartet werden: ${String(error)}`);
@@ -468,6 +668,12 @@ window.smutPrototype = {
   },
   // Read-only lifecycle diagnostic for native gesture regression tests.
   isSelectionDragActive: () => isNativeSelectionDrag || selectionScrollFrame !== 0,
+  // Native gesture tests inspect handle visibility, never mutate a range.
+  getSelectionHandles: () => ({
+    start: selectionHandles.start?.hidden === false,
+    end: selectionHandles.end?.hidden === false,
+    dragging: activeGrip?.side ?? null,
+  }),
   // Test-only proof that the editor can select a range spanning A5 pages.
   // Never expose this operation for a real saved manuscript.
   selectAllTestFixture: () => {
