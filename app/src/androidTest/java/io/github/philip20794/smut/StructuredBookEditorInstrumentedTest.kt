@@ -3,6 +3,7 @@ package io.github.philip20794.smut
 import android.content.Intent
 import android.os.SystemClock
 import android.view.View
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.webkit.WebView
@@ -135,6 +136,16 @@ class StructuredBookEditorInstrumentedTest {
         }
         assertTrue("Native Android IME must commit into A5 Canvas", applied)
     }
+    private fun enter(scenario: ActivityScenario<BookEditorActivity>) {
+        var applied = false
+        scenario.onActivity { activity ->
+            val web = findWebView(activity.window.decorView)!!
+            val connection = web.onCreateInputConnection(EditorInfo())!!
+            applied = connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)) &&
+                connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
+        }
+        assertTrue("Enter must be delivered through Android IME", applied)
+    }
     private fun textOf(id: String): String {
         val chapters = (store.load(id) as BookLoad.Found).document.getJSONArray("chapters")
         val blocks = chapters.getJSONObject(0).getJSONArray("blocks")
@@ -161,10 +172,20 @@ class StructuredBookEditorInstrumentedTest {
                 assertTrue("Persisted structured manuscript must contain native IME text",
                     textOf(id).contains("W01 Äöüß"))
                 await(scenario, "window.smutBook?.isDirty()", "false")
+                enter(scenario)
+                ime(scenario, "Zweiter Absatz")
+                await(scenario, "window.smutBook?.getText()", "Zweiter Absatz")
+                await(scenario, "window.smutBook?.getRevision() >= 3", "true")
+                await(scenario, "window.smutBook?.isDirty()", "false")
+                assertEquals(2, (store.load(id) as BookLoad.Found).document
+                    .getJSONArray("chapters").getJSONObject(0).getJSONArray("blocks").length())
+                assertTrue(textOf(id).contains("W01 Äöüß"))
+                assertTrue(textOf(id).contains("Zweiter Absatz"))
             }
             ActivityScenario.launch<BookEditorActivity>(BookEditorActivity.intent(context, id)).use { reopened ->
                 await(reopened, "window.smutBook?.getBookId()", id)
                 await(reopened, "window.smutBook?.getText()", "W01 Äöüß")
+                await(reopened, "window.smutBook?.getText()", "Zweiter Absatz")
                 assertTrue((store.load(id) as BookLoad.Found).position.blockId != null)
                 // The legacy E-02 file cannot be overwritten by structured edits.
                 if (legacyBefore == null) assertTrue(!legacy.exists())
