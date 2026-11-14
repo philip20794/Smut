@@ -3,8 +3,10 @@ package io.github.philip20794.smut
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -23,6 +27,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,7 +55,8 @@ class LibraryActivity : ComponentActivity() {
     private data class WorkResult(val message: String, val opened: OpenedBook? = null)
     private data class OpenedBook(
         val id: String, val title: String, val chapters: List<ChapterSummary>,
-        val position: BookPosition, val revision: Long, val recovered: Boolean
+        val position: BookPosition, val revision: Long, val recovered: Boolean,
+        val positionRepaired: Boolean
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +68,8 @@ class LibraryActivity : ComponentActivity() {
                         books = books,
                         opened = selected?.let { book ->
                             BookSummary(book.id, book.title, book.chapters,
-                                book.position.chapterId, book.revision, book.recovered)
+                                book.position, book.revision, book.recovered,
+                                book.positionRepaired)
                         },
                         status = status,
                         busy = busy,
@@ -153,6 +161,46 @@ class LibraryActivity : ComponentActivity() {
         refresh()
     }
 
+    /**
+     * Show the saved caret's surrounding text in the read-only native view.
+     * The actual editable A5 document is connected only in W-01.
+     */
+    private fun chapterPreview(chapter: JSONObject, focus: BookPosition?): String {
+        val blocks = chapter.getJSONArray("blocks")
+        val focusIndex = if (focus?.blockId == null) -1 else
+            (0 until blocks.length()).firstOrNull {
+                blocks.getJSONObject(it).optString("id") == focus.blockId
+            } ?: -1
+        return buildString {
+            for (i in maxOf(0, focusIndex) until blocks.length()) {
+                if (length >= 800) break
+                val block = blocks.getJSONObject(i)
+                val runs = block.optJSONArray("runs") ?: continue
+                val fullText = buildString {
+                    for (j in 0 until runs.length()) append(runs.getJSONObject(j).getString("text"))
+                }
+                if (fullText.isEmpty()) continue
+                if (isNotEmpty()) append("\n")
+                val cursor = if (i == focusIndex) focus!!.offset.coerceIn(0, fullText.length) else 0
+                var from = if (i == focusIndex) (cursor - 160).coerceAtLeast(0) else 0
+                if (from in 1 until fullText.length &&
+                    Character.isHighSurrogate(fullText[from - 1]) &&
+                    Character.isLowSurrogate(fullText[from])) from--
+                var to = minOf(fullText.length, from + (800 - length).coerceAtLeast(0))
+                if (to in 1 until fullText.length &&
+                    Character.isHighSurrogate(fullText[to - 1]) &&
+                    Character.isLowSurrogate(fullText[to])) to--
+                if (from > 0) append("… ")
+                if (i == focusIndex && cursor <= to) {
+                    append(fullText.substring(from, cursor))
+                    append("▏")
+                    append(fullText.substring(cursor, to))
+                } else append(fullText.substring(from, to))
+                if (to < fullText.length) append(" …")
+            }
+        }
+    }
+
     private fun summary(book: BookLoad.Found): OpenedBook {
         val json: JSONObject = book.document
         val chapters = json.getJSONArray("chapters")
@@ -161,20 +209,11 @@ class LibraryActivity : ComponentActivity() {
             (0 until chapters.length()).map { index ->
                 val chapter = chapters.getJSONObject(index)
                 val blocks = chapter.getJSONArray("blocks")
-                val preview = buildString {
-                    for (i in 0 until blocks.length()) {
-                        if (length >= 400) break
-                        val runs = blocks.getJSONObject(i).optJSONArray("runs") ?: continue
-                        if (isNotEmpty()) append("\n")
-                        for (j in 0 until runs.length()) {
-                            if (length >= 400) break
-                            append(runs.getJSONObject(j).getString("text").take(400 - length))
-                        }
-                    }
-                }
-                ChapterSummary(chapter.getString("id"), chapter.getString("title"), blocks.length(), preview)
+                val focus = book.position.takeIf { it.chapterId == chapter.getString("id") }
+                ChapterSummary(chapter.getString("id"), chapter.getString("title"),
+                    blocks.length(), chapterPreview(chapter, focus))
             },
-            book.position, book.revision, book.recovered
+            book.position, book.revision, book.recovered, book.positionRepaired
         )
     }
 
@@ -252,8 +291,11 @@ internal data class ChapterSummary(
 )
 internal data class BookSummary(
     val id: String, val title: String, val chapters: List<ChapterSummary>,
-    val lastChapterId: String, val revision: Long, val recovered: Boolean
-)
+    val position: BookPosition, val revision: Long, val recovered: Boolean,
+    val positionRepaired: Boolean
+) {
+    val lastChapterId: String get() = position.chapterId
+}
 
 @Composable
 internal fun LibraryScreen(
@@ -282,6 +324,19 @@ internal fun LibraryScreen(
     var newChapterDialog by remember { mutableStateOf(false) }
     var renameChapter by remember { mutableStateOf<ChapterSummary?>(null) }
     var deleteChapter by remember { mutableStateOf<ChapterSummary?>(null) }
+    var bookMenuOpen by remember { mutableStateOf(false) }
+    val readingScroll = rememberScrollState()
+
+    // Hardware/system back returns to the catalog instead of closing the app.
+    BackHandler(enabled = opened != null) { if (!busy) onBack() }
+    LaunchedEffect(opened?.id, opened?.lastChapterId) {
+        if (opened == null) readingScroll.scrollTo(0)
+        else {
+            // Wait for the new book contents to be measured before restoring Y.
+            withFrameNanos { }
+            readingScroll.scrollTo(opened.position.scrollY)
+        }
+    }
 
     val editing = createDialog || renameEntry != null
     if (editing) {
@@ -386,11 +441,32 @@ internal fun LibraryScreen(
 
     Column(
         modifier = Modifier.fillMaxSize().safeDrawingPadding()
-            .verticalScroll(rememberScrollState()).padding(16.dp),
+            .verticalScroll(readingScroll).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Smut", style = MaterialTheme.typography.headlineMedium)
         if (opened != null) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = onBack, enabled = !busy, modifier = Modifier.weight(1f)
+                ) { Text("Zur Bücherliste") }
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        onClick = { bookMenuOpen = true }, enabled = !busy,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Buchmenü") }
+                    DropdownMenu(
+                        expanded = bookMenuOpen,
+                        onDismissRequest = { bookMenuOpen = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Buch-Backup und Import") },
+                            onClick = { bookMenuOpen = false; onBackup() }
+                        )
+                    }
+                }
+            }
             Text("Buch geöffnet · Leseansicht", style = MaterialTheme.typography.titleMedium)
             Text(opened.title, style = MaterialTheme.typography.headlineSmall)
             Text("Die direkte Bearbeitung dieses Buchformats folgt in W-01.",
@@ -463,11 +539,17 @@ internal fun LibraryScreen(
                     style = MaterialTheme.typography.titleMedium)
                 Text(chapter.blockCount.toString() + " Textblöcke · Nur Lesevorschau",
                     style = MaterialTheme.typography.bodySmall)
+                if (opened.position.blockId != null) {
+                    Text("Gespeicherte Textstelle: Zeichen " + opened.position.offset,
+                        style = MaterialTheme.typography.bodySmall)
+                }
                 if (chapter.preview.isNotEmpty()) Text(chapter.preview)
                 else Text("Dieses Kapitel enthält noch keinen Text.")
             }
+            if (opened.positionRepaired) Text(
+                "Eine veraltete Leseposition wurde auf einen gültigen Textanker gesetzt."
+            )
             if (opened.recovered) Text("Buch wurde aus einer gültigen Vorversion wiederhergestellt.")
-            Button(onClick = onBack, enabled = !busy) { Text("Zur Bücherliste") }
         } else {
             Button(
                 onClick = { inputTitle = ""; createDialog = true },

@@ -25,7 +25,8 @@ internal sealed interface BookLoad {
         val document: JSONObject,
         val revision: Long,
         val position: BookPosition,
-        val recovered: Boolean
+        val recovered: Boolean,
+        val positionRepaired: Boolean = false
     ) : BookLoad
     data object Error : BookLoad
 }
@@ -90,6 +91,7 @@ internal class BookStore(
         val position: BookPosition,
         val revision: Long,
         val encoded: ByteArray,
+        val positionRepaired: Boolean,
     )
     private sealed interface DiskState {
         data object Missing : DiskState
@@ -143,9 +145,9 @@ internal class BookStore(
         val book = JSONObject(content)
         val info = BookDocumentValidator.inspect(book)
         require(info.id == expectedId) { "Buch-ID stimmt nicht mit Dateiname überein" }
-        val position = BookPosition.parse(JSONObject(location))
-        BookDocumentValidator.validatePosition(book, position)
-        return Snapshot(book, info, position, revision, bytes)
+        val storedPosition = BookPosition.parse(JSONObject(location))
+        val position = BookDocumentValidator.restorePosition(book, storedPosition)
+        return Snapshot(book, info, position, revision, bytes, position != storedPosition)
     }
     private fun readBounded(file: File): ByteArray {
         val output = ByteArrayOutputStream()
@@ -216,7 +218,8 @@ internal class BookStore(
                 is DiskState.Valid -> {
                     syncIndex(state.snapshot)
                     BookLoad.Found(state.snapshot.book, state.snapshot.revision,
-                        state.snapshot.position, state.recovered)
+                        state.snapshot.position, state.recovered,
+                        state.snapshot.positionRepaired)
                 }
             }
         } catch (_: Exception) {

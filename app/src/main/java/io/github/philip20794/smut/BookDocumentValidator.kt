@@ -144,6 +144,41 @@ internal object BookDocumentValidator {
         return BookInfo(bookId, title, created, updated)
     }
 
+    /**
+     * B-03: A valid, checksummed older snapshot may refer to a chapter or block
+     * removed by a later edit. Repair only a structurally parsed location; a
+     * broken envelope, checksum or document is never treated as a valid book.
+     */
+    fun restorePosition(book: JSONObject, saved: BookPosition): BookPosition {
+        if (runCatching { validatePosition(book, saved) }.isSuccess) return saved
+        val chapters = book.getJSONArray("chapters")
+        require(chapters.length() > 0) { "Kein gültiger Positionsanker vorhanden" }
+        val chapter = (0 until chapters.length())
+            .map { chapters.getJSONObject(it) }
+            .firstOrNull { it.getString("id") == saved.chapterId }
+            ?: chapters.getJSONObject(0)
+        val chapterId = chapter.getString("id")
+        // An unknown chapter or non-text block must not inherit an unrelated scroll.
+        if (chapterId != saved.chapterId || saved.blockId == null) {
+            return BookPosition(chapterId, null, 0, 0)
+        }
+        val blocks = chapter.getJSONArray("blocks")
+        val block = (0 until blocks.length()).map { blocks.getJSONObject(it) }
+            .firstOrNull { it.getString("id") == saved.blockId }
+        if (block == null || block.optString("type") !in setOf("paragraph", "heading")) {
+            return BookPosition(chapterId, null, 0, 0)
+        }
+        val runs = block.getJSONArray("runs")
+        val content = buildString {
+            for (i in 0 until runs.length()) append(runs.getJSONObject(i).getString("text"))
+        }
+        var offset = saved.offset.coerceAtMost(content.length)
+        if (offset in 1 until content.length &&
+            Character.isHighSurrogate(content[offset - 1]) &&
+            Character.isLowSurrogate(content[offset])) offset--
+        return BookPosition(chapterId, saved.blockId, offset, saved.scrollY)
+    }
+
     fun validatePosition(book: JSONObject, position: BookPosition) {
         val chapters = book.getJSONArray("chapters")
         val chapter = (0 until chapters.length()).map { chapters.getJSONObject(it) }
