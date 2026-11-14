@@ -8,7 +8,7 @@
 - **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04 und P2 D-01 abgeschlossen; Canvas Editor 1.1.0 + lokaler PDF-Prototyp 0.8.0 bestätigt. Buchverwaltung, produktive Speicherung und druckreifer PDF-Export folgen in P2–P5.
 - **Meilenstein:** `P2 – Dokumentmodell und Datensicherheit` (technische Arbeit freigegeben).
 - **Letzte abgeschlossene Aufgabe:** `D-01 DONE`: versioniertes Buch-/Kapitel-/Blockmodell, strikte Validierung, JSON-Rundreise, nichtdestruktive Canvas-Migrationsprobe und sechs neue Unit-Tests. Siehe [D01_DOCUMENT_MODEL.md](D01_DOCUMENT_MODEL.md).
-- **Nächste ausführbare Aufgabe:** `D-02 TODO` – editierbare Dokumentoperationen (insert/delete/replace/split/merge/format) mit stabilen Cursor-/Auswahlankern und Undo/Redo. `E-05` bleibt `BLOCKED` bis zur echten Smartphone-Abnahme.
+- **Aktive Aufgabe:** `D-02 IN_PROGRESS` – pure Editoroperationen, Unicode-Graphemanker, mehrblockige Textbereiche und Undo/Redo sind implementiert; vollständige GitHub-CI steht noch aus. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
 - **Abgeschlossene Aufgaben:** **11 / 35 (31,4 %)**; nur `DONE` zählt.
 - **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353), Commit [512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38): TypeScript, Lint, alle Node-Tests einschließlich sechs D-01-Fälle, Kotlin/Lint/APK, API-35-Offline-Emulator einschließlich E-04-PDF und geprüfte APK.
 - **Letzte geprüfte APK:** `smut-tested-dev-512b0c5d2a422d7ec85ea0890c2fced6a8f66e38` aus [CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353); PDF-Testartefakt `smut-e04-a5-pdf-probe-512b0c5d2a422d7ec85ea0890c2fced6a8f66e38`. Beide zeitlich befristet. **Kein echter Smartphone-Test.**
@@ -45,7 +45,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P1 | E-04 | DONE | [CI 43578985300](https://github.com/philip20794/Smut/actions/runs/43578985300) vollständig grün: drei Seiten Editor/PDF, 419,25×595,50 pt, durchsuchbares Deutsch/Unicode, keine Rasterbilder, 13 Android-Emulatortests, geprüfte Test-APK. [Messbericht](E04_PDF_PROBE.md), [ADR-009](DECISIONS.md) (GO nur für Prototyp, druckreifer Satz später P5). |
 | P1 | E-05 | BLOCKED | MANUAL: tatsächliche Bedienungs- und PDF-Sichtprüfung auf einem Android-Smartphone benötigt. Keine Emulator-Simulation als Freigabe. D-01 parallel möglich. |
 | P2 | D-01 | DONE | [Code 512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38), [vollständige CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353) grün (TS/Lint/Unit, Kotlin/Lint/APK, Emulator/PDF), [Modell-/Migrationsvertrag](D01_DOCUMENT_MODEL.md) |
-| P2 | D-02 | TODO | – |
+| P2 | D-02 | IN_PROGRESS | [Operationen und Testfälle](D02_EDIT_OPERATIONS.md), TypeScript-/Node-Tests eingebaut; GitHub-CI ausstehend |
 | P2 | D-03 | TODO | – |
 | P2 | D-04 | TODO | – |
 | P3 | B-01 | TODO | – |
@@ -85,6 +85,15 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 **Gate-Abhängigkeiten:** siehe [Implementierungsplan](IMPLEMENTATION_PLAN.md). Für P1 kann `E-05` auf eine Geräteabnahme warten, während unabhängige Arbeit fortgesetzt wird. Der Status bleibt `BLOCKED` und zählt nicht als abgeschlossen; spätestens vor P7 muss ein echter Gerätetest vorliegen.
 
 ## 5. Letzte Arbeitssitzung / Handoff
+
+### D-02 – Implementierung in CI-Prüfung (14.11.2026)
+
+- `editor/src/edit-operations.ts`: pure Operationen für Insert/Delete/Replace/Split/Merge/Format, kanonische Textanker an Unicode-Graphemgrenzen, Abweisung von Löschungen über explizite Strukturtrennungen und Kapitelgrenzen, Auswahl-Remapping sowie begrenzte Undo-/Redo-History.
+- `editor/tests/edit-operations.test.mjs`: Abnahmefälle für UTF-16/Emoji/Grapheme, Absatz-/Run-Formatierung, Operationen über mehrere Absätze, Fehleratomizität, Auswahlanker und mehrfaches Undo/Redo.
+- Noch kein produktiver Aufruf der neuen Operationen durch den Canvas-Prototyp. Dokument-Storage/Recovery erst D-03, Integration erst W-01.
+- Bei grüner CI D-02 auf `DONE` stellen und D-03 als nächsten Schritt eintragen; D-01 bleibt abgeschlossen.
+
+
 
 ### Aktuelle Übergabe – D-01 DONE / D-02 als nächstes (14.11.2026)
 
