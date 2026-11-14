@@ -70,7 +70,9 @@ function getLocalPdfEngine(): Promise<PdfEngineModule> {
       // The published ESM bundle externalizes the bare specifier 'jspdf'.
       // UMD builds run entirely from local, pinned APK assets instead.
       await loadLocalScript("./vendor/jspdf.umd.min.js");
-      // Rollup UMD expects the jspdf MODULE object at global "jsPDF",\n      // not only its .jsPDF constructor (the plugin imports two named symbols).\n      window.jsPDF = window.jspdf;
+      // Rollup UMD expects the jspdf MODULE object at global "jsPDF",
+      // not only its .jsPDF constructor (the plugin imports two named symbols).
+      window.jsPDF = window.jspdf;
       if (!window.jsPDF) throw new Error("jsPDF fehlt in der lokalen WebView");
       await loadLocalScript("./vendor/canvas-editor-pdf.umd.js");
       if (!window.CanvasEditorPDF?.DrawPdf) {
