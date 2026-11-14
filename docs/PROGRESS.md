@@ -8,7 +8,7 @@
 - **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04 und P2 D-01/D-02 abgeschlossen; Canvas Editor 1.1.0 + lokaler PDF-Prototyp 0.8.0 bestätigt. Persistenz, Buchverwaltung und druckreifer PDF-Export folgen in P2–P5.
 - **Meilenstein:** `P2 – Dokumentmodell und Datensicherheit` (technische Arbeit freigegeben).
 - **Letzte abgeschlossene Aufgabe:** `D-02 DONE`: unveränderliche Insert/Delete/Replace/Split/Merge/Format-Operationen, graphemsichere Textanker, Auswahlabbildung und begrenzte Undo-/Redo-History mit automatisierten Tests. Siehe [D02_EDIT_OPERATIONS.md](D02_EDIT_OPERATIONS.md).
-- **Nächste ausführbare Aufgabe:** `D-03 TODO` – lokale Speicherung, Autosave und Crash-Recovery für das versionierte Buchmodell. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
+- **Aktive Aufgabe:** `D-03 IN_PROGRESS` – Room-Index, atomare Buchdateien, Autosave und Crash-Recovery für das versionierte Modell werden über GitHub CI geprüft. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
 - **Abgeschlossene Aufgaben:** **12 / 35 (34,3 %)**; nur `DONE` zählt.
 - **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130), Commit [a7df11d](https://github.com/philip20794/Smut/commit/a7df11d282226e82cbda4336086ff9a7ee383aef): TypeScript-Typecheck, Lint, Node-Tests einschließlich D-02, Kotlin/Lint/APK, API-35-Offline-Emulator einschließlich E-04-PDF und geprüfte APK.
 - **Letzte geprüfte APK:** `smut-tested-dev-a7df11d282226e82cbda4336086ff9a7ee383aef` aus [CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130); PDF-Testartefakt `smut-e04-a5-pdf-probe-a7df11d282226e82cbda4336086ff9a7ee383aef`. Beide bis 14.12.2026 verfügbar. **Kein echter Smartphone-Test.**
@@ -46,7 +46,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P1 | E-05 | BLOCKED | MANUAL: tatsächliche Bedienungs- und PDF-Sichtprüfung auf einem Android-Smartphone benötigt. Keine Emulator-Simulation als Freigabe. D-01 parallel möglich. |
 | P2 | D-01 | DONE | [Code 512b0c5](https://github.com/philip20794/Smut/commit/512b0c5d2a422d7ec85ea0890c2fced6a8f66e38), [vollständige CI 43583247353](https://github.com/philip20794/Smut/actions/runs/43583247353) grün (TS/Lint/Unit, Kotlin/Lint/APK, Emulator/PDF), [Modell-/Migrationsvertrag](D01_DOCUMENT_MODEL.md) |
 | P2 | D-02 | DONE | [Code a7df11d](https://github.com/philip20794/Smut/commit/a7df11d282226e82cbda4336086ff9a7ee383aef), [CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130) vollständig grün (Editor-Typecheck, Node-Unit, Kotlin/Lint/APK, Emulator und PDF-Probe); [Abnahmevertrag](D02_EDIT_OPERATIONS.md) |
-| P2 | D-03 | TODO | – |
+| P2 | D-03 | IN_PROGRESS | [Implementierungs- und Testvertrag](D03_PERSISTENCE.md); CI-Prüfung ausstehend |
 | P2 | D-04 | TODO | – |
 | P3 | B-01 | TODO | – |
 | P3 | B-02 | TODO | – |
@@ -86,7 +86,13 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 ## 5. Letzte Arbeitssitzung / Handoff
 
-### Aktuelle Übergabe – D-02 DONE / D-03 als nächstes (14.11.2026)
+### D-03 – Implementierung in CI-Prüfung (14.11.2026)
+
+- Neue getrennte native Datenschicht: Room-Index, atomare versionierte JSON-Buchdateien mit SHA-256, validierte Rückfallrevision, Cursor-/Kapitelposition und Revisionskonfliktprüfung. Der bisherige E-02-Prototyp bleibt unberührt.
+- Erweiterter separater Bridge-Vertrag für strukturierte Bücher und TypeScript-Autosave-Warteschlange; Android-Emulator-Tests prüfen Unterbrechung, Dateibeschädigung, Neustart und Legacy-Unversehrtheit. **Noch nicht als bestanden bestätigt.**
+- **Kein D-03-DONE ohne vollständig grünen CI-Lauf.** Die vorhandene Canvas-Oberfläche wird erst in W-01 auf das neue Buchformat umgestellt. E-05 bleibt echte Smartphone-Abnahme.
+
+### Vorherige Übergabe – D-02 DONE / D-03 als nächstes (14.11.2026)
 
 - **D-02 DONE:** [Commit a7df11d](https://github.com/philip20794/Smut/commit/a7df11d282226e82cbda4336086ff9a7ee383aef). Neues `editor/src/edit-operations.ts` für alle sechs geforderten Operationen, graphemsichere UTF-16-Textanker, Trennungs-/Kapitelbarrieren, Auswahlverschiebung sowie begrenztes Undo/Redo.
 - **Prüfung:** [Smut CI 43585173130](https://github.com/philip20794/Smut/actions/runs/43585173130) vollständig `success`: neue Node-Unit-Tests und alle bestehenden TypeScript-/Android-/Offline-Emulator-/PDF-Gates grün.

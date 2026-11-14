@@ -19,9 +19,23 @@ import java.nio.charset.StandardCharsets
 internal class EditorBridge(private val webView: WebView) {
     private val prototypeFile = AtomicFile(File(webView.context.filesDir, "prototype-editor-v1.json"))
     private val pdfProbeFile = AtomicFile(File(webView.context.filesDir, "e04-a5-probe.pdf"))
+    private val bookStore by lazy { BookStore(webView.context.applicationContext) }
 
     @JavascriptInterface
     fun postMessage(payload: String) {
+        val bookRequest = BookBridgeProtocol.parseRequest(payload)
+        if (bookRequest != null) {
+            val bookResponse = when (bookRequest) {
+                is BookBridgeRequest.Load ->
+                    BookBridgeProtocol.loadResult(bookRequest.requestId, bookStore.load(bookRequest.bookId))
+                is BookBridgeRequest.Save ->
+                    BookBridgeProtocol.saveResult(bookRequest.requestId, bookStore.save(
+                        bookRequest.document, bookRequest.expectedRevision, bookRequest.position
+                    ))
+            }
+            deliver(bookResponse)
+            return
+        }
         val request = BridgeProtocol.parseRequest(payload) ?: return
         val response = when (request) {
             is BridgeRequest.Ready -> BridgeProtocol.ack(request.requestId)
@@ -66,6 +80,10 @@ internal class EditorBridge(private val webView: WebView) {
                 BridgeProtocol.saveResult(request.requestId, saved)
             }
         }
+        deliver(response)
+    }
+
+    private fun deliver(response: String) {
         webView.post {
             if (webView.url == EDITOR_URL) {
                 val quoted = JSONObject.quote(response)
