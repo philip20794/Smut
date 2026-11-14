@@ -9,6 +9,7 @@
             android:name=".BackupActivity"
             android:exported="false" />
         <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".BookEditorActivity" android:exported="false" />
         <activity android:name=".LibraryActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -40,7 +40,8 @@ private fun blockedResource(): WebResourceResponse =
         ByteArrayInputStream(ByteArray(0))
     )
 
-internal fun createEditorWebView(context: Context): WebView {
+internal fun createEditorWebView(context: Context, bookId: String? = null): WebView {
+    if (bookId != null) BookDocumentValidator.safeId(bookId)
     val assetLoader = WebViewAssetLoader.Builder()
         .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(context))
         .build()
@@ -71,7 +72,7 @@ internal fun createEditorWebView(context: Context): WebView {
                 return assetLoader.shouldInterceptRequest(request.url) ?: blockedResource()
             }
         }
-        addJavascriptInterface(EditorBridge(this), "SmutAndroid")
+        addJavascriptInterface(EditorBridge(this, bookId), "SmutAndroid")
         loadUrl(EDITOR_URL)
     }
 }

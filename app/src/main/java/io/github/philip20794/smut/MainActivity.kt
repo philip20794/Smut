@@ -29,9 +29,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-internal fun SmutStartScreen() {
+internal fun SmutStartScreen(bookId: String? = null) {
     val context = LocalContext.current
-    val webView = remember(context) { createEditorWebView(context) }
+    val webView = remember(context, bookId) { createEditorWebView(context, bookId) }
     DisposableEffect(webView) {
         onDispose {
             webView.removeJavascriptInterface("SmutAndroid")

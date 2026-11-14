@@ -18,7 +18,10 @@ import java.nio.charset.StandardCharsets
  * streng per URL-Allowlist kontrollierten WebView. Das Dateiformat ist ein
  * temporäres Testformat, noch keine finale Buch- oder Kapitelpersistenz.
  */
-internal class EditorBridge(private val webView: WebView) {
+internal class EditorBridge(private val webView: WebView, private val activeBook: String? = null) {
+    /** MainActivity has no book identity: its E-02 legacy file stays isolated. */
+    @JavascriptInterface
+    fun activeBookId(): String = activeBook ?: ""
     private val prototypeFile = AtomicFile(File(webView.context.filesDir, "prototype-editor-v1.json"))
     private val pdfProbeFile = AtomicFile(File(webView.context.filesDir, "e04-a5-probe.pdf"))
     private val bookStore by lazy { BookStore(webView.context.applicationContext) }
@@ -27,6 +30,16 @@ internal class EditorBridge(private val webView: WebView) {
     fun postMessage(payload: String) {
         val bookRequest = BookBridgeProtocol.parseRequest(payload)
         if (bookRequest != null) {
+            // Never allow the WebView to switch to a different manuscript ID.
+            if (activeBook == null || when (bookRequest) {
+                is BookBridgeRequest.Load -> bookRequest.bookId != activeBook
+                is BookBridgeRequest.Save -> bookRequest.document.optString("id") != activeBook
+            }) {
+                deliver(JSONObject().put("version", 1).put("type",
+                    if (bookRequest is BookBridgeRequest.Load) "book-load-result" else "book-save-result"
+                ).put("requestId", bookRequest.requestId).put("state", "error").toString())
+                return
+            }
             val bookResponse = when (bookRequest) {
                 is BookBridgeRequest.Load ->
                     BookBridgeProtocol.loadResult(bookRequest.requestId, bookStore.load(bookRequest.bookId))
@@ -39,6 +52,9 @@ internal class EditorBridge(private val webView: WebView) {
             return
         }
         val request = BridgeProtocol.parseRequest(payload) ?: return
+        // Legacy read/write must never be available to a structured book tab.
+        if (activeBook != null && (request is BridgeRequest.Load ||
+                request is BridgeRequest.Save)) return
         val response = when (request) {
             is BridgeRequest.Ready -> BridgeProtocol.ack(request.requestId)
             is BridgeRequest.OpenBackup -> {

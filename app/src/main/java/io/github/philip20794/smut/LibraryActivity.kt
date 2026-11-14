@@ -134,7 +134,8 @@ class LibraryActivity : ComponentActivity() {
                             }
                         },
                         onBackup = { startActivity(Intent(this, BackupActivity::class.java)) },
-                        onPrototype = { startActivity(Intent(this, MainActivity::class.java)) }
+                        onPrototype = { startActivity(Intent(this, MainActivity::class.java)) },
+                        onEdit = { id -> startActivity(BookEditorActivity.intent(this, id)) }
                     )
                 }
             }
@@ -315,7 +316,8 @@ internal fun LibraryScreen(
     onDeleteChapter: (String, Long, String) -> Unit,
     onOpenChapter: (String, Long, String) -> Unit,
     onBackup: () -> Unit,
-    onPrototype: () -> Unit
+    onPrototype: () -> Unit,
+    onEdit: (String) -> Unit
 ) {
     var createDialog by remember { mutableStateOf(false) }
     var renameEntry by remember { mutableStateOf<BookEntry?>(null) }
@@ -469,8 +471,10 @@ internal fun LibraryScreen(
             }
             Text("Buch geöffnet · Leseansicht", style = MaterialTheme.typography.titleMedium)
             Text(opened.title, style = MaterialTheme.typography.headlineSmall)
-            Text("Die direkte Bearbeitung dieses Buchformats folgt in W-01.",
-                style = MaterialTheme.typography.bodyMedium)
+            Button(
+                onClick = { onEdit(opened.id) }, enabled = !busy,
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Im A5-Editor bearbeiten") }
             Text(status, style = MaterialTheme.typography.bodySmall)
             Text("Kapitel", style = MaterialTheme.typography.titleMedium)
             Button(
