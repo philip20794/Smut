@@ -255,7 +255,9 @@ function autoScrollSelection(): void {
     window.scrollBy(0, delta);
     if (window.scrollY !== before) forwardNativeSelectionDrag(x, y);
   }
-  selectionScrollFrame = requestAnimationFrame(autoScrollSelection);
+  // A held finger away from the edge needs no animation loop. The next
+  // touchmove will restart it if the finger approaches the viewport edge.
+  if (delta !== 0) selectionScrollFrame = requestAnimationFrame(autoScrollSelection);
 }
 
 container?.addEventListener("touchstart", event => {
