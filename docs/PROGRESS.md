@@ -5,27 +5,27 @@
 ## 1. Aktueller Stand
 
 - **Stand:** 2026-11-14.
-- **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04, P2 sowie P3 B-01/B-02 abgeschlossen; native Bücher- und Kapitelverwaltung mit revisionssicherer Speicherung, B-03 als Nächstes. Der A5-Prototyp nutzt bis W-01 weiterhin sein separates Legacy-Format.
-- **Meilenstein:** `P3 – Bücher und Kapitel` (durch vollständiges P2-Gate freigegeben).
-- **Letzte abgeschlossene Aufgabe:** `B-02 DONE` – Kapitelverwaltung, Änderung der Reihenfolge, aktive Kapitel-Navigation, Revisionskontrolle und Löschbestätigung; [B02_CHAPTER_MANAGEMENT.md](B02_CHAPTER_MANAGEMENT.md), vollständige [CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709) grün.
-- **Nächste ausführbare Aufgabe:** `B-03 IN_PROGRESS` – letzte Cursor-/Scroll-/Kapitelposition beim Wiederöffnen wiederherstellen, klare Zurück-Navigation und reduziertes Buchmenü; End-to-End-Tests. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
-- **Abgeschlossene Aufgaben:** **16 / 35 (45,7 %)**; nur `DONE` zählt.
-- **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709), Commit [da2678b](https://github.com/philip20794/Smut/commit/da2678bbf93aa43196e5a5bc350f258cec17616c): TypeScript, Kotlin-Unit/Lint/APK, Offline-Emulator inklusive B-02-Kapiteltests, bestehender B-01/D-04/Editor-Tests sowie E-04-PDF-Probe vollständig erfolgreich.
-- **Letzte geprüfte APK:** `smut-tested-dev-da2678bbf93aa43196e5a5bc350f258cec17616c` aus [CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709), verfügbar bis 14.12.2026; PDF-Probe `smut-e04-a5-pdf-probe-da2678bbf93aa43196e5a5bc350f258cec17616c`. **Kein echter Smartphone-Test.**
+- **Projektstatus:** `IN_PROGRESS` – P0, P1 E-01 bis E-04, P2 sowie P3 B-01/B-02/B-03 abgeschlossen; W-01 (produktive Editorintegration) als Nächstes. Der A5-Prototyp nutzt bis W-01 weiterhin sein separates Legacy-Format.
+- **Meilenstein:** `P4 – Alltagstauglicher Editor`, durch den vollständig grünen P3-Gate freigegeben.
+- **Letzte abgeschlossene Aufgabe:** `B-03 DONE` – Wiederaufnahme des gespeicherten Kapitel-/Cursor-/Scrollankers, sicherer Fallback bei veraltetem Block/Kapitel, System-Zurück-Navigation und reduziertes Buchmenü; [B03_READING_POSITION.md](B03_READING_POSITION.md), [vollständige CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487) grün.
+- **Nächste ausführbare Aufgabe:** `W-01 TODO` – strukturiertes D-01/D-03-Buchmodell mit editierbarem A5-Canvas verbinden, Migration ohne Datenverlust, echte Eingabe-/Autosave-/Emulator-Tests. `E-05` bleibt `BLOCKED` bis zum echten Smartphone-Test.
+- **Abgeschlossene Aufgaben:** **17 / 35 (48,6 %)**; nur `DONE` zählt.
+- **Letzter verifizierter grüner Code-CI-Lauf:** [Smut CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487), Commit [5e89c93](https://github.com/philip20794/Smut/commit/5e89c932846a096b5b238008fc477ccb933e46f2): TypeScript, Kotlin-Unit/Lint/APK, Offline-Emulator inklusive B-03-Positions-/Navigations-Regression sowie aller bisherigen B-02/B-01/D-04/Editor- und PDF-Tests erfolgreich.
+- **Letzte geprüfte APK:** `smut-tested-dev-5e89c932846a096b5b238008fc477ccb933e46f2` aus [CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487), verfügbar bis 14.12.2026; PDF-Probe `smut-e04-a5-pdf-probe-5e89c932846a096b5b238008fc477ccb933e46f2`. **Kein echter Smartphone-Test.**
 - **Letztes Release:** keines; signierte Releases stehen aus.
 - **Technische Entscheidung:** **GO** für die offlinefähige Prototyp-Architektur; **kein druckfertiges Benutzer-PDF**: problematische Worttrennungen/Blocksatz, nur PDF-Standardfonts ohne eingebettete lokale Buchschrift, fehlender Zeilen-Goldenvergleich und noch keine anwenderseitige Export-UI. Das sind Pflichtpunkte für P5 L-01 bis L-04, ggf. Engine-Fallback bei Nichterfüllung.
-- **Nutzeraktion:** E-05 auf echtem Smartphone (später); B-03 kann ohne Nutzerhardware umgesetzt werden.
+- **Nutzeraktion:** E-05 auf echtem Smartphone (später); W-01 kann ohne Nutzerhardware umgesetzt werden.
 
 ## 2. Verbindlicher nächster Schritt
 
-**B-03 – Letzte Position und Minimalnavigation** nach grünem B-02-Gate.
+**W-01 – Persistentes direktes Schreiben** nach grünem B-03-Gate.
 
-1. Beim Öffnen die zuletzt gespeicherte Kapitel-/Cursor-/Scrollposition aus dem D-03-Buchmodell wiederherstellen; bei alter oder ungültiger Position einen nachvollziehbaren, gültigen Anker wählen.
-2. Klare Buch-zur-Bücherliste-Navigation und ein zurückhaltendes Menü mit den für das aktive Buch nötigen Aktionen, ohne die E-02-Prototypdatei zu überschreiben.
-3. Android-End-to-End-Tests für Kapitelwechsel, Schließen, Neustart und korrekte Positionsrückkehr. Speicherkonflikte dürfen keine falschen Erfolgsmeldungen auslösen.
-4. Vollständige Pflicht-CI inklusive Offline-Emulator vor `B-03 DONE`; `E-05` bleibt ein separater echter Smartphone-Test.
+1. Die bis jetzt getrennte D-01/D-03-Buchstruktur und den editierbaren A5-Canvas verbinden, ohne `prototype-editor-v1.json` zu überschreiben. Migration erst nach nachgewiesenem verlustfreiem Test.
+2. Kapitelwahl, Texteinfügung, Cursor-/Scrollanker und Autosave revisionssicher verbinden. Konflikte und Speicherfehler dürfen keine falschen Erfolgsmeldungen erzeugen.
+3. Android-End-to-End-Tests für Tippen, Neustart, App-Abbruch und Wiederaufnahme über mehrere Buchseiten; bestehende Backup- und PDF-Regressionsprüfungen erhalten.
+4. Vollständige Pflicht-CI inklusive Offline-Emulator vor `W-01 DONE`; `E-05` bleibt ein separater echter Smartphone-Test.
 
-**Letzte grüne Codeprüfung:** [CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709) für [B-02](https://github.com/philip20794/Smut/commit/da2678bbf93aa43196e5a5bc350f258cec17616c); strukturierte Bücher öffnen bis W-01 als native Leseansicht, der editierbare A5-Prototyp ist unabhängig.
+**Letzte grüne Codeprüfung:** [CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487) für [B-03](https://github.com/philip20794/Smut/commit/5e89c932846a096b5b238008fc477ccb933e46f2); strukturierte Bücher öffnen derzeit als native Leseansicht, editierbarer A5-Prototyp unabhängig. Direkte Anbindung ist der Kern von W-01.
 
 ## 3. Task-Tracker
 
@@ -50,8 +50,8 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P2 | D-04 | DONE | [Code 1386ce4](https://github.com/philip20794/Smut/commit/1386ce4a9fa676bad8b533d28ad6d1d5c48d9811), [CI 43592192732](https://github.com/philip20794/Smut/actions/runs/43592192732) grün (SAF-ContentResolver, SHA-256, Export–Löschen–Import, Konflikte, parallele Zugriffe, bestehende Editor-/PDF-Tests); [D04-Vertrag](D04_BACKUP.md) |
 | P3 | B-01 | DONE | [Code/Tests fcf7642](https://github.com/philip20794/Smut/commit/fcf7642272d0ec716b57bd83dce67c2916377359), [vollständige CI 43594430969](https://github.com/philip20794/Smut/actions/runs/43594430969) grün: native Buchliste, CRUD, Bestätigungsabbruch, eindeutige IDs, Room-/Datei-Neustart, Lösch-Recovery; [B-01-Doku](B01_BOOK_LIBRARY.md) |
 | P3 | B-02 | DONE | [Code/Test-Fix da2678b](https://github.com/philip20794/Smut/commit/da2678bbf93aa43196e5a5bc350f258cec17616c), [vollständige CI 43597289709](https://github.com/philip20794/Smut/actions/runs/43597289709) grün: Kapitel CRUD, Reorder, Navigation, Emoji-Cursoranker, Revisionskonflikte, lange Kapitel, UI-Abbruch/Bestätigung, Neustart; [B-02-Doku](B02_CHAPTER_MANAGEMENT.md) |
-| P3 | B-03 | IN_PROGRESS | Umsetzung: Wiederaufnahme der gespeicherten Position, gültige Anker bei veralteter Position, Zurück-Taste/Buchmenü und Android-End-to-End-Test; CI ausstehend. |
-| P4 | W-01 | TODO | – |
+| P3 | B-03 | DONE | [Code/Test 5e89c93](https://github.com/philip20794/Smut/commit/5e89c932846a096b5b238008fc477ccb933e46f2), [vollständige CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487) grün: echte Android-Navigation/Activity-Recreation, Kapitel-/Cursor-/Scrollposition, sichere Fallbacks für veraltete Anker, Prüfsummen-Schutz; [B-03-Doku](B03_READING_POSITION.md) |
+| P4 | W-01 | TODO | als nächstes – Verbindung von D-01/D-03 und A5-Editor ohne Legacy-Datenverlust |
 | P4 | W-02 | TODO | – |
 | P4 | W-03 | TODO | – |
 | P4 | W-04 | TODO | – |
@@ -76,7 +76,7 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 | P0 | 6/6 | Build, CI, Emulator-Smoke und Test-APK | **erfüllt** |
 | P1 | 4/5 | E-01…E-04 GO, echter Gerätetest E-05 separat | **GO für D-01; E-05 offen** |
 | P2 | 4/4 | Modell, Operationen, sichere Persistenz, Backup | **erfüllt – P3 freigegeben** |
-| P3 | 2/3 | Bücherliste und Kapitelverwaltung fertig; B-03 letzte Position/Minimalnavigation offen | B-01/B-02 erfüllt |
+| P3 | 3/3 | Bücherliste, Kapitelverwaltung, Positionswiederaufnahme und Minimalnavigation fertig | **erfüllt – P4 freigegeben** |
 | P4 | 0/5 | Direktbearbeitung und Textfunktionen | offen |
 | P5 | 0/4 | A5-Satz und textbasierter PDF-Export | offen |
 | P6 | 0/4 | Offline, Performance, Zuverlässigkeit, Gerätetest | offen |
@@ -86,11 +86,13 @@ Statuswerte ausschließlich: `TODO`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DON
 
 ## 5. Letzte Arbeitssitzung / Handoff
 
-### B-03 IN_PROGRESS – 14.11.2026
+### Aktuelle Übergabe – B-03 DONE / W-01 als nächstes (14.11.2026)
 
-- Begonnen: Positionsanker bei altem Kapitel/Block robust wiederherstellen, gespeicherte Textstelle in der nativen Leseansicht sichtbar machen, klare System-Zurück-Navigation und schlankes Buchmenü.
-- Nächste Prüfung: instrumentierte Android-Tests für Schließen, erneutes Öffnen, Activity-Neustart, Position/Fallback und Navigation. `DONE` erst nach vollständig grünem Pflicht-CI-Lauf mit APK; `E-05` bleibt echter Smartphone-Test.
-
+- **B-03 DONE:** [Code mit Navigation/Positionsanker f115440](https://github.com/philip20794/Smut/commit/f115440f90373253c30a39aa96bbf109cfac8ee0), [Regressionstests/Fix 5e89c93](https://github.com/philip20794/Smut/commit/5e89c932846a096b5b238008fc477ccb933e46f2), [vollständige CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487) grün und getestete Debug-APK als Artifact vorhanden.
+- Das gespeicherte Kapitel und die Cursorumgebung werden in der nativen Lesevorschau beim Wiederöffnen angezeigt; nach Layout wird die gespeicherte Scrollposition auf die Leseseite angewendet. System-Zurück und die Schaltfläche führen zur Bücherliste; Buchmenü bleibt kompakt.
+- Veraltete, aber prüfsummengültige Textanker werden in einen vorhandenen Kapitel-/Textanker normalisiert, ohne unbeteiligte Buchinhalte zu überschreiben. Fehlende Blocks/Chapters setzen den Anker auf einen gültigen Kapitelanfang zurück. Struktur-/Hash-Fehler bleiben Fehler; eine defekte aktuelle Revision fällt höchstens auf die letzte gültige Vorversion zurück.
+- **Tests:** Android-Emulator prüft gespeicherten Unicode-Offset und Scrollanker, Zurück/erneutes Öffnen, Activity-Neustart, Buchmenü, ungültige Anker bis hin zum Emoji-Surrogatpaar sowie kaputte Prüfsumme. Bestehende Tests (P0–P3, Offline-Canvas und A5-PDF-Testprobe) vollständig grün.
+- **Nächste Aufgabe W-01:** direktes Schreiben im strukturierten Buchformat und sichere Editor-/Autosave-Integration. Die native Leseansicht speichert absichtlich keine neuen Editor-Cursor; `prototype-editor-v1.json` bleibt bisher getrennt. **E-05** echter Smartphone-Test weiterhin `BLOCKED`.
 
 ### Aktuelle Übergabe – B-02 DONE / B-03 als nächstes (14.11.2026)
 

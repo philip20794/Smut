@@ -1,6 +1,6 @@
 # B-03 – Letzte Buchposition und minimale Navigation
 
-**Implementierung:** 14.11.2026. **Status:** `IN_REVIEW` bis der vollständige Pflicht-CI-Lauf inklusive Android-Emulator und geprüfter Test-APK grün ist.
+**Status:** `DONE` am 14.11.2026. **Beleg:** [vollständig grüne CI 43600342487](https://github.com/philip20794/Smut/actions/runs/43600342487) für [Code/Test 5e89c93](https://github.com/philip20794/Smut/commit/5e89c932846a096b5b238008fc477ccb933e46f2); Android-Emulator, Pflichtchecks und geprüfte Entwickler-APK bestätigt. E-05 (echtes Smartphone) bleibt `BLOCKED`.
 
 ## Verhalten
 
