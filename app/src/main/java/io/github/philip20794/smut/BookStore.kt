@@ -13,6 +13,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.UUID
 
 /** All BookStore instances in this app process share the same atomic file namespace. */
 private val BOOK_DISK_LOCK = Any()
@@ -38,6 +39,14 @@ internal sealed interface BookImport {
     data object Imported : BookImport
     data object AlreadyExists : BookImport
     data object Error : BookImport
+}
+
+/** Library commands report success only after an authoritative disk transaction. */
+internal sealed interface BookLibraryResult {
+    data class Success(val bookId: String) : BookLibraryResult
+    data object Missing : BookLibraryResult
+    data object InvalidTitle : BookLibraryResult
+    data object Error : BookLibraryResult
 }
 
 /**
@@ -77,6 +86,11 @@ internal class BookStore(
 
     private fun primary(id: String) = File(directory, "$id.book.json")
     private fun previous(id: String) = File(directory, "$id.previous.json")
+    private fun tombstone(id: String) = File(directory, "$id.deleted")
+    private fun isDeleted(id: String) = exists(tombstone(id))
+    private fun newId(prefix: String) = prefix + UUID.randomUUID().toString().replace("-", "")
+    private fun validTitle(title: String): Boolean =
+        title.isNotBlank() && title.length <= 240 && title.none { it == '\u0000' || it == '\n' || it == '\r' }
     private fun exists(file: File) = file.exists() || File(file.path + ".bak").exists()
 
     private fun hash(revision: Long, document: String, position: String): String {
@@ -181,6 +195,7 @@ internal class BookStore(
 
     private fun loadUnderLock(id: String): BookLoad {
         if (runCatching { BookDocumentValidator.safeId(id) }.isFailure) return BookLoad.Error
+        if (isDeleted(id)) return BookLoad.Missing
         return try {
             when (val state = readDisk(id)) {
                 DiskState.Missing -> BookLoad.Missing
@@ -207,6 +222,7 @@ internal class BookStore(
             val working = JSONObject(document.toString())
             val info = BookDocumentValidator.inspect(working)
             BookDocumentValidator.validatePosition(working, position)
+            if (isDeleted(info.id)) return BookSave.Error
             val state = readDisk(info.id)
             if (state == DiskState.Corrupt) return BookSave.Error
             val revision = when (state) {
@@ -236,9 +252,155 @@ internal class BookStore(
         }
     }
 
-    /** The Room index is never trusted as a substitute for the authoritative book file. */
+    /** A crash after the deletion marker cannot make a deleted book visible again. */
+    private fun finalizeDelete(id: String) {
+        if (!isDeleted(id)) return
+        val artifacts = listOf(primary(id), previous(id)).flatMap { file ->
+            listOf(file, File(file.path + ".bak"), File(file.path + ".new"))
+        }
+        if (artifacts.any { it.exists() && !it.delete() }) return
+        if (runCatching { dao.delete(id) }.isFailure) return
+        val marker = tombstone(id)
+        listOf(marker, File(marker.path + ".bak"), File(marker.path + ".new")).forEach {
+            if (it.exists()) it.delete()
+        }
+    }
+
+    private fun cleanupPendingDeletes() {
+        directory.listFiles()?.mapNotNull { file ->
+            when {
+                file.name.endsWith(".deleted") -> file.name.removeSuffix(".deleted")
+                file.name.endsWith(".deleted.bak") -> file.name.removeSuffix(".deleted.bak")
+                else -> null
+            }
+        }?.distinct()?.forEach { id ->
+            if (runCatching { BookDocumentValidator.safeId(id) }.isSuccess) finalizeDelete(id)
+        }
+    }
+
+    /** Room is only a catalog; deletion markers take precedence during recovery. */
     @Synchronized
-    fun listEntries(): List<BookEntry> = dao.all()
+    fun listEntries(): List<BookEntry> = synchronized(BOOK_DISK_LOCK) {
+        cleanupPendingDeletes()
+        dao.all().filterNot { isDeleted(it.id) }
+    }
+
+    /** New books start with one empty chapter and a valid, non-text cursor position. */
+    @Synchronized
+    fun createBook(rawTitle: String): BookLibraryResult = synchronized(BOOK_DISK_LOCK) {
+        val title = rawTitle.trim()
+        if (!validTitle(title)) return@synchronized BookLibraryResult.InvalidTitle
+        val id = newId("b")
+        val chapterId = newId("c")
+        val now = iso.format(Instant.now())
+        val document = JSONObject().put("schemaVersion", 1)
+            .put("id", id).put("title", title).put("createdAt", now).put("updatedAt", now)
+            .put("layout", JSONObject().put("pageWidthMm", 148).put("pageHeightMm", 210)
+                .put("marginsMm", JSONObject().put("top", 18).put("bottom", 18)
+                    .put("inside", 20).put("outside", 16))
+                .put("fontFamily", "serif").put("fontSizePt", 11)
+                .put("lineSpacing", 1.3).put("pageNumbers", true))
+            .put("chapters", org.json.JSONArray().put(JSONObject().put("id", chapterId)
+                .put("title", "Kapitel 1").put("blocks", org.json.JSONArray())))
+        when (saveUnderLock(document, 0, BookPosition(chapterId, null, 0, 0))) {
+            is BookSave.Saved -> BookLibraryResult.Success(id)
+            else -> BookLibraryResult.Error
+        }
+    }
+
+    /** A rename changes only the title; the original manuscript and position stay intact. */
+    @Synchronized
+    fun renameBook(id: String, rawTitle: String): BookLibraryResult = synchronized(BOOK_DISK_LOCK) {
+        val title = rawTitle.trim()
+        if (!validTitle(title)) return@synchronized BookLibraryResult.InvalidTitle
+        when (val loaded = loadUnderLock(id)) {
+            BookLoad.Missing -> BookLibraryResult.Missing
+            is BookLoad.Found -> {
+                val changed = JSONObject(loaded.document.toString()).put("title", title)
+                when (saveUnderLock(changed, loaded.revision, loaded.position)) {
+                    is BookSave.Saved -> BookLibraryResult.Success(id)
+                    else -> BookLibraryResult.Error
+                }
+            }
+            else -> BookLibraryResult.Error
+        }
+    }
+
+    /** Duplicate all content and layout under independent book/chapter/block IDs. */
+    @Synchronized
+    fun duplicateBook(id: String): BookLibraryResult = synchronized(BOOK_DISK_LOCK) {
+        when (val loaded = loadUnderLock(id)) {
+            BookLoad.Missing -> BookLibraryResult.Missing
+            is BookLoad.Found -> {
+                try {
+                    val copied = JSONObject(loaded.document.toString())
+                    val newBookId = newId("b")
+                    val now = iso.format(Instant.now())
+                    val originalTitle = copied.getString("title")
+                    val title = originalTitle.take(232) + " (Kopie)"
+                    val ids = mutableMapOf<String, String>()
+                    val chapters = copied.getJSONArray("chapters")
+                    for (i in 0 until chapters.length()) {
+                        val chapter = chapters.getJSONObject(i)
+                        val oldId = chapter.getString("id")
+                        val freshId = newId("c")
+                        ids[oldId] = freshId
+                        chapter.put("id", freshId)
+                        val blocks = chapter.getJSONArray("blocks")
+                        for (j in 0 until blocks.length()) {
+                            val block = blocks.getJSONObject(j)
+                            val prior = block.getString("id")
+                            val next = newId("p")
+                            ids[prior] = next
+                            block.put("id", next)
+                        }
+                    }
+                    val position = loaded.position
+                    val clonedPosition = BookPosition(
+                        ids.getValue(position.chapterId),
+                        position.blockId?.let { ids.getValue(it) },
+                        position.offset, position.scrollY
+                    )
+                    copied.put("id", newBookId).put("title", title)
+                        .put("createdAt", now).put("updatedAt", now)
+                    when (saveUnderLock(copied, 0, clonedPosition)) {
+                        is BookSave.Saved -> BookLibraryResult.Success(newBookId)
+                        else -> BookLibraryResult.Error
+                    }
+                } catch (_: Exception) {
+                    BookLibraryResult.Error
+                }
+            }
+            else -> BookLibraryResult.Error
+        }
+    }
+
+    /**
+     * Commit a persistent deletion marker before removing any document bytes.
+     * If the process dies during cleanup, the next catalog read finishes it.
+     * The separate E-02 prototype is never touched.
+     */
+    @Synchronized
+    fun deleteBook(id: String): BookLibraryResult = synchronized(BOOK_DISK_LOCK) {
+        if (runCatching { BookDocumentValidator.safeId(id) }.isFailure) {
+            return@synchronized BookLibraryResult.Error
+        }
+        when (readDisk(id)) {
+            DiskState.Missing -> BookLibraryResult.Missing
+            DiskState.Corrupt -> BookLibraryResult.Error
+            is DiskState.Valid -> {
+                if (!isDeleted(id)) {
+                    try {
+                        writeAtomic(tombstone(id), byteArrayOf(1))
+                    } catch (_: Exception) {
+                        return@synchronized BookLibraryResult.Error
+                    }
+                }
+                finalizeDelete(id)
+                BookLibraryResult.Success(id)
+            }
+        }
+    }
 
     /**
      * D-04: restore a validated portable backup as a NEW book only.
@@ -258,7 +420,7 @@ internal class BookStore(
         val b = previous(info.id)
         fun anyArtifact(file: File): Boolean =
             exists(file) || File(file.path + ".new").exists()
-        if (dao.find(info.id) != null || anyArtifact(a) || anyArtifact(b)) {
+        if (isDeleted(info.id) || dao.find(info.id) != null || anyArtifact(a) || anyArtifact(b)) {
             BookImport.AlreadyExists
         } else {
             val bytes = bytesFor(book, source.revision, source.position)
