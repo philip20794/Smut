@@ -153,8 +153,9 @@ jobs:
             adb shell svc data disable
             trap 'status=$?; adb logcat -d -v time > app/build/reports/emulator/logcat.txt || true; if [ "$status" -ne 0 ]; then adb shell screencap -p /sdcard/smut-f05-error.png || true; adb pull /sdcard/smut-f05-error.png app/build/reports/emulator/ || true; fi' EXIT
             ./gradlew --no-daemon :app:connectedDebugAndroidTest
-            adb exec-out run-as io.github.philip20794.smut.dev cat files/e04-a5-probe.pdf > app/build/reports/emulator/e04-a5-probe.pdf
+            adb pull /sdcard/Download/smut-e04-a5-probe.pdf app/build/reports/emulator/e04-a5-probe.pdf
             test -s app/build/reports/emulator/e04-a5-probe.pdf
+            head -c 4 app/build/reports/emulator/e04-a5-probe.pdf | grep -aFx '%PDF'
       - name: Validate PDF text, page geometry and Unicode independently
         run: |
           python3 -m pip install --user --disable-pip-version-check "pypdf==6.0.0"

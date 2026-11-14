@@ -836,6 +836,23 @@ class OfflineEditorSmokeTest {
                             kotlin.math.abs(page.height - 595.28) < 1.0)
                     }
                 }
+                // Android Gradle Plugin can uninstall the debug package after
+                // instrumentation. Publish the isolated test PDF through the
+                // Android 10+ MediaStore Downloads API while the test still
+                // owns the app data; no storage permission or network needed.
+                val values = android.content.ContentValues().apply {
+                    put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "smut-e04-a5-probe.pdf")
+                    put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                    put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH,
+                        android.os.Environment.DIRECTORY_DOWNLOADS)
+                }
+                val exported = activity.contentResolver.insert(
+                    android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                assertNotNull("MediaStore test PDF export URI", exported)
+                activity.contentResolver.openOutputStream(exported!!).use { destination ->
+                    assertNotNull("MediaStore test PDF output stream", destination)
+                    pdf.inputStream().use { input -> input.copyTo(destination!!) }
+                }
             }
         } finally {
             evaluate("window.smutPrototype?.setPdfTestFixture(false)")
