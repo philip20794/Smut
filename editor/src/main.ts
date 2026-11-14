@@ -6,7 +6,7 @@ import { createReadyMessage, parseReadyAck } from "./bridge.js";
 import { generatePdfProbe, bytesToBase64 } from "./pdf-probe.js";
 import { BookAutosaveQueue, createBookLoadRequest, createBookSaveRequest, parseBookReply,
   type BookPosition, type BookLoadReply, type BookSaveReply } from "./book-persistence.js";
-import { canvasForChapter, reconcileCanvasChapter, textForChapter } from "./chapter-canvas.js";
+import { canvasForChapter, reconcileCanvasChapter } from "./chapter-canvas.js";
 import type { BookDocument } from "./book-model.js";
 import {
   INITIAL_DOCUMENT, createDocumentRequest, isPrototypeData, parseDocumentResponse,

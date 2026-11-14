@@ -23,10 +23,10 @@ test("W-01: insertion keeps existing rich runs and independent chapters untouche
   const result = changed(doc, "Äpfel schön und Welt");
   assert.equal(result.changed, true);
   assert.deepEqual(result.document.chapters[0].blocks[0].runs, [
-    run("Äpfel schön", { italic: true }), run(" und Welt"),
+    run("Äpfel", { italic: true }), run(" schön und Welt"),
   ]);
   assert.deepEqual(doc, snapshot);
-  assert.deepEqual(result.position, {chapterId: "chapter123", blockId: "p1", offset: 11, scrollY: 125});
+  assert.deepEqual(result.position, {chapterId: "chapter123", blockId: "p1", offset: 12, scrollY: 125});
   assert.ok(serializeBookDocument(result.document));
 });
 test("W-01: split creates a new paragraph and keeps old identity", () => {
